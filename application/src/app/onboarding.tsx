@@ -2,12 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import React, { useCallback, useMemo, useState } from 'react';
+import type { ImageSourcePropType } from 'react-native';
 import { Pressable, TextInput } from 'react-native';
 import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
 
 import {
   Checkbox,
   FocusAwareStatusBar,
+  Image,
   SafeAreaView,
   ScrollView,
   Text,
@@ -15,30 +17,38 @@ import {
 } from '@/components/ui';
 import { completeOnboarding } from '@/lib';
 
+import { Images } from '../../assets/images/index';
+
 const EXPERIENCE_LEVELS = [
   {
-    id: 'junior',
-    label: 'Junior',
-    description: '0-2 years of experience',
-    icon: '🌱',
+    id: 'internship',
+    label: 'Internships',
+    description: 'Looking for internship opportunities',
+    image: Images.experience.internship,
   },
   {
-    id: 'mid',
-    label: 'Mid-Level',
-    description: '2-5 years of experience',
-    icon: '🚀',
+    id: 'less-than-one',
+    label: 'Less than 1 Year',
+    description: 'Just starting out',
+    image: Images.experience.lessThanOne,
   },
   {
-    id: 'senior',
-    label: 'Senior',
-    description: '5-8 years of experience',
-    icon: '⭐',
+    id: 'one-to-three',
+    label: '1 - 3 Years',
+    description: 'Building experience',
+    image: Images.experience.oneToThree,
   },
   {
-    id: 'lead',
-    label: 'Lead / Principal',
-    description: '8+ years of experience',
-    icon: '👑',
+    id: 'three-to-five',
+    label: '3 - 5 Years',
+    description: 'Mid-level professional',
+    image: Images.experience.threeToFive,
+  },
+  {
+    id: 'five-plus',
+    label: '5+ Years',
+    description: 'Senior professional',
+    image: Images.experience.fivePlus,
   },
 ] as const;
 
@@ -152,6 +162,41 @@ type Step1Props = {
   onSelect: (level: ExperienceLevel) => void;
 };
 
+type ExperienceCardProps = {
+  selected: boolean;
+  onPress: () => void;
+  label: string;
+  image: ImageSourcePropType;
+};
+
+function ExperienceCard({
+  selected,
+  onPress,
+  label,
+  image,
+}: ExperienceCardProps) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className={`mb-3 flex-row items-center overflow-hidden rounded-2xl border bg-white p-3 shadow-md dark:bg-neutral-800 ${
+        selected
+          ? 'border-2 border-black dark:border-white'
+          : 'border-neutral-200 dark:border-neutral-700'
+      }`}
+    >
+      <Image source={image} className="size-14 rounded-xl" contentFit="cover" />
+      <Text className="ml-4 flex-1 text-lg font-semibold dark:text-white">
+        {label}
+      </Text>
+      <Ionicons
+        name={selected ? 'checkmark-circle' : 'checkmark-circle-outline'}
+        size={24}
+        color={selected ? '#000000' : '#d1d5db'}
+      />
+    </Pressable>
+  );
+}
+
 function Step1({ selectedLevel, onSelect }: Step1Props) {
   return (
     <Animated.View
@@ -160,7 +205,7 @@ function Step1({ selectedLevel, onSelect }: Step1Props) {
       className="flex-1"
     >
       <View className="px-6">
-        <Text className="mb-2 text-3xl font-bold">
+        <Text className="mb-2 text-3xl font-bold dark:text-white">
           What&apos;s your experience level?
         </Text>
         <Text className="mb-6 text-base text-neutral-500">
@@ -176,26 +221,15 @@ function Step1({ selectedLevel, onSelect }: Step1Props) {
           paddingBottom: 24,
         }}
       >
-        {EXPERIENCE_LEVELS.map((level) => {
-          const isSelected = selectedLevel === level.id;
-          return (
-            <OptionCard
-              key={level.id}
-              selected={isSelected}
-              onPress={() => onSelect(level.id)}
-            >
-              <View className="flex-row items-center">
-                <Text className="mr-3 text-2xl">{level.icon}</Text>
-                <View className="flex-1">
-                  <Text className="text-lg font-semibold">{level.label}</Text>
-                  <Text className="text-sm text-neutral-500">
-                    {level.description}
-                  </Text>
-                </View>
-              </View>
-            </OptionCard>
-          );
-        })}
+        {EXPERIENCE_LEVELS.map((level) => (
+          <ExperienceCard
+            key={level.id}
+            selected={selectedLevel === level.id}
+            onPress={() => onSelect(level.id)}
+            label={level.label}
+            image={level.image}
+          />
+        ))}
       </ScrollView>
     </Animated.View>
   );
@@ -429,6 +463,12 @@ export default function Onboarding() {
       </SafeAreaView>
 
       <View className="border-t border-neutral-200 bg-white px-6 pb-8 pt-4 dark:border-neutral-700 dark:bg-neutral-900">
+        {step === 2 && selectedCompanies.length > 0 && (
+          <Text className="mb-3 text-center text-sm font-medium text-neutral-600 dark:text-neutral-400">
+            You will be notified for {selectedCompanies.length} companies info
+            🚀
+          </Text>
+        )}
         <Pressable
           onPress={step === 1 ? handleContinue : handleFinish}
           disabled={!canContinue}

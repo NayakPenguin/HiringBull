@@ -12,10 +12,10 @@ import {
 import { subscribe } from '@/lib';
 
 const BENEFITS = [
-  'Unlimited job applications',
+  'Access to all job listings & applications',
+  'Direct connect with HRs & employees',
+  'Real-time interview experiences',
   'Priority support from our team',
-  'Exclusive access to premium jobs',
-  'Direct messaging with recruiters',
 ];
 
 export default function Payment() {
@@ -32,30 +32,30 @@ export default function Payment() {
       <SafeAreaView className="flex-1">
         <View className="flex-1 px-6 pt-10">
           <View className="items-center">
-            <View className="mb-6 size-20 items-center justify-center rounded-3xl bg-neutral-900 dark:bg-white">
-              <Ionicons name="diamond-outline" size={40} color="#fbbf24" />
-            </View>
             <Text className="text-center text-4xl font-black text-neutral-900 dark:text-white">
-              Go Premium
+              Get Started
             </Text>
             <Text className="mt-4 text-center text-lg font-medium text-neutral-500 dark:text-neutral-400">
-              Unlock exclusive features to fast-track your career journey.
+              Subscribe to access the app and supercharge your job search
             </Text>
           </View>
 
           <View className="mt-12 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
             <View className="mb-6 items-center border-b border-neutral-100 pb-6 dark:border-neutral-800">
               <Text className="text-sm font-bold uppercase tracking-widest text-neutral-500">
-                Monthly Plan
+                Monthly
               </Text>
               <View className="flex-row items-baseline">
                 <Text className="text-5xl font-black text-neutral-900 dark:text-white">
-                  $9.99
+                  ₹299
                 </Text>
                 <Text className="ml-1 text-lg font-medium text-neutral-500">
-                  /mo
+                  /month
                 </Text>
               </View>
+              <Text className="mt-2 text-sm text-neutral-400">
+                Less than ₹10/day
+              </Text>
             </View>
 
             <View className="gap-4">
@@ -79,7 +79,7 @@ export default function Payment() {
             className="h-14 items-center justify-center rounded-xl bg-neutral-900 dark:bg-white"
           >
             <Text className="text-lg font-bold text-white dark:text-black">
-              Subscribe Now
+              Subscribe · ₹299/month
             </Text>
           </Pressable>
           <Text className="mt-4 text-center text-xs font-medium text-neutral-400">
