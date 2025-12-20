@@ -14,43 +14,28 @@ Notifications.setNotificationHandler({
     shouldShowList: true,
   }),
 });
-
 /**
  * Hook to observe notification taps and handle navigation
  * Based on official Expo documentation pattern
- * https://docs.expo.dev/versions/latest/sdk/notifications/#handle-push-notifications-with-navigation
+ * Uses useLastNotificationResponse for proper timing with killed state
  */
 export function useNotificationObserver() {
+  // This hook handles killed state properly - returns undefined until ready
+  const lastNotificationResponse = Notifications.useLastNotificationResponse();
+
   useEffect(() => {
-    // Helper function to handle navigation from notification
-    function redirect(notification: Notifications.Notification) {
-      const url = notification.request.content.data?.url;
+    if (
+      lastNotificationResponse &&
+      lastNotificationResponse.actionIdentifier ===
+        Notifications.DEFAULT_ACTION_IDENTIFIER
+    ) {
+      const url = lastNotificationResponse.notification.request.content.data?.url;
       if (typeof url === 'string') {
         console.log('Navigating to:', url);
         router.push(url as any);
-
       }
     }
-
-    // Handle killed state: check if app was opened from a notification
-    const response = Notifications.getLastNotificationResponse();
-    if (response?.notification) {
-      console.log('App opened from notification:', response);
-      redirect(response.notification);
-    }
-
-    // Handle foreground/background: listen for notification taps
-    const subscription = Notifications.addNotificationResponseReceivedListener(
-      (response) => {
-        console.log('Notification tapped:', response);
-        redirect(response.notification);
-      }
-    );
-
-    return () => {
-      subscription.remove();
-    };
-  }, []);
+  }, [lastNotificationResponse]);
 }
 
 /**
