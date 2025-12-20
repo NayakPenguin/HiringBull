@@ -18,6 +18,7 @@ import {
   loadSelectedTheme,
   useAuth,
   useIsFirstTime,
+  useNotificationObserver,
   useNotifications,
   useOnboarding,
 } from '@/lib';
@@ -58,6 +59,9 @@ function RootNavigator() {
     // Initialize push notifications
     const { expoPushToken } = useNotifications();
     console.log('Push Token:', expoPushToken);
+
+    // Handle notification tap navigation (official Expo pattern)
+    useNotificationObserver();
 
   //   temporary flags for testing
 //   const isFirstTime = false;

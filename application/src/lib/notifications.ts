@@ -15,12 +15,52 @@ Notifications.setNotificationHandler({
   }),
 });
 
+/**
+ * Hook to observe notification taps and handle navigation
+ * Based on official Expo documentation pattern
+ * https://docs.expo.dev/versions/latest/sdk/notifications/#handle-push-notifications-with-navigation
+ */
+export function useNotificationObserver() {
+  useEffect(() => {
+    // Helper function to handle navigation from notification
+    function redirect(notification: Notifications.Notification) {
+      const url = notification.request.content.data?.url;
+      if (typeof url === 'string') {
+        console.log('Navigating to:', url);
+        router.push(url as any);
+
+      }
+    }
+
+    // Handle killed state: check if app was opened from a notification
+    const response = Notifications.getLastNotificationResponse();
+    if (response?.notification) {
+      console.log('App opened from notification:', response);
+      redirect(response.notification);
+    }
+
+    // Handle foreground/background: listen for notification taps
+    const subscription = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        console.log('Notification tapped:', response);
+        redirect(response.notification);
+      }
+    );
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+}
+
+/**
+ * Hook to register for push notifications and listen for incoming notifications
+ */
 export function useNotifications() {
   const [expoPushToken, setExpoPushToken] = useState<string>('');
   const [notification, setNotification] =
     useState<Notifications.Notification>();
   const notificationListener = useRef<Notifications.EventSubscription>(null);
-  const responseListener = useRef<Notifications.EventSubscription>(null);
 
   useEffect(() => {
     registerForPushNotificationsAsync()
@@ -34,30 +74,8 @@ export function useNotifications() {
         console.log('Notification received:', notification);
       });
 
-    // Listener for when user taps on a notification
-    responseListener.current =
-      Notifications.addNotificationResponseReceivedListener((response) => {
-        console.log('Notification tapped:', response);
-
-        // Get the data from the notification
-        const data = response.notification.request.content.data;
-
-        // Navigate based on the 'screen' field in notification data
-        // Example: send notification with data: { screen: 'saved' }
-        if (data?.screen) {
-          const screen = data.screen as string;
-          console.log('Navigating to:', screen);
-
-          // Add a small delay to ensure app is fully initialized (especially for killed state)
-          setTimeout(() => {
-            router.push(`/(app)/${screen}` as any);
-          }, 100);
-        }
-      });
-
     return () => {
       notificationListener.current?.remove();
-      responseListener.current?.remove();
     };
   }, []);
 
