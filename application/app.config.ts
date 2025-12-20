@@ -53,6 +53,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       backgroundColor: '#2E3C4B',
     },
     package: Env.PACKAGE,
+    googleServicesFile:'./google-services.json'
   },
   web: {
     favicon: './assets/favicon.png',
@@ -77,6 +78,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-router',
     ['app-icon-badge', appIconBadgeConfig],
     ['react-native-edge-to-edge'],
+    'expo-notifications'
   ],
   extra: {
     ...ClientEnv,

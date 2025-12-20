@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "50206145204",
+    "project_id": "hiringbull-app",
+    "storage_bucket": "hiringbull-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:50206145204:android:48e912e3424759c96535e1",
+        "android_client_info": {
+          "package_name": "com.myapp.development"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAAbC_CENeeyyID8hIwyC57fUJNMwXUg_A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
