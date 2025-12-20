@@ -18,6 +18,7 @@ import {
   loadSelectedTheme,
   useAuth,
   useIsFirstTime,
+  useNotifications,
   useOnboarding,
 } from '@/lib';
 import { useThemeConfig } from '@/lib/use-theme-config';
@@ -53,6 +54,10 @@ function RootNavigator() {
     const isSubscribed = useOnboarding.use.isSubscribed();
     const status = useAuth.use.status();
     const isAuthenticated = status === 'signIn';
+
+    // Initialize push notifications
+    const { expoPushToken } = useNotifications();
+    console.log('Push Token:', expoPushToken);
 
   //   temporary flags for testing
 //   const isFirstTime = false;
