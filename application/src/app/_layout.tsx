@@ -89,15 +89,12 @@ function NotificationInitializer() {
 
 function RootNavigator() {
     const [isFirstTime] = useIsFirstTime();
-  const { isSignedIn } = useAuth()
+  const { isSignedIn, isLoaded } = useAuth()
     const hasCompletedOnboarding = useOnboarding.use.hasCompletedOnboarding();
     const isSubscribed = useOnboarding.use.isSubscribed();
-    // const status = useAuth.use.status();
-    // const isAuthenticated = status === 'signIn';
-    const isAuthenticated = isSignedIn || false;
 
-    console.log("😈 isSignedIn from clerk ", isSignedIn)
-
+    // Wait for Clerk to load before determining auth state
+    const isAuthenticated = isLoaded ? (isSignedIn ?? false) : false;
 
     // Notifications should only be initialized for paying users
     const shouldInitNotifications = isAuthenticated && isSubscribed;
@@ -108,10 +105,12 @@ function RootNavigator() {
 //   const hasCompletedOnboarding = true;
 //   const isSubscribed = true;
 
-  // Hide splash once we have initial state
+  // Hide splash only after Clerk has loaded
   useEffect(() => {
-    SplashScreen.hideAsync();
-  }, []);
+    if (isLoaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [isLoaded]);
 
   return (
     <>
