@@ -18,6 +18,8 @@ import {
   loadSelectedTheme,
   useAuth,
   useIsFirstTime,
+  useNotificationObserver,
+  useNotifications,
   useOnboarding,
 } from '@/lib';
 import { useThemeConfig } from '@/lib/use-theme-config';
@@ -47,12 +49,53 @@ export default function RootLayout() {
   );
 }
 
+/**
+ * Initializes push notifications only for authenticated, subscribed users.
+ * This component renders nothing - it only runs the notification hooks.
+ */
+function NotificationInitializer() {
+  const { expoPushToken } = useNotifications();
+  useNotificationObserver();
+
+  // Send push token to backend when available
+  useEffect(() => {
+    if (expoPushToken) {
+      console.log('Push Token:', expoPushToken);
+
+      // TODO: Replace with actual API endpoint
+      const API_URL = 'https://madar-production.up.railway.app/api/users/devices/public/';
+
+      fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token: expoPushToken,
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log('Push token registered:', data);
+        })
+        .catch((error) => {
+          console.error('Failed to register push token:', error);
+        });
+    }
+  }, [expoPushToken]);
+
+  return null;
+}
+
 function RootNavigator() {
     const [isFirstTime] = useIsFirstTime();
     const hasCompletedOnboarding = useOnboarding.use.hasCompletedOnboarding();
     const isSubscribed = useOnboarding.use.isSubscribed();
     const status = useAuth.use.status();
     const isAuthenticated = status === 'signIn';
+
+    // Notifications should only be initialized for paying users
+    const shouldInitNotifications = isAuthenticated && isSubscribed;
 
   //   temporary flags for testing
 //   const isFirstTime = false;
@@ -66,7 +109,9 @@ function RootNavigator() {
   }, []);
 
   return (
-    <Stack>
+    <>
+      {shouldInitNotifications && <NotificationInitializer />}
+      <Stack>
       <Stack.Protected guard={isFirstTime}>
         <Stack.Screen name="landing" options={{ headerShown: false }} />
       </Stack.Protected>
@@ -90,7 +135,8 @@ function RootNavigator() {
       >
         <Stack.Screen name="(app)" options={{ headerShown: false }} />
       </Stack.Protected>
-    </Stack>
+      </Stack>
+    </>
   );
 }
 
