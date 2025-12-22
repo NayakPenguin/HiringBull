@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useSignIn, useSignUp } from '@clerk/clerk-expo';
+import { useSignIn, useSignUp, useSSO } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { ActivityIndicator, Pressable } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Platform, Pressable } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
+import * as WebBrowser from 'expo-web-browser';
+import * as AuthSession from 'expo-auth-session';
 
 import {
   FocusAwareStatusBar,
@@ -16,10 +18,27 @@ import {
 type Step = 'email' | 'otp';
 type AuthMode = 'signIn' | 'signUp' | null;
 
+// Preloads the browser for Android devices to reduce authentication load time
+const useWarmUpBrowser = () => {
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    void WebBrowser.warmUpAsync();
+    return () => {
+      void WebBrowser.coolDownAsync();
+    };
+  }, []);
+};
+
+// Handle any pending authentication sessions
+WebBrowser.maybeCompleteAuthSession();
+
 export default function Login() {
+  useWarmUpBrowser();
+
   const router = useRouter();
   const { signIn, setActive: setActiveSignIn, isLoaded: isSignInLoaded } = useSignIn();
   const { signUp, setActive: setActiveSignUp, isLoaded: isSignUpLoaded } = useSignUp();
+  const { startSSOFlow } = useSSO();
 
   const [step, setStep] = useState<Step>('email');
   const [email, setEmail] = useState('');
@@ -28,11 +47,31 @@ export default function Login() {
   const [error, setError] = useState('');
   const [authMode, setAuthMode] = useState<AuthMode>(null);
 
-  const handleGoogleLogin = () => {
-    // TODO: Implement Google Sign In using useSSO from Clerk
-    // Requires Google OAuth to be configured in Clerk Dashboard
-    console.log('Google Login - Configure in Clerk Dashboard');
-  };
+  const handleGoogleLogin = useCallback(async () => {
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const { createdSessionId, setActive, signIn, signUp } = await startSSOFlow({
+        strategy: 'oauth_google',
+        redirectUrl: AuthSession.makeRedirectUri(),
+      });
+
+      if (createdSessionId) {
+        await setActive!({ session: createdSessionId });
+        router.replace('/');
+      } else {
+        // Handle missing requirements if needed (MFA, etc.)
+        console.log('OAuth flow incomplete:', { signIn, signUp });
+        setError('Sign-in incomplete. Please try again.');
+      }
+    } catch (err: any) {
+      console.error('Google OAuth error:', JSON.stringify(err, null, 2));
+      setError(err?.errors?.[0]?.message || 'Google sign-in failed');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [startSSOFlow, router]);
 
   const handleInitialContinue = async () => {
     if (!isSignInLoaded || !isSignUpLoaded || !signIn || !signUp || email.length === 0) return;
