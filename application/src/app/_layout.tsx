@@ -90,8 +90,8 @@ function NotificationInitializer() {
 function RootNavigator() {
     const [isFirstTime] = useIsFirstTime();
   const { isSignedIn, isLoaded } = useAuth()
-    // const hasCompletedOnboarding = useOnboarding.use.hasCompletedOnboarding();
-    const hasCompletedOnboarding = false;
+    const hasCompletedOnboarding = useOnboarding.use.hasCompletedOnboarding();
+    // const hasCompletedOnboarding = false;
     const isSubscribed = useOnboarding.use.isSubscribed();
     // const isSubscribed = false;
 

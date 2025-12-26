@@ -52,7 +52,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons
               name="format-quote-close"
-              size={32}
+              size={40}
               color={color}
             />
           ),
