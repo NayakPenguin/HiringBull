@@ -6,7 +6,7 @@ import { ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect } from 'react';
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import FlashMessage from 'react-native-flash-message';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
@@ -55,34 +55,54 @@ export default function RootLayout() {
  */
 function NotificationInitializer() {
   const { expoPushToken } = useNotifications();
+  const { getToken } = useAuth();
   useNotificationObserver();
 
   // Send push token to backend when available
   useEffect(() => {
-    if (expoPushToken) {
+    async function registerDeviceToken() {
+      if (!expoPushToken) return;
+
       console.log('Push Token:', expoPushToken);
 
-      // TODO: Replace with actual API endpoint
-      const API_URL = 'https://madar-production.up.railway.app/api/users/devices/public/';
+      try {
+        // Get the JWT token from Clerk for authentication
+        const authToken = await getToken();
 
-      fetch(API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          token: expoPushToken,
-        }),
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          console.log('Push token registered:', data);
-        })
-        .catch((error) => {
-          console.error('Failed to register push token:', error);
+        if (!authToken) {
+          console.error('No authentication token available for device registration');
+          return;
+        }
+
+        const API_URL = 'https://e09f70749ed9.ngrok-free.app/api/users/devices';
+        const deviceType = Platform.OS === 'ios' ? 'ios' : 'android';
+
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({
+            token: expoPushToken,
+            type: deviceType,
+          }),
         });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || `API error: ${response.status}`);
+        }
+
+        console.log('Push token registered:', data);
+      } catch (error) {
+        console.error('Failed to register push token:', error);
+      }
     }
-  }, [expoPushToken]);
+
+    registerDeviceToken();
+  }, [expoPushToken, getToken]);
 
   return null;
 }

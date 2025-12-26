@@ -31,20 +31,7 @@ app.use(morgan("dev"));
 app.set("trust proxy", 1);
 
 // Clerk authentication (populates req.auth)
-// Wrap initClerk to skip if keys are missing
-app.use((req, res, next) => {
-  const isDev = process.env.NODE_ENV === 'development' || !process.env.NODE_ENV;
-  if (isDev && (!process.env.CLERK_PUBLISHABLE_KEY || !process.env.CLERK_SECRET_KEY)) {
-    if (req.method !== 'OPTIONS') {
-      const missing = [];
-      if (!process.env.CLERK_PUBLISHABLE_KEY) missing.push('CLERK_PUBLISHABLE_KEY');
-      if (!process.env.CLERK_SECRET_KEY) missing.push('CLERK_SECRET_KEY');
-      console.warn(`⚠️ Clerk keys missing (${missing.join(', ')}) - bypassing authentication middleware`);
-    }
-    return next();
-  }
-  return initClerk(req, res, next);
-});
+app.use(initClerk);
 
 // Routes
 app.use("/api", routes);

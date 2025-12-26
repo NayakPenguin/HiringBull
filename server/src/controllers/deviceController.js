@@ -1,6 +1,5 @@
 import httpStatus from 'http-status';
 import prisma from '../prismaClient.js';
-import { getClerkUserId } from '../middlewares/auth.js';
 
 const catchAsync = (fn) => (req, res, next) => {
     Promise.resolve(fn(req, res, next)).catch((err) => next(err));
@@ -11,45 +10,24 @@ const catchAsync = (fn) => (req, res, next) => {
  * POST /api/users/devices
  */
 export const addDevice = catchAsync(async (req, res) => {
-    const userId = getClerkUserId(req) || req.clerkUserId;
-
-    if (!userId) {
-        const error = new Error('User not authenticated');
-        error.statusCode = httpStatus.UNAUTHORIZED;
-        throw error;
-    }
-
     const { token, type } = req.body;
+    const userId = req.user.id;
 
-    // Check if device already exists for this user
     const existingDevice = await prisma.device.findUnique({
         where: { token },
     });
 
-    if (existingDevice) {
-        if (existingDevice.userId === userId) {
-            // Device already registered to this user, just return it
-            return res.status(httpStatus.OK).json(existingDevice);
-        } else {
-            // Device registered to different user - update ownership
-            const device = await prisma.device.update({
-                where: { token },
-                data: { userId, type },
-            });
-            return res.status(httpStatus.OK).json(device);
-        }
+    if (existingDevice && existingDevice.userId === userId) {
+        return res.status(httpStatus.OK).json(existingDevice);
     }
 
-    // Create new device
-    const device = await prisma.device.create({
-        data: {
-            token,
-            type,
-            userId,
-        },
+    const device = await prisma.device.upsert({
+        where: { token },
+        update: { userId, type },
+        create: { token, type, userId },
     });
 
-    res.status(httpStatus.CREATED).json(device);
+    res.status(httpStatus.OK).json(device);
 });
 
 /**
@@ -57,17 +35,9 @@ export const addDevice = catchAsync(async (req, res) => {
  * DELETE /api/users/devices/:token
  */
 export const removeDevice = catchAsync(async (req, res) => {
-    const userId = getClerkUserId(req) || req.clerkUserId;
-
-    if (!userId) {
-        const error = new Error('User not authenticated');
-        error.statusCode = httpStatus.UNAUTHORIZED;
-        throw error;
-    }
-
     const { token } = req.params;
+    const userId = req.user.id;
 
-    // Find device and verify ownership
     const device = await prisma.device.findUnique({
         where: { token },
     });
@@ -96,16 +66,8 @@ export const removeDevice = catchAsync(async (req, res) => {
  * GET /api/users/devices
  */
 export const getDevices = catchAsync(async (req, res) => {
-    const userId = getClerkUserId(req) || req.clerkUserId;
-
-    if (!userId) {
-        const error = new Error('User not authenticated');
-        error.statusCode = httpStatus.UNAUTHORIZED;
-        throw error;
-    }
-
     const devices = await prisma.device.findMany({
-        where: { userId },
+        where: { userId: req.user.id },
         orderBy: { createdAt: 'desc' },
     });
 
@@ -116,15 +78,27 @@ export const getDevices = catchAsync(async (req, res) => {
  * POST /api/users/devices/public
  */
 export const addDevicePublic = catchAsync(async (req, res) => {
-    const { token, type, userId } = req.body;
+    const { token, type, clerkId } = req.body;
 
-    // Check if device already exists
+    let userId = null;
+    if (clerkId) {
+        const user = await prisma.user.findUnique({
+            where: { clerkId },
+        });
+        if (user) {
+            userId = user.id;
+        }
+    }
+
     const existingDevice = await prisma.device.findUnique({
         where: { token },
     });
 
     if (existingDevice) {
-        // Update device info if it exists
+        if (userId && existingDevice.userId === userId) {
+            return res.status(httpStatus.OK).json(existingDevice);
+        }
+
         const device = await prisma.device.update({
             where: { token },
             data: {
@@ -135,12 +109,11 @@ export const addDevicePublic = catchAsync(async (req, res) => {
         return res.status(httpStatus.OK).json(device);
     }
 
-    // Create new device
     const device = await prisma.device.create({
         data: {
             token,
             type,
-            userId: userId || null,
+            userId,
         },
     });
 

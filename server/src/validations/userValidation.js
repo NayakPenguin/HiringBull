@@ -2,8 +2,8 @@ import Joi from 'joi';
 
 export const createUser = {
     body: Joi.object().keys({
-        name: Joi.string().required(),
-        email: Joi.string().required().email(),
+        name: Joi.string().allow(null, ''),
+        email: Joi.string().email().allow(null, ''),
         img_url: Joi.string().uri().allow(null, ''),
         active: Joi.boolean(),
         is_experienced: Joi.boolean(),
@@ -14,9 +14,9 @@ export const createUser = {
         resume_link: Joi.string().uri().allow(null, ''),
         segment: Joi.string().allow(null, ''),
         companies: Joi.array().items(Joi.string()),
-        clerkId: Joi.string().allow(null, ''), // Allow passing Clerk ID for testing/sync
-        promo_code: Joi.string().allow(null, ''), // Assuming this is passed or generated
-    }),
+        clerkId: Joi.string().allow(null, ''),
+        promo_code: Joi.string().allow(null, ''),
+    }).min(0),
 };
 
 export const getUser = {

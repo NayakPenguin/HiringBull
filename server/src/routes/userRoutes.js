@@ -3,7 +3,6 @@ import validate from '../middlewares/validate.js';
 import * as userValidation from '../validations/userValidation.js';
 import { requireAuth } from '../middlewares/auth.js';
 import {
-    createUser,
     getAllUsers,
     getUserById,
     updateUser,
@@ -12,9 +11,6 @@ import {
 } from '../controllers/userController.js';
 
 const router = express.Router();
-
-// Protected route (requires authentication via Clerk token)
-router.post('/', requireAuth, validate(userValidation.createUser), createUser);
 
 // Protected routes (require authentication)
 router.get('/me', requireAuth, getCurrentUser);

@@ -11,7 +11,7 @@ export const addDevicePublic = {
     body: Joi.object().keys({
         token: Joi.string().required(),
         type: Joi.string().valid('ios', 'android', 'web').optional(),
-        userId: Joi.string().uuid().optional(),
+        clerkId: Joi.string().optional(),
     }),
 };
 
