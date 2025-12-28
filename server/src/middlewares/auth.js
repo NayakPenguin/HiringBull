@@ -1,5 +1,6 @@
 import { clerkMiddleware, requireAuth as clerkRequireAuth, getAuth } from '@clerk/express';
 import prisma from '../prismaClient.js';
+import { log } from '../utils/logger.js';
 
 /**
  * Initialize Clerk middleware for the Express app
@@ -23,22 +24,16 @@ export const requireAuth = async (req, res, next) => {
         }
 
         const clerkId = clerkUser.userId;
-        let user = await prisma.user.findUnique({
-            where: { clerkId }
+        const user = await prisma.user.upsert({
+            where: { clerkId },
+            update: {},
+            create: {
+                clerkId,
+                email: clerkUser.sessionClaims?.email || clerkUser.sessionClaims?.email_address || `${clerkId}@no-email.clerk`,
+                name: clerkUser.sessionClaims?.name || 'User',
+                active: true
+            }
         });
-
-        if (!user) {
-            user = await prisma.user.create({
-                data: {
-                    clerkId,
-                    email: `${clerkId}@clerk.dev`,
-                    name: 'User',
-                    active: true
-                }
-            });
-
-            console.log(`User created in DB for Clerk ID: ${clerkId}`);
-        }
 
         if (!user.active) {
             return res.status(403).json({ message: "Account disabled or deleted" });
@@ -52,6 +47,7 @@ export const requireAuth = async (req, res, next) => {
 /**
  * Middleware to optionally attach user info if authenticated
  * Does not block unauthenticated requests
+ * Note: initClerk must be mounted globally before this middleware
  */
 export const optionalAuth = (req, res, next) => {
     const auth = getAuth(req);
@@ -73,16 +69,8 @@ export const requirePayment = async (req, res, next) => {
             return res.status(401).json({ message: "Authentication required" });
         }
 
-        const user = await prisma.user.findUnique({
-            where: { id: req.user.id }
-        });
-
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
         const now = new Date();
-        const isActive = user.isPaid && (!user.planExpiry || user.planExpiry > now);
+        const isActive = req.user.isPaid && (!req.user.planExpiry || req.user.planExpiry > now);
 
         if (!isActive) {
             return res.status(403).json({
@@ -91,11 +79,9 @@ export const requirePayment = async (req, res, next) => {
             });
         }
 
-        // Attach updated user object to req for convenience
-        req.user = user;
         next();
     } catch (error) {
-        console.error("Payment check error:", error);
+        log("Payment check error:", error);
         res.status(500).json({ message: "Internal server error during payment check" });
     }
 };
