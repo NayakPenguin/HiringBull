@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { View as RNView } from 'react-native';
+import { Image, ScrollView } from 'react-native';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 
 import {
   FocusAwareStatusBar,
@@ -14,22 +15,22 @@ import { useIsFirstTime } from '@/lib';
 
 const FEATURES = [
   {
-    icon: 'briefcase-outline',
-    title: 'Personalized Jobs',
-    description: 'Curated opportunities based on your experience.',
-    color: '#3b82f6', // blue-500
+    icon: 'rocket',
+    title: 'Early Access',
+    description: 'Discover opportunities before they trend',
+    gradient: ['#f59e0b', '#ef4444'],
   },
   {
-    icon: 'people-outline',
-    title: 'Referral Network',
-    description: 'Connect directly with employees and recruiters.',
-    color: '#10b981', // emerald-500
+    icon: 'trophy',
+    title: 'Beat the Crowd',
+    description: '50 competitors, not 50,000',
+    gradient: ['#3b82f6', '#8b5cf6'],
   },
   {
-    icon: 'chatbubbles-outline',
-    title: 'Community',
-    description: 'Anonymous discussions and insights.',
-    color: '#8b5cf6', // violet-500
+    icon: 'people',
+    title: 'Direct Referrals',
+    description: 'Employee connections that matter',
+    gradient: ['#10b981', '#06b6d4'],
   },
 ] as const;
 
@@ -37,30 +38,28 @@ function FeatureCard({
   icon,
   title,
   description,
-  color,
+  gradient,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   title: string;
   description: string;
-  color: string;
+  gradient: string[];
 }) {
   return (
-    <View className="mb-4 flex-row items-center gap-4 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-      <View
-        className="size-12 items-center justify-center rounded-full bg-opacity-10"
-        style={{ backgroundColor: `${color}15` }}
-      >
-        <Ionicons name={icon} size={24} color={color} />
+    <Animated.View
+      entering={FadeInUp.duration(500)}
+      className="mb-4 overflow-hidden rounded-3xl bg-white p-6 shadow-sm dark:bg-neutral-900/50"
+    >
+      <View className="mb-3 mr-8 size-14 items-center justify-center rounded-2xl bg-neutral-900 dark:bg-white">
+        <Ionicons name={icon} size={26} color={gradient[0]} />
       </View>
-      <View className="flex-1">
-        <Text className="text-lg font-bold text-neutral-900 dark:text-white">
-          {title}
-        </Text>
-        <Text className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-          {description}
-        </Text>
-      </View>
-    </View>
+      <Text className="mb-2 text-xl font-bold text-neutral-900 dark:text-white">
+        {title}
+      </Text>
+      <Text className="text-base leading-6 text-neutral-600 dark:text-neutral-400">
+        {description}
+      </Text>
+    </Animated.View>
   );
 }
 
@@ -74,43 +73,90 @@ export default function Landing() {
   };
 
   return (
-    <View className="flex-1 bg-white dark:bg-neutral-950">
+    <View className="flex-1 bg-neutral-50 dark:bg-black">
       <FocusAwareStatusBar />
       <SafeAreaView className="flex-1">
-        <View className="flex-1 px-6 pt-10">
-          {/* Header / Title Section */}
-          <View className="mb-10">
-            <View className="mb-4 size-16 items-center justify-center rounded-2xl bg-neutral-900 dark:bg-white">
-              <Text className="text-3xl font-black text-white dark:text-black">
-                H
+        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+          <View className="flex-1 px-6">
+            {/* Hero Section */}
+            <Animated.View
+              entering={FadeInDown.duration(600)}
+              className="mb-10 mt-16"
+            >
+              {/* Logo with glow effect */}
+              <View className="flex flex-row items-center justify-center">
+                <View className="mb-8 mr-6 size-24 items-center justify-center self-start rounded-[28px] shadow-2xl dark:bg-white">
+                  <Image
+                    source={require('assets/splash-icon.png')}
+                    style={{ width: 90, height: 90, borderRadius: 28 }}
+                    contentFit="contain"
+                  />
+                </View>
+
+                {/* Brand Name */}
+                <Text className="mb-8 text-6xl font-black leading-[72px] tracking-tighter text-neutral-900 dark:text-white">
+                  Hiring
+                  <Text className="text-6xl font-black tracking-tighter text-amber-500">
+                    Bull
+                  </Text>
+                </Text>
+              </View>
+
+              {/* Main Tagline */}
+              <View className="mb-6">
+                <Text className="text-[28px] font-bold leading-[38px] text-neutral-900 dark:text-white">
+                  Apply early,{'\n'}compete with{' '}
+                  <Text className="text-[28px] font-black text-amber-500">
+                    50 people
+                  </Text>
+                  {'\n'}not{' '}
+                  <Text className="text-[28px] font-black text-neutral-400 line-through dark:text-neutral-600">
+                    50,000
+                  </Text>
+                </Text>
+              </View>
+
+              {/* Subtitle */}
+              <Text className="text-lg leading-7 text-neutral-600 dark:text-neutral-400">
+                Early job alerts. Direct referrals.{'\n'}Better odds at landing
+                your dream role.
+              </Text>
+            </Animated.View>
+
+            {/* Features Grid */}
+            <View className="flex-1">
+              {FEATURES.map((feature, index) => (
+                <FeatureCard key={index} {...feature} />
+              ))}
+            </View>
+
+            {/* Stats Badge */}
+            <View className="mb-6 flex-row items-center justify-center gap-2 rounded-2xl bg-neutral-900/5 px-4 py-3 dark:bg-white/5">
+              <Ionicons name="people" size={16} color="#f59e0b" />
+              <Text className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
+                Join 10,000+ job seekers winning faster
               </Text>
             </View>
-            <Text className="text-4xl font-black text-neutral-900 dark:text-white">
-              HiringBull
-            </Text>
-            <Text className="mt-2 text-lg font-medium text-neutral-500 dark:text-neutral-400">
-              Find your dream job at top companies with referrals and community
-              support.
-            </Text>
           </View>
+        </ScrollView>
 
-          {/* Features List */}
-          <View className="flex-1">
-            {FEATURES.map((feature, index) => (
-              <FeatureCard key={index} {...feature} />
-            ))}
-          </View>
-        </View>
-
-        {/* Bottom Action Section */}
-        <View className="border-t border-neutral-200 bg-white px-6 pb-8 pt-4 dark:border-neutral-800 dark:bg-neutral-950">
+        {/* CTA Section */}
+        <View className="px-6 pb-8">
           <Pressable
             onPress={handleContinue}
-            className="h-14 items-center justify-center rounded-xl bg-neutral-900 dark:bg-white"
+            className="h-16 items-center justify-center rounded-[24px] bg-neutral-900 shadow-xl active:scale-[0.98] dark:bg-white"
           >
-            <Text className="text-lg font-bold text-white dark:text-black">
-              Get Started
-            </Text>
+            <View className="flex-row items-center gap-2">
+              <Text className="text-xl font-bold text-white dark:text-black">
+                Start Winning
+              </Text>
+              <Ionicons
+                name="arrow-forward"
+                size={20}
+                color="white"
+                className="dark:text-black"
+              />
+            </View>
           </Pressable>
         </View>
       </SafeAreaView>
