@@ -312,14 +312,20 @@ export default function Payment() {
           {!isReferralApplied ? (
             <Pressable
               onPress={present}
-              className="mb-6 flex-row items-center justify-center gap-1.5"
+              className="mb-6 items-center justify-center"
             >
               <Text className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-                Have a referral code? Get flat ₹50 off
+                Have a referral code?
               </Text>
-              <Text className="text-sm font-bold text-neutral-900 underline dark:text-white">
-                Apply
-              </Text>
+
+              <View className="flex-row items-center gap-1.5">
+                <Text className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+                  Get flat ₹50 off per month 🎉
+                </Text>
+                <Text className="text-sm font-bold text-neutral-900 underline dark:text-white">
+                  Apply
+                </Text>
+              </View>
             </Pressable>
           ) : (
             <View className="mb-6 items-center justify-center">
