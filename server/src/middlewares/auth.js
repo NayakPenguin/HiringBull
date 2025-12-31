@@ -85,3 +85,17 @@ export const requirePayment = async (req, res, next) => {
         res.status(500).json({ message: "Internal server error during payment check" });
     }
 };
+
+/**
+ * Middleware to require internal API key
+ * Used for bulk data creation/admin tasks
+ */
+export const requireApiKey = (req, res, next) => {
+    const apiKey = req.headers['x-api-key'];
+
+    if (!apiKey || apiKey !== process.env.INTERNAL_API_KEY) {
+        return res.status(401).json({ message: "Invalid or missing API key" });
+    }
+
+    next();
+};

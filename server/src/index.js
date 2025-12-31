@@ -16,11 +16,15 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 // Health check root - moved to top to ensure availability even if config is incomplete
 app.get("/", (req, res) => {
-  res.send({ status: "ok", message: "Kabeer Testing CI/CD Pipeline in new repo." });
+  res.send({ status: "ok", message: "Hi guys , HiringBull server is running" });
 });
 
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: '*', // Allow all origins for public access
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
@@ -40,6 +44,7 @@ app.use("/api", routes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`HiringBull server running on port ${PORT}`);
+  console.log(`Server accessible at http://0.0.0.0:${PORT}`);
 });
