@@ -38,7 +38,6 @@ export const updateCompany = {
 export const bulkUpdateCompanies = {
     body: Joi.array().items(
         Joi.object().keys({
-            id: Joi.string().required(),
             name: Joi.string(),
             description: Joi.string().allow(null, ''),
             logo: Joi.string().uri().allow(null, ''),
