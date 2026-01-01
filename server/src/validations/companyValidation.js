@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-const categoryValues = ['tech-giant', 'fintech-giant', 'indian-startup', 'global-startup', 'ycombinator', 'mass-hiring', 'hft'];
+const categoryValues = ['TECH_GIANT', 'FINTECH_GIANT', 'INDIAN_STARTUP', 'GLOBAL_STARTUP', 'YCOMBINATOR', 'MASS_HIRING', 'HFT'];
 
 const companySchema = Joi.object().keys({
     name: Joi.string().required(),
