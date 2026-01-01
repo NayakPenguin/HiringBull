@@ -95,27 +95,21 @@ export const bulkUpdateCompanies = catchAsync(async (req, res) => {
     const updates = req.body;
 
     const results = await Promise.all(
-        updates.map(async ({ id, ...updateData }) => {
+        updates.map(async ({ name, ...updateData }) => {
             try {
-                const company = await prisma.company.findUnique({ where: { id } });
+                const company = await prisma.company.findUnique({ where: { name } });
                 if (!company) {
-                    return { id, success: false, error: "Company not found" };
-                }
-
-                if (updateData.name && updateData.name !== company.name) {
-                    if (await prisma.company.findUnique({ where: { name: updateData.name } })) {
-                        return { id, success: false, error: "Company name already exists" };
-                    }
+                    return { name, success: false, error: "Company not found" };
                 }
 
                 const updated = await prisma.company.update({
-                    where: { id },
+                    where: { name },
                     data: updateData,
                 });
 
-                return { id, success: true, data: updated };
+                return { name, success: true, data: updated };
             } catch (error) {
-                return { id, success: false, error: error.message };
+                return { name, success: false, error: error.message };
             }
         })
     );
