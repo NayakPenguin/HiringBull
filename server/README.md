@@ -1,125 +1,225 @@
 # HiringBull API Documentation
 
-Backend APIs for HiringBull – onboarding users, jobs, companies, payments, referrals, and notifications.
+Backend APIs for HiringBull – a comprehensive platform for onboarding users, managing jobs, companies, payments (IAP), referrals, and notifications.
 
 ---
 
-## Base URL
-https://hiringbull-api.scale8ai.com/api/
+## 🚀 Tech Stack
 
+- **Runtime**: Node.js (>= 18)
+- **Framework**: Express.js
+- **Database**: PostgreSQL (via Prisma ORM)
+- **Authentication**: Clerk (JWT & Webhooks)
+- **Validation**: Joi
+- **Payments**: In-App Purchases (Google Console / Apple Store)
 
 ---
 
-## Authentication
+## 🛠️ Getting Started
 
-| Type | Usage |
-|----|------|
-| Bearer (Clerk JWT) | Logged-in user APIs |
-| API Key | Internal / Admin / Bulk APIs |
-| None | Public APIs |
+### Prerequisites
+- Node.js installed on your machine.
+- A running PostgreSQL database.
 
-### Headers
+### Installation
+1. Clone the repository and navigate to the server directory.
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-```http
-Authorization: Bearer <CLERK_JWT_TOKEN>
-x-api-key: <INTERNAL_API_KEY>
-Content-Type: application/json
+### Database Setup
+1. Configure your `DATABASE_URL` in the `.env` file.
+2. Generate Prisma client:
+   ```bash
+   npx prisma generate
+   ```
+3. Push the schema to your database:
+   ```bash
+   npx prisma db push
+   ```
+
+### Running the App
+- **Development mode**:
+  ```bash
+  npm run dev
+  ```
+- **Production mode**:
+  ```bash
+  npm start
+  ```
+
+---
+
+## 🔑 Environment Variables
+
+Create a `.env` file in the root of the `server/` directory:
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `CLERK_PUBLISHABLE_KEY` | No | Clerk publishable key |
+| `CLERK_SECRET_KEY` | No | Clerk secret key |
+| `CLERK_WEBHOOK_SECRET` | No | Secret for verifying Clerk webhooks |
+| `INTERNAL_API_KEY` | No | Key for internal/bulk admin operations |
+| `PORT` | No | Server port (default: 4000) |
+
+---
+
+## 📂 Project Structure
+
+```bash
+server/
+├── prisma/             # Prisma schema and migrations
+└── src/
+    ├── controllers/    # Business logic & request handlers
+    ├── middlewares/    # Auth, validation, & error handling
+    ├── routes/         # API route definitions
+    ├── validations/    # Joi request validation schemas
+    ├── utils/          # Helper functions (pagination, env validation)
+    ├── index.js        # Server entry point
+    └── prismaClient.js # Prisma client singleton
 ```
 
-## 1. Onboarding (User Management)
+---
 
-| Method | API | Auth | Sample Body |
-|------|-----|------|------------|
-| POST | `/users` | Bearer | `{ "name": "John Doe", "email": "john@gmail.com", "segment": "software_engineering" }` |
-| GET | `/users/me` | Bearer | — |
-| GET | `/users` | Bearer (Admin) | — |
-| GET | `/users/:id` | Bearer | — |
-| PUT | `/users/:id` | Bearer | `{ "company_name": "Google", "years_of_experience": 5 }` |
-| DELETE | `/users/:id` | Bearer | — |
+## 📡 API Endpoints
+
+### Base URL
+`https://hiringbull-api.scale8ai.com/api/`
+
+### Authentication & Authorization
+| Type | Usage | Header |
+|------|-------|--------|
+| **Bearer** | Logged-in Users | `Authorization: Bearer <CLERK_JWT>` |
+| **API Key** | Admin / Bulk | `x-api-key: <INTERNAL_API_KEY>` |
+| **None** | Public Access | — |
+
+> [!IMPORTANT]
+> Some routes require an active subscription (`requirePayment`). If the user hasn't paid, these routes will return a `402 Payment Required` status.
 
 ---
 
-## 2. Payment
+### 1. User Management
 
-| Method | API | Auth | Sample Body |
-|------|-----|------|------------|
-| POST | `/payment/order` | Bearer | `{ "amount": 999, "userId": "user-uuid" }` |
-| POST | `/payment/verify` | Bearer | `{ "razorpay_order_id": "...", "razorpay_payment_id": "...", "razorpay_signature": "...", "userId": "user-uuid" }` |
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/users` | Bearer | Create/Sync user after Clerk signup |
+| `GET` | `/users/me` | Bearer | Get current user profile |
+| `PUT` | `/users/me`| Bearer | Update current user profile |
+| `GET` | `/users` | Bearer | [Admin] List all users |
 
-**Notes**
-- Amount in INR (converted to paise internally)
-- On success: `isPaid = true`, `planExpiry` updated
-
----
-
-## 3. Add Companies
-
-| Method | API | Auth | Sample Body |
-|------|-----|------|------------|
-| GET | `/companies` | None | — |
-| POST | `/companies` | API Key | `{ "name": "Stripe", "category": "global_startup" }` |
-| POST | `/companies/bulk` | API Key | `[ { "name": "Uber" }, { "name": "Airbnb" } ]` |
-
----
-
-## 4. Add Job
-
-| Method | API | Auth | Sample Body |
-|------|-----|------|------------|
-| GET | `/jobs` | None | — |
-| GET | `/jobs/:id` | None | — |
-| POST | `/jobs/bulk` | API Key | `[ { "title": "SDE", "companyId": "company-uuid", "segment": "software_engineering" } ]` |
+#### Sample Request (`PUT /api/users/me`)
+```json
+{
+  "name": "John Doe",
+  "is_experienced": true,
+  "company_name": "Google",
+  "years_of_experience": 5,
+  "experience_level": "ONE_TO_THREE_YEARS"
+}
+```
 
 ---
 
-## 5. Job Notification
+### 2. Payment (In-App Purchases)
 
-| Method | API | Auth | Sample Body |
-|------|-----|------|------------|
-| POST | `/users/devices` | Bearer | `{ "token": "fcm_token_123", "type": "android" }` |
-| POST | `/users/devices/public` | None | `{ "token": "fcm_token_public", "type": "ios" }` |
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/payment/order` | Bearer | Initialize a payment/order intent |
+| `POST` | `/payment/verify`| Bearer | Verify IAP receipt from Play/App Store |
 
----
-
-## 6. Add Social Post
-
-| Method | API | Auth | Sample Body |
-|------|-----|------|------------|
-| GET | `/social-posts` | None | — |
-| GET | `/social-posts/:id` | None | — |
-| POST | `/social-posts/bulk` | API Key | `[ { "name": "Google Referral", "source": "linkedin" } ]` |
-
----
-
-## 7. Company Outreach Form
-
-| Method | API | Auth | Sample Body |
-|------|-----|------|------------|
-| POST | `/outreach` | Bearer | `{ "companyId": "uuid", "message": "Interested in referral" }` |
-| GET | `/outreach` | Bearer (Admin) | — |
+#### Sample Request (`POST /api/payment/verify`)
+```json
+{
+  "receipt": "base64_encoded_receipt_data",
+  "platform": "android",
+  "productId": "premium_monthly"
+}
+```
 
 ---
 
-## 8. Referral
+### 3. Company Management
 
-| Method | API | Auth | Sample Body |
-|------|-----|------|------------|
-| POST | `/referrals` | Bearer | `{ "companyId": "uuid", "resumeLink": "https://..." }` |
-| GET | `/referrals` | Bearer | — |
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/companies` | Bearer + Paid | List all companies |
+| `POST` | `/companies` | API Key | Create a single company |
+| `POST` | `/companies/bulk`| API Key | Bulk create companies |
 
 ---
 
-## Error Responses
+### 4. Job Management
 
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/jobs` | Bearer + Paid | List jobs (supports filtering/pagination)|
+| `GET` | `/jobs/:id` | Bearer + Paid | Get job details |
+| `POST` | `/jobs/bulk` | API Key | Bulk upload job listings |
+
+---
+
+### 5. Social & Referrals
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/social-posts` | Bearer | Get all referral/social posts |
+| `GET` | `/social-posts/:id` | Bearer | Get single social post |
+| `POST` | `/social-posts/bulk`| API Key | Bulk create social posts |
+
+---
+
+### 6. Device & Notifications
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/users/devices` | Bearer | Register token for current user |
+| `GET` | `/users/devices` | Bearer | List current user devices |
+| `DELETE`| `/users/devices/:token`| Bearer | Unregister a device token |
+| `POST` | `/users/devices/public`| None | Register token (public/guest) |
+
+---
+
+### 7. Webhooks
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/webhooks/clerk` | Clerk/Svix | Sync user data from Clerk events |
+
+---
+
+### 8. Testing & Public Hub (Development Only)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/public/testing` | None | Health check endpoint |
+| `GET` | `/public/auth-test`| Bearer | Verify JWT authentication |
+| `GET` | `/public/all-devices`| None | Debug: List all registered devices |
+
+---
+
+## ⚠️ Responses
+
+### Success Response
+```json
+{
+  "status": "success",
+  "data": { ... }
+}
+```
+
+### Error Response
 | Status | Meaning |
-|------|--------|
-| 400 | Validation Error |
-| 401 | Unauthorized |
-| 403 | Forbidden |
-| 404 | Not Found |
-| 500 | Internal Server Error |
+|--------|---------|
+| `400` | Validation Error |
+| `401` | Unauthorized (Invalid token/key) |
+| `402` | Payment Required (Subscription expired/missing) |
+| `404` | Resource Not Found |
+| `500` | Internal Server Error |
 
 ```json
 {
-  "message": "Error message here"
+  "message": "Detailed error message here"
 }
+```
