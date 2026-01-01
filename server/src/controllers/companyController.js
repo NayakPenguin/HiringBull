@@ -43,10 +43,10 @@ export const createCompany = catchAsync(async (req, res) => {
  * Bulk create companies (internal use)
  */
 export const bulkCreateCompanies = catchAsync(async (req, res) => {
-    const companiesData = req.body;
+    const { companies } = req.body;
 
     const count = await prisma.company.createMany({
-        data: companiesData,
+        data: companies,
         skipDuplicates: true,
     });
 
@@ -92,10 +92,10 @@ export const updateCompany = catchAsync(async (req, res) => {
  * Bulk update companies
  */
 export const bulkUpdateCompanies = catchAsync(async (req, res) => {
-    const updates = req.body;
+    const { companies } = req.body;
 
     const results = await Promise.all(
-        updates.map(async ({ name, ...updateData }) => {
+        companies.map(async ({ name, ...updateData }) => {
             try {
                 const company = await prisma.company.findUnique({ where: { name } });
                 if (!company) {

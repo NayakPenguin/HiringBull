@@ -20,7 +20,9 @@ export const createCompany = {
 };
 
 export const bulkCreateCompanies = {
-    body: Joi.array().items(companySchema).min(1),
+    body: Joi.object().keys({
+        companies: Joi.array().items(companySchema).min(1),
+    }),
 };
 
 export const updateCompany = {
@@ -36,12 +38,14 @@ export const updateCompany = {
 };
 
 export const bulkUpdateCompanies = {
-    body: Joi.array().items(
-        Joi.object().keys({
-            name: Joi.string().required(),
-            description: Joi.string().allow(null, ''),
-            logo: Joi.string().uri().allow(null, ''),
-            category: Joi.string().valid(...categoryValues).allow(null, ''),
-        }).min(1)
-    ).min(1),
+    body: Joi.object().keys({
+        companies: Joi.array().items(
+            Joi.object().keys({
+                name: Joi.string().required(),
+                description: Joi.string().allow(null, ''),
+                logo: Joi.string().uri().allow(null, ''),
+                category: Joi.string().valid(...categoryValues).allow(null, ''),
+            }).min(1)
+        ).min(1),
+    }),
 };
