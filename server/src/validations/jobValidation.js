@@ -28,3 +28,11 @@ export const bulkCreateJobs = {
         })
     ).min(1).required(),
 };
+
+export const getJobsFollowed = {
+    query: Joi.object().keys({
+        segment: Joi.string().allow(''),
+        page: Joi.number().integer().min(1).default(1),
+        limit: Joi.number().integer().min(1).max(100).default(20),
+    }),
+};

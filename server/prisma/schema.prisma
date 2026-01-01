@@ -16,6 +16,16 @@ enum ExperienceLevel {
   ONE_TO_THREE_YEARS
 }
 
+enum CompanyCategory {
+  TECH_GIANT
+  FINTECH_GIANT
+  INDIAN_STARTUP
+  GLOBAL_STARTUP
+  YCOMBINATOR
+  MASS_HIRING
+  HFT
+}
+
 model User {
   id                     String    @id @default(uuid())
   clerkId                String?   @unique // Clerk user ID for auth sync
@@ -61,7 +71,7 @@ model Company {
   name        String   @unique
   logo        String?
   description String?
-  category    String?  // "tech-giant", "fintech-giant", "indian-startup", "global-startup", "ycombinator", "mass-hiring", "hft"
+  category    CompanyCategory?
   users       User[]
   jobs        Job[]
   createdAt   DateTime @default(now())

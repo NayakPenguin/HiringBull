@@ -55,3 +55,79 @@ export const bulkCreateCompanies = catchAsync(async (req, res) => {
         count: count.count
     });
 });
+
+/**
+ * Update a single company
+ */
+export const updateCompany = catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const { name, description, logo, category } = req.body;
+
+    const company = await prisma.company.findUnique({ where: { id } });
+    if (!company) {
+        return res.status(httpStatus.NOT_FOUND).json({ message: "Company not found" });
+    }
+
+    if (name && name !== company.name) {
+        if (await prisma.company.findUnique({ where: { name } })) {
+            return res.status(httpStatus.BAD_REQUEST).json({ message: "Company name already exists" });
+        }
+    }
+
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (description !== undefined) updateData.description = description;
+    if (logo !== undefined) updateData.logo = logo;
+    if (category !== undefined) updateData.category = category;
+
+    const updatedCompany = await prisma.company.update({
+        where: { id },
+        data: updateData,
+    });
+
+    res.status(httpStatus.OK).json(updatedCompany);
+});
+
+/**
+ * Bulk update companies
+ */
+export const bulkUpdateCompanies = catchAsync(async (req, res) => {
+    const updates = req.body;
+
+    const results = await Promise.all(
+        updates.map(async ({ id, ...updateData }) => {
+            try {
+                const company = await prisma.company.findUnique({ where: { id } });
+                if (!company) {
+                    return { id, success: false, error: "Company not found" };
+                }
+
+                if (updateData.name && updateData.name !== company.name) {
+                    if (await prisma.company.findUnique({ where: { name: updateData.name } })) {
+                        return { id, success: false, error: "Company name already exists" };
+                    }
+                }
+
+                const updated = await prisma.company.update({
+                    where: { id },
+                    data: updateData,
+                });
+
+                return { id, success: true, data: updated };
+            } catch (error) {
+                return { id, success: false, error: error.message };
+            }
+        })
+    );
+
+    const successCount = results.filter(r => r.success).length;
+    const failureCount = results.filter(r => !r.success).length;
+
+    res.status(httpStatus.OK).json({
+        message: "Bulk update completed",
+        total: results.length,
+        success: successCount,
+        failures: failureCount,
+        results
+    });
+});

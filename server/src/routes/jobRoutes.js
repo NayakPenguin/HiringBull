@@ -4,6 +4,7 @@ import {
     getAllJobs,
     getJobById,
     bulkCreateJobs,
+    getJobsFromFollowedCompanies,
 } from '../controllers/jobController.js';
 import validate from '../middlewares/validate.js';
 import * as jobValidation from '../validations/jobValidation.js';
@@ -15,6 +16,7 @@ router.post('/bulk', requireApiKey, validate(jobValidation.bulkCreateJobs), bulk
 
 // Protected routes (require valid subscription)
 router.get('/', requireAuth, requirePayment, validate(jobValidation.getJobs), getAllJobs);
+router.get('/followed', requireAuth, requirePayment, validate(jobValidation.getJobsFollowed), getJobsFromFollowedCompanies);
 router.get('/:id', requireAuth, requirePayment, validate(jobValidation.getJob), getJobById);
 
 export default router;
