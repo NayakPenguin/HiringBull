@@ -52,7 +52,10 @@ export default function Login() {
     setError('');
 
     try {
-      const redirectUrl = AuthSession.makeRedirectUri();
+      // Per Clerk AI recommendation: just use path, scheme auto-detected
+      const redirectUrl = AuthSession.makeRedirectUri({
+        path: 'sso-callback',
+      });
       console.log('Starting SSO flow with redirect URL:', redirectUrl);
 
       const { createdSessionId, setActive, signIn, signUp } = await startSSOFlow({
@@ -60,20 +63,30 @@ export default function Login() {
         redirectUrl,
       });
 
+      // Session was created successfully - set it active and navigate
       if (createdSessionId) {
         await setActive!({ session: createdSessionId });
         router.replace('/');
-      } else {
-        // Handle missing requirements if needed (MFA, etc.)
-        console.log('OAuth flow incomplete:', { signIn, signUp });
-        setError('Sign-in incomplete. Please try again.');
+        return;
       }
+
+      // On Android, the session might be established asynchronously via maybeCompleteAuthSession()
+      // The _layout.tsx guards will automatically navigate when auth state changes
+      // So we don't show an error here - just log for debugging
+      console.log('OAuth returned without session - waiting for async auth state update...', {
+        signIn: signIn ? { status: signIn.status, firstFactor: signIn.firstFactorVerification?.status } : null,
+        signUp: signUp ? { status: signUp.status } : null
+      });
+
+      // Keep loading state briefly to allow for async session establishment
+      // The layout guards will navigate automatically when isSignedIn becomes true
+
     } catch (err: any) {
       console.error('Google OAuth error:', JSON.stringify(err, null, 2));
       setError(err?.errors?.[0]?.message || 'Google sign-in failed');
-    } finally {
       setIsLoading(false);
     }
+    // Note: We don't set isLoading to false here because the layout guards will unmount this component
   }, [startSSOFlow, router]);
 
   const handleInitialContinue = async () => {

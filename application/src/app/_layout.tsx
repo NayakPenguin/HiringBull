@@ -133,6 +133,9 @@ function RootNavigator() {
       >
         <Stack.Screen name="(app)" options={{ headerShown: false }} />
       </Stack.Protected>
+
+      {/* SSO callback route - accessible during OAuth flow */}
+      <Stack.Screen name="sso-callback" options={{ headerShown: false }} />
       </Stack>
     </>
   );
