@@ -26,7 +26,6 @@ import { Images } from '../../../assets/images';
 import useRegisterUser from '@/features/users/hooks/useRegisterUser';
 import { UserRegistration } from '@/features/users';
 import Step2 from '@/app/onboarding/Step2';
-import { CompanyId } from '@/app/onboarding/types';
 
 const EXPERIENCE_LEVELS:{id: UserRegistration['experience_level'],
   label: string,
@@ -364,7 +363,7 @@ export default function Onboarding() {
   });
   const [experienceLevel, setExperienceLevel] =
     useState<ExperienceLevel | null>(null);
-  const [selectedCompanies, setSelectedCompanies] = useState<CompanyId[]>([]);
+  const [selectedCompanies, setSelectedCompanies] = useState<string[]>([]);
 
   const {mutate: registerUser, isPending: isRegistering} = useRegisterUser();
 
@@ -376,27 +375,23 @@ export default function Onboarding() {
     logToken();
   }, [getToken]);
 
-  const handleToggleCompany = useCallback((companyId: CompanyId) => {
+  const handleToggleCompany = (companyId: string) => {
     setSelectedCompanies((prev) =>
       prev.includes(companyId)
         ? prev.filter((id) => id !== companyId)
         : [...prev, companyId]
     );
-  }, []);
+  };
 
-  const handleSelectAll = useCallback(
-    (companyIds: CompanyId[], select: boolean) => {
-      setSelectedCompanies((prev) => {
-        if (select) {
-          const toAdd = companyIds.filter((id) => !prev.includes(id));
-          return [...prev, ...toAdd];
-        } else {
-          return prev.filter((id) => !companyIds.includes(id));
-        }
-      });
-    },
-    []
-  );
+  const handleSelectAll = (companyIds: string[], select: boolean) => {
+    setSelectedCompanies((prev) => {
+      if (select) {
+        return companyIds;
+      } else {
+        return prev.filter((id) => !companyIds.includes(id));
+      }
+    });
+  }
 
   const handleContinue = useCallback(() => {
     setStep((prev) => prev + 1);
@@ -414,10 +409,7 @@ export default function Onboarding() {
         is_experienced: profileData.isExperienced,
         resume_link: profileData.resumeLink,
         experience_level: experienceLevel,
-        followedCompanies: [
-          "1fd207c4-59dc-479d-ae20-42c3daece209",
-          "3369f26a-13cc-41d4-8abc-f3de762edf2d"
-        ],
+        followedCompanies: selectedCompanies,
       } as UserRegistration;
 
       if(payload.is_experienced){
@@ -437,14 +429,14 @@ export default function Onboarding() {
 
       console.log({payload})
 
-      registerUser(payload,{
-          onSuccess:()=>{
-            router.replace('/');
-          },
-          onError:(e)=>{
-            console.error(e)
-          }
-        })
+      // registerUser(payload,{
+      //     onSuccess:()=>{
+      //       router.replace('/');
+      //     },
+      //     onError:(e)=>{
+      //       console.error(e)
+      //     }
+      //   })
     }
 
    

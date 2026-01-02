@@ -1,5 +1,3 @@
-import { COMPANIES, FILTERS } from "@/app/onboarding/constants";
-import { CompanyId } from "@/app/onboarding/types";
 import { useMemo, useState } from "react";
 import { useColorScheme } from 'nativewind';
 import {  Pressable} from 'react-native';
@@ -12,12 +10,13 @@ import{
   ScrollView,
 } from '@/components/ui';
 import {TextInput} from 'react-native';
+import useFetchOnboardedCompanies from "@/app/onboarding/hooks/useFetchOnboardedCompanies";
 
 type Step2Props = {
-  selectedCompanies: CompanyId[];
-  onToggle: (companyId: CompanyId) => void;
+  selectedCompanies: string[];
+  onToggle: (companyId: string) => void;
   onBack: () => void;
-  onSelectAll: (companyIds: CompanyId[], select: boolean) => void;
+  onSelectAll: (companyIds: string[], select: boolean) => void;
 };
 function Step2({
   selectedCompanies,
@@ -27,11 +26,16 @@ function Step2({
 }: Step2Props) {
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] =
-    useState<(typeof FILTERS)[number]['value']>('all');
+    useState<string>('ALL');
   const { colorScheme } = useColorScheme();
 
+  const {data:COMPANIES, isFetching: isFetchingCompanies} = useFetchOnboardedCompanies();
+
+  console.log({COMPANIES,activeFilter});
+
   const filteredCompanies = useMemo(() => {
-    let result = activeFilter === 'all' ? COMPANIES : COMPANIES.filter((c) => c.type === activeFilter)
+    let result = COMPANIES ? activeFilter === 'ALL' ? 
+    COMPANIES : COMPANIES.filter((c) => c.category === activeFilter) : [];
     if (!search.trim()) return result;
     return result.filter((company) =>
       company.name.toLowerCase().includes(search.toLowerCase())
@@ -43,6 +47,16 @@ function Step2({
     return filteredCompanies.every((c) => selectedCompanies.includes(c.id));
   }, [filteredCompanies, selectedCompanies]);
 
+  if(!COMPANIES || isFetchingCompanies){
+    return <Text className="ml-1 text-xl font-medium text-neutral-500  dark:text-neutral-400">
+            Loading list of companies ...
+          </Text>
+  }
+
+  console.log({COMPANIES});
+
+  const FILTERS = ['ALL',...new Set(COMPANIES.map(c=> c.category))];
+  console.log({FILTERS})
   return (
     <Animated.View
       entering={FadeInRight.duration(300)}
@@ -88,22 +102,22 @@ function Step2({
         >
           {FILTERS.map((filter) => (
             <Pressable
-              key={filter.value}
-              onPress={() => setActiveFilter(filter.value)}
+              key={filter}
+              onPress={() => setActiveFilter(filter)}
               className={`mr-2 rounded-full border px-4 py-2  ${
-                activeFilter === filter.value
+                activeFilter === filter
                   ? 'border-black bg-black dark:border-white dark:bg-white'
                   : 'border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800'
               }`}
             >
               <Text
                 className={`text-sm font-medium ${
-                  activeFilter === filter.value
+                  activeFilter === filter
                     ? 'text-white dark:text-black'
                     : 'text-neutral-600 dark:text-neutral-300'
                 }`}
               >
-                {filter.label}
+                {filter.toUpperCase()}
               </Text>
             </Pressable>
           ))}

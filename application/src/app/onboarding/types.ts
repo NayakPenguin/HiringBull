@@ -1,3 +1,8 @@
-import { COMPANIES } from "@/app/onboarding/constants";
-
-export type CompanyId = (typeof COMPANIES)[number]['id'];
+export type OnboardedCompanies = {
+    "id": string,
+    "name": string,
+    "logo": string,
+    "description": null,
+    "category": string,
+    "createdAt": string
+}[]
