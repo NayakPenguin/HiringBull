@@ -23,7 +23,7 @@ import {
 } from '@/components/ui';
 import { completeOnboarding } from '@/lib';
 
-import { Images } from '../../assets/images/index';
+import { Images } from '../../../assets/images';
 import useRegisterUser from '@/features/users/hooks/useRegisterUser';
 import { UserRegistration } from '@/features/users';
 
