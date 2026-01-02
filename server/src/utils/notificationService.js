@@ -20,9 +20,13 @@ export const sendNotificationsToDevices = async (devices, title, body, data = {}
     messages.push({
       to: device.token,
       sound: 'default',
-      title,
-      body,
-      data,
+      data: {
+        title,
+        body,
+        data: {
+          url: '/(app)/profile'
+        }
+      }
     });
   }
 
