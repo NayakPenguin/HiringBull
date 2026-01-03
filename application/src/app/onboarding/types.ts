@@ -1,3 +1,5 @@
+import { UserRegistration } from "@/features/users";
+
 export type OnboardedCompanies = {
     "id": string,
     "name": string,
@@ -15,3 +17,5 @@ export type ProfileData = {
   cgpaOrYoe: string;
   resumeLink: string;
 };
+
+export type ExperienceLevel =  UserRegistration['experience_level'];

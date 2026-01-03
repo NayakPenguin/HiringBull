@@ -11,6 +11,7 @@ import {
   View,
 } from '@/components/ui';
 import { resetOnboarding } from '@/lib';
+import { navigate } from 'expo-router/build/global-state/routing';
 
 type SettingsItem = {
   label: string;
@@ -140,6 +141,7 @@ export default function Profile() {
       label: 'Change segment',
       icon: 'layers-outline',
       iconColor: '#3b82f6', // blue-500
+      onPress:()=> navigate('/profile/editExperience'),
     },
     {
       label: 'Update Companies',
