@@ -431,7 +431,7 @@ export default function Onboarding() {
 
       registerUser(payload,{
           onSuccess:()=>{
-            router.replace('/');
+            router.replace('/payment');
           },
           onError:(e)=>{
             console.error(e)

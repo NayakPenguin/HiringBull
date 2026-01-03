@@ -90,7 +90,7 @@ function RootNavigator() {
     const isAuthenticated = isLoaded ? (isSignedIn ?? false) : false;
 
     // Notifications should only be initialized for paying users
-    const shouldInitNotifications = isAuthenticated && isSubscribed;
+    const shouldInitNotifications = true;
 
   //   temporary flags for testing
 //   const isFirstTime = false;
@@ -123,13 +123,13 @@ function RootNavigator() {
       </Stack.Protected>
 
       <Stack.Protected
-        guard={isAuthenticated && hasCompletedOnboarding && !isSubscribed}
+        guard={true}
       >
         <Stack.Screen name="payment" options={{ headerShown: false }} />
       </Stack.Protected>
 
       <Stack.Protected
-        guard={isAuthenticated && hasCompletedOnboarding && isSubscribed}
+        guard={true}
       >
         <Stack.Screen name="(app)" options={{ headerShown: false }} />
       </Stack.Protected>
