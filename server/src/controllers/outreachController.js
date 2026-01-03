@@ -1,9 +1,5 @@
 import { prisma } from '../config/prisma.js';
-
-/**
- * Create outreach request
- * - Enforces max 3 per month
- */
+ 
 export const createOutreachRequest = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -47,9 +43,6 @@ export const createOutreachRequest = async (req, res) => {
     }
 };
 
-/**
- * Get all outreach requests of logged-in user
- */
 export const getMyOutreachRequests = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -66,9 +59,6 @@ export const getMyOutreachRequests = async (req, res) => {
     }
 };
 
-/**
- * Get single outreach request by ID
- */
 export const getOutreachById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -92,9 +82,7 @@ export const getOutreachById = async (req, res) => {
     }
 };
 
-/**
- * ADMIN: Get all pending outreach requests
- */
+
 export const getPendingOutreachRequests = async (req, res) => {
     try {
         const pending = await prisma.outreachRequest.findMany({
@@ -109,10 +97,7 @@ export const getPendingOutreachRequests = async (req, res) => {
     }
 };
 
-/**
- * ADMIN: Update outreach status
- * - APPROVED / REJECTED / SENT
- */
+
 export const updateOutreachStatus = async (req, res) => {
     try {
         const { id } = req.params;
