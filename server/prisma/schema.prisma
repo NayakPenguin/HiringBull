@@ -88,7 +88,7 @@ model Company {
   users       User[]
   jobs        Job[]
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt 
+  updatedAt   DateTime @default(now()) @updatedAt 
 
   @@index([category])
   @@index([name])
