@@ -6,3 +6,12 @@ export type OnboardedCompanies = {
     "category": string,
     "createdAt": string
 }[]
+
+
+export type ProfileData = {
+  name: string;
+  isExperienced: boolean;
+  collegeOrCompany: string;
+  cgpaOrYoe: string;
+  resumeLink: string;
+};
