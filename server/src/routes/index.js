@@ -7,10 +7,10 @@ import companyRoutes from './companyRoutes.js';
 import deviceRoutes from './deviceRoutes.js';
 import webhookRoutes from './webhookRoutes.js';
 import testingRoutes from './testing.js';
+import webRegistrationRoutes from './webRegistrationRoutes.js';
 
 const router = express.Router();
 
-// Register more specific routes first
 router.use('/users/devices', deviceRoutes);
 router.use('/users', userRoutes);
 router.use('/jobs', jobRoutes);
@@ -19,6 +19,7 @@ router.use('/social-posts', socialPostRoutes);
 router.use('/payment', paymentRoutes);
 router.use('/companies', companyRoutes);
 router.use('/webhooks', webhookRoutes);
+router.use('/web-registration', webRegistrationRoutes);
 router.use('/public', testingRoutes);
 
 export default router;

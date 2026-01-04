@@ -1,5 +1,5 @@
 import express from 'express';
-import { requireAuth, requirePayment, requireApiKey } from '../middlewares/auth.js';
+import { requireAuth, requireApiKey } from '../middlewares/auth.js';
 import validate from '../middlewares/validate.js';
 import * as outreachValidation from '../validations/outreachValidation.js';
 import {
@@ -13,13 +13,13 @@ import {
 const router = express.Router();
 
 // Create outreach request (max 3/month enforced in controller)
-router.post( '/', requireAuth, requirePayment, validate(outreachValidation.createOutreach), createOutreachRequest );
+router.post( '/', requireAuth, validate(outreachValidation.createOutreach), createOutreachRequest );
 
 // Get logged-in user's outreach requests
-router.get( '/me', requireAuth, requirePayment, getMyOutreachRequests );
+router.get( '/me', requireAuth, getMyOutreachRequests );
 
 // Get single outreach request by id
-router.get( '/:id', requireAuth, requirePayment, validate(outreachValidation.getOutreachById), getOutreachById );
+router.get( '/:id', requireAuth, validate(outreachValidation.getOutreachById), getOutreachById );
 
 // Get all pending outreach requests
 router.get( '/admin/pending', requireApiKey, getPendingOutreachRequests );

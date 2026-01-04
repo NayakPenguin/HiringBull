@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { requireAuth, requirePayment, requireApiKey } from '../middlewares/auth.js';
+import { requireAuth, requireApiKey } from '../middlewares/auth.js';
 import {
     getAllCompanies,
     createCompany,

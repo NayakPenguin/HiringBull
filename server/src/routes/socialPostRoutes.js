@@ -1,5 +1,5 @@
 import express from 'express';
-import { requireAuth, requirePayment, requireApiKey } from '../middlewares/auth.js';
+import { requireAuth, requireApiKey } from '../middlewares/auth.js';
 import {
     getAllSocialPosts,
     getSocialPostById,
@@ -13,7 +13,7 @@ const router = express.Router();
 // Admin routes (require API Key)
 router.post('/bulk', requireApiKey, validate(socialPostValidation.bulkCreateSocialPosts), bulkCreateSocialPosts);
 
-// Protected routes (require valid subscription)
+// Protected routes
 router.get('/', requireAuth, validate(socialPostValidation.getSocialPosts), getAllSocialPosts);
 router.get('/:id', requireAuth, validate(socialPostValidation.getSocialPost), getSocialPostById);
 
