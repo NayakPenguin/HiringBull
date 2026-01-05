@@ -206,6 +206,7 @@ export default function Login() {
 
     setIsLoading(true);
     setError('');
+    setOtp('');
 
     try {
       if (authMode === 'signIn') {

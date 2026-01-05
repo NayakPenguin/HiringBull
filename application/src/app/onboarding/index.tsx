@@ -132,7 +132,6 @@ export default function Onboarding() {
     setStep((prev) => prev - 1);
   }, []);
 
-  console.log({profileData , experienceLevel , selectedCompanies})
   const handleFinish = () => {
     if(profileData && experienceLevel && selectedCompanies){
       let payload = {
