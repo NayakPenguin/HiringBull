@@ -66,7 +66,7 @@ export default function SSOCallback() {
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
       <ActivityIndicator size="large" color="#000" />
-      <Text style={{ marginTop: 16, color: '#666' }}>SSO callback screen</Text>
+      <Text style={{ marginTop: 16, color: '#666' }}>Loading...</Text>
     </View>
   );
 }
