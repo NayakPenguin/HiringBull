@@ -1,8 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useCallback, useState } from 'react';
-import { Pressable, Image, Linking } from 'react-native';
+import React, { useCallback, useState, useMemo, useEffect } from 'react';
+import { Pressable, Image, Linking, FlatList, ActivityIndicator } from 'react-native';
 
 import { type Job, JobCard } from '@/components/job-card';
+import useFetchFollowedJobs from './hooks/useFetchFollowedJobs';
+import { type Job as ApiJob } from '@/api/jobs'; // Import API Job type
 import {
   FocusAwareStatusBar,
   Input,
@@ -13,85 +15,26 @@ import {
   useModal,
   View,
 } from '@/components/ui';
+import { useAuth } from '@clerk/clerk-expo';
 
-const DUMMY_JOBS: Job[] = [
-  {
-    id: '1',
-    company: 'Google',
-    segment: 'Experience: <1 Year',
-    title: 'Software Engineer, AI/ML Infrastructure',
-    careerpage_link: 'https://google.com',
-    company_id: 'google-1',
-    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    created_by: null,
-    isSaved: true,
-    company_type: 'MNC',
-  },
-  {
-    id: '2',
-    company: 'Meta',
-    segment: 'Experience: 1-3 Years',
-    title: 'Frontend Engineer, React Native',
-    careerpage_link: 'https://meta.com',
-    company_id: 'meta-1',
-    created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-    created_by: 'admin',
-    isSaved: false,
-    company_type: 'MNC',
-  },
-  {
-    id: '3',
-    company: 'Amazon',
-    segment: 'Experience: <1 Year',
-    title: 'SDE I, AWS Cloud Services',
-    careerpage_link: 'https://amazon.jobs',
-    company_id: 'amazon-1',
-    created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    created_by: null,
-    isSaved: true,
-    company_type: 'MNC',
-  },
-  {
-    id: '4',
-    company: 'Microsoft',
-    segment: 'Experience: 2-4 Years',
-    title: 'Product Manager, Azure DevOps',
-    careerpage_link: 'https://microsoft.com',
-    company_id: 'microsoft-1',
-    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    created_by: 'admin',
-    isSaved: false,
-    company_type: 'Global Startup',
-  },
-  {
-    id: '5',
-    company: 'Apple',
-    segment: 'Experience: 1-2 Years',
-    title: 'iOS Developer, Health Team',
-    careerpage_link: 'https://apple.com/careers',
-    company_id: 'apple-1',
-    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    created_by: null,
-    isSaved: true,
-    company_type: 'MNC',
-  },
-  {
-    id: '6',
-    company: 'Netflix',
-    segment: 'Experience: 3-5 Years',
-    title: 'Senior Backend Engineer, Streaming',
-    careerpage_link: 'https://netflix.com/jobs',
-    company_id: 'netflix-1',
-    created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    created_by: 'admin',
-    isSaved: false,
-    company_type: 'Indian Startup',
-  },
-];
+
+
 
 export default function Jobs() {
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = useFetchFollowedJobs();
+  const {getToken} = useAuth()
   const [searchQuery, setSearchQuery] = useState('');
   const { ref, present, dismiss } = useModal();
+
+  const allJobs = useMemo(() => {
+    return data?.pages.flatMap((page) => page?.data || []) || [];
+  }, [data]);
 
   const handleSaveJob = useCallback((jobId: string) => {
     // TODO: Implement save job functionality
@@ -102,13 +45,65 @@ export default function Jobs() {
     present();
   }, [present]);
 
-  const filteredJobs = DUMMY_JOBS.filter((job) => {
-    const query = searchQuery.toLowerCase();
-    return (
-      job.title.toLowerCase().includes(query) ||
-      job.company.toLowerCase().includes(query)
-    );
-  });
+  const filteredJobs = useMemo(() => {
+    return allJobs.filter((job) => {
+      if (!job) return false;
+      const query = searchQuery.toLowerCase();
+      const title = job.title?.toLowerCase() || '';
+      const company = job.company?.toLowerCase() || '';
+      return title.includes(query) || company.includes(query);
+    });
+  }, [allJobs, searchQuery]);
+
+  // Map API job to UI Job type
+  const mapJobData = useCallback((apiJob: ApiJob): Job => {
+    return {
+      id: apiJob.id,
+      company: apiJob.company,
+      segment: apiJob.experience_level || apiJob.segment,
+      title: apiJob.title,
+      careerpage_link: apiJob.apply_link,
+      company_id: apiJob.companyId,
+      created_at: apiJob.posted_date || apiJob.created_at,
+      created_by: null,
+      isSaved: false,
+      company_type: apiJob.company_type || 'TECH_GIANT',
+    };
+  }, []);
+
+  const renderItem = useCallback(({ item }: { item: any }) => {
+    return <JobCard job={mapJobData(item)} onSave={() => handleSaveJob(item.id)} />;
+  }, [handleSaveJob, mapJobData]);
+
+  useEffect(()=>{
+    const printToken = async()=>{
+
+        const token = await getToken();
+        console.log(token)
+    }
+    printToken()
+
+  },[getToken])
+
+  const renderFooter = useCallback(() => {
+    if (isFetchingNextPage) {
+      return (
+        <View className="py-4">
+          <ActivityIndicator size="small" color="#0000ff" />
+        </View>
+      );
+    }
+    if (!hasNextPage && allJobs.length > 0) {
+      return (
+        <View className="py-8 items-center justify-center">
+          <Text className="text-sm text-neutral-400 font-medium">
+            You've reached the end of the list
+          </Text>
+        </View>
+      );
+    }
+    return null;
+  }, [isFetchingNextPage, hasNextPage, allJobs.length]);
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={['top']}>
@@ -194,73 +189,80 @@ export default function Jobs() {
           </View>
         </View>
 
-        <ScrollView
-          className="flex-1"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingHorizontal: 20,
-            paddingBottom: 20,
-            paddingTop: 10,
-          }}
-        >
-          <View className="mb-3 flex-row gap-2">
-            <Pressable
-              className="self-start items-center justify-center rounded-xl border border-neutral-200 bg-white android:shadow-md ios:shadow-sm"
-              style={{
-                paddingVertical: 5,
-                paddingHorizontal: 10,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 11,
-                  color: 'rgb(19, 128, 59)',
-                  fontWeight: '400',
-                }}
-              >
-                42 Companies Selected
-              </Text>
-            </Pressable>
-
-            <Pressable
-              className="self-start items-center justify-center rounded-xl border border-neutral-200 bg-white android:shadow-md ios:shadow-sm"
-              style={{
-                paddingVertical: 5,
-                paddingHorizontal: 10,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 11,
-                  color: 'rgb(19, 128, 59)',
-                  fontWeight: '400',
-                }}
-              >
-                Entry Level (0–1 Year)
-              </Text>
-            </Pressable>
+        {(isLoading || !data) ? (
+          <View className="flex-1 items-center justify-center pt-20">
+            <ActivityIndicator size="large" color="#0000ff" />
           </View>
+        ) : (
+          <FlatList
+            data={filteredJobs}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={{
+              paddingHorizontal: 20,
+              paddingBottom: 20,
+              paddingTop: 10,
+            }}
+            showsVerticalScrollIndicator={false}
+            onEndReached={() => {
+              if (hasNextPage) {
+                fetchNextPage();
+              }
+            }}
+            onEndReachedThreshold={0.5}
+            ListHeaderComponent={
+              <View className="mb-3 flex-row gap-2">
+                <Pressable
+                  className="self-start items-center justify-center rounded-xl border border-neutral-200 bg-white android:shadow-md ios:shadow-sm"
+                  style={{
+                    paddingVertical: 5,
+                    paddingHorizontal: 10,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 11,
+                      color: 'rgb(19, 128, 59)',
+                      fontWeight: '400',
+                    }}
+                  >
+                    {data?.pages?.[0]?.pagination?.totalCount || 0} Companies Selected
+                  </Text>
+                </Pressable>
 
-          {filteredJobs.length === 0 ? (
-            <View className="mt-20 items-center justify-center">
-              <Ionicons name="search-outline" size={48} color="#a3a3a3" />
-              <Text className="mt-4 text-center text-lg font-medium text-neutral-500">
-                No jobs found
-              </Text>
-              <Text className="mt-1 text-center text-sm text-neutral-400">
-                Try adjusting your search or filters
-              </Text>
-            </View>
-          ) : (
-            filteredJobs.map((job) => (
-              <JobCard
-                key={job.id}
-                job={job}
-                onSave={() => handleSaveJob(job.id)}
-              />
-            ))
-          )}
-        </ScrollView>
+                <Pressable
+                  className="self-start items-center justify-center rounded-xl border border-neutral-200 bg-white android:shadow-md ios:shadow-sm"
+                  style={{
+                    paddingVertical: 5,
+                    paddingHorizontal: 10,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 11,
+                      color: 'rgb(19, 128, 59)',
+                      fontWeight: '400',
+                    }}
+                  >
+                    Entry Level (0–1 Year)
+                  </Text>
+                </Pressable>
+              </View>
+            }
+            ListEmptyComponent={
+              <View className="mt-20 items-center justify-center">
+                <Ionicons name="search-outline" size={48} color="#a3a3a3" />
+                <Text className="mt-4 text-center text-lg font-medium text-neutral-500">
+                  No jobs found
+                </Text>
+                <Text className="mt-1 text-center text-sm text-neutral-400">
+                  Try adjusting your search or filters
+                </Text>
+              </View>
+            }
+            ListFooterComponent={renderFooter}
+          />
+        )}
       </View>
 
       <Modal

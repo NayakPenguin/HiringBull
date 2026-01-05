@@ -1,10 +1,10 @@
 import axios, { AxiosRequestConfig, AxiosError } from 'axios';
 import { authService } from '@/service/auth-service';
 
-// Hardcoded base URL
+
 const BASE_URL = 'https://hiringbull-api.scale8ai.com/';
 
-// Create axios instance
+
 export const client = axios.create({
   baseURL: BASE_URL,
   timeout: 20000,

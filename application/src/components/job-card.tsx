@@ -6,7 +6,14 @@ import { Pressable } from 'react-native';
 import { Text, View } from '@/components/ui';
 import { formatRelativeTime } from '@/lib/utils';
 
-export type CompanyType = 'MNC' | 'Global Startup' | 'Indian Startup';
+export type CompanyType =
+  | 'TECH_GIANT'
+  | 'FINTECH_GIANT'
+  | 'INDIAN_STARTUP'
+  | 'GLOBAL_STARTUP'
+  | 'YCOMBINATOR'
+  | 'MASS_HIRING'
+  | 'HFT';
 
 export type Job = {
   id: string;
@@ -18,7 +25,7 @@ export type Job = {
   created_at: string;
   created_by: string | null;
   isSaved?: boolean;
-  company_type: CompanyType;
+  company_type: CompanyType | string;
 };
 
 type JobCardProps = {
@@ -57,16 +64,24 @@ export function JobCard({ job, onSave }: JobCardProps) {
     };
   };
 
-  const getTagStyle = (type: CompanyType) => {
+  const getTagStyle = (type: string) => {
     switch (type) {
-      case 'MNC':
-        return { bg: 'bg-green-100', text: 'text-black' };
-      case 'Global Startup':
-        return { bg: 'bg-pink-100', text: 'text-black' };
-      case 'Indian Startup':
-        return { bg: 'bg-amber-100', text: 'text-black' };
+      case 'TECH_GIANT':
+        return { bg: 'bg-blue-100', text: 'text-blue-800' };
+      case 'FINTECH_GIANT':
+        return { bg: 'bg-green-100', text: 'text-green-800' };
+      case 'INDIAN_STARTUP':
+        return { bg: 'bg-amber-100', text: 'text-amber-800' };
+      case 'GLOBAL_STARTUP':
+        return { bg: 'bg-pink-100', text: 'text-pink-800' };
+      case 'YCOMBINATOR':
+        return { bg: 'bg-orange-100', text: 'text-orange-800' };
+      case 'MASS_HIRING':
+        return { bg: 'bg-gray-100', text: 'text-gray-800' };
+      case 'HFT':
+        return { bg: 'bg-indigo-100', text: 'text-indigo-800' };
       default:
-        return { bg: 'bg-gray-100', text: 'text-black' };
+        return { bg: 'bg-gray-100', text: 'text-gray-800' };
     }
   };
 
