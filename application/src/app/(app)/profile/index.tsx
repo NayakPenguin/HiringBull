@@ -147,6 +147,7 @@ export default function Profile() {
       label: 'Update Companies',
       icon: 'business-outline',
       iconColor: '#8b5cf6', // violet-500
+      onPress:()=> navigate('/profile/editFollowedCompanies'),
     },
     {
       label: 'Logout',

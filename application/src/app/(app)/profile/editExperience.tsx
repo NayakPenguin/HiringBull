@@ -19,7 +19,7 @@ const EditExperience = () => {
   const [experienceLevel, setExperienceLevel] =
       useState<ExperienceLevel | null>(null);
     
-  const {mutate: registerUser, isPending: isRegistering} = useRegisterOrEditUser();
+  const {mutate: editUser, isPending: isUpdating} = useRegisterOrEditUser();
 
   const handleBack = useCallback(() => {
     router.back();
@@ -38,7 +38,7 @@ const EditExperience = () => {
 
   const updateExperienceLevel = ()=>{
     if(experienceLevel){
-      registerUser({experience_level: experienceLevel},{
+      editUser({experience_level: experienceLevel},{
       onSuccess:(data)=>{
         setExperienceLevel(data);
         updateUserInfo(data);
@@ -65,7 +65,7 @@ const EditExperience = () => {
         </View>
         <Pressable
         onPress={updateExperienceLevel}
-        disabled={btnDisabled || isRegistering}
+        disabled={btnDisabled || isUpdating}
         className={`h-14 items-center justify-center rounded-xl ${
               !btnDisabled ? 'bg-black dark:bg-white' : 'bg-neutral-300'
         }`}
@@ -75,7 +75,7 @@ const EditExperience = () => {
             !btnDisabled ? 'text-white dark:text-black' : 'text-neutral-500'
           }`}
         >
-          {isRegistering ? 'Updating...' : 'Update'}
+          {isUpdating ? 'Updating...' : 'Update'}
         </Text>
       </Pressable>
       </View>
