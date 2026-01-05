@@ -16,6 +16,8 @@ import {
   View,
 } from '@/components/ui';
 import { useAuth } from '@clerk/clerk-expo';
+import { router } from 'expo-router';
+import { formatSegment } from '@/lib/utils';
 
 
 
@@ -28,7 +30,7 @@ export default function Jobs() {
     isFetchingNextPage,
     isLoading,
   } = useFetchFollowedJobs();
-  const {getToken} = useAuth()
+
   const [searchQuery, setSearchQuery] = useState('');
   const { ref, present, dismiss } = useModal();
 
@@ -60,7 +62,7 @@ export default function Jobs() {
     return {
       id: apiJob.id,
       company: apiJob.company,
-      segment: apiJob.experience_level || apiJob.segment,
+      segment: formatSegment(apiJob.experience_level || apiJob.segment),
       title: apiJob.title,
       careerpage_link: apiJob.apply_link,
       company_id: apiJob.companyId,
@@ -75,15 +77,6 @@ export default function Jobs() {
     return <JobCard job={mapJobData(item)} onSave={() => handleSaveJob(item.id)} />;
   }, [handleSaveJob, mapJobData]);
 
-  useEffect(()=>{
-    const printToken = async()=>{
-
-        const token = await getToken();
-        console.log(token)
-    }
-    printToken()
-
-  },[getToken])
 
   const renderFooter = useCallback(() => {
     if (isFetchingNextPage) {
@@ -213,6 +206,7 @@ export default function Jobs() {
             ListHeaderComponent={
               <View className="mb-3 flex-row gap-2">
                 <Pressable
+                  onPress={() => router.push('/(app)/profile/editFollowedCompanies')}
                   className="self-start items-center justify-center rounded-xl border border-neutral-200 bg-white android:shadow-md ios:shadow-sm"
                   style={{
                     paddingVertical: 5,
@@ -226,11 +220,12 @@ export default function Jobs() {
                       fontWeight: '400',
                     }}
                   >
-                    {data?.pages?.[0]?.pagination?.totalCount || 0} Companies Selected
+                    Edit your companies
                   </Text>
                 </Pressable>
 
                 <Pressable
+                  onPress={() => router.push('/(app)/profile/editExperience')}
                   className="self-start items-center justify-center rounded-xl border border-neutral-200 bg-white android:shadow-md ios:shadow-sm"
                   style={{
                     paddingVertical: 5,
@@ -244,7 +239,7 @@ export default function Jobs() {
                       fontWeight: '400',
                     }}
                   >
-                    Entry Level (0–1 Year)
+                   Edit your experience
                   </Text>
                 </Pressable>
               </View>

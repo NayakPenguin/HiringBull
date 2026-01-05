@@ -25,6 +25,14 @@ export function formatRelativeTime(date: string | Date): string {
   return `${diffInYears}y ago`;
 }
 
+export function formatSegment(segment: string): string {
+  if (!segment) return '';
+  return segment
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
 type WithSelectors<S> = S extends { getState: () => infer T }
   ? S & { use: { [K in keyof T]: () => T[K] } }
   : never;

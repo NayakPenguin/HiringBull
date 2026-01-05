@@ -86,6 +86,7 @@ export default function TabLayout() {
       {/* Hidden screens */}
       <Tabs.Screen name="style" options={{ href: null }} />
       <Tabs.Screen name="settings" options={{ href: null }} />
+      <Tabs.Screen name="hooks" options={{ href: null }} />
     </Tabs>
   );
 }
