@@ -10,6 +10,8 @@ import { updateUserInfo, useOnboarding } from "@/lib";
 import { useRouter } from "expo-router";
 import useRegisterOrEditUser from "@/features/users/hooks/useRegisterOrEditUser";
 import { isFollowedCompanyObject } from "@/features/users";
+import QueryKeys from "@/service/queryKeys";
+import { useIsFetching } from "@tanstack/react-query";
 
 const EditFollowedCompanies = () => {
     const router = useRouter();
@@ -19,6 +21,8 @@ const EditFollowedCompanies = () => {
   
     
   const {mutate: editUser, isPending: isUpdating} = useRegisterOrEditUser();
+
+  const fetchingOnboardingCompanies = useIsFetching({ queryKey: [QueryKeys.onboardedCompanies] })
 
   const handleBack = useCallback(() => {
     router.back();
@@ -36,10 +40,6 @@ const EditFollowedCompanies = () => {
         }
     }
   },[]);
-
-
-  console.log({fl: userInfo.followedCompanies})
-
 
   const handleToggleCompany = (companyId: string) => {
     setSelectedCompanies((prev) =>
@@ -66,7 +66,7 @@ const EditFollowedCompanies = () => {
       }
     })
   } 
-  const btnDisabled = isUpdating;
+  const btnDisabled = (fetchingOnboardingCompanies > 0) || isUpdating;
   return (
     <SafeAreaView
         className="flex-1 dark:bg-neutral-950"
@@ -84,6 +84,7 @@ const EditFollowedCompanies = () => {
         </View>
         <Pressable
         onPress={updateFollowedCompanies}
+        disabled={btnDisabled }
         className={`h-14 items-center justify-center rounded-xl ${
               !btnDisabled ? 'bg-black dark:bg-white' : 'bg-neutral-300'
         }`}
@@ -93,7 +94,7 @@ const EditFollowedCompanies = () => {
             !btnDisabled ? 'text-white dark:text-black' : 'text-neutral-500'
           }`}
         >
-          {isUpdating ? 'Updating...' : 'Update'}
+          {fetchingOnboardingCompanies ? 'Fetching companies...' : isUpdating ? 'Updating...' : 'Update'}
         </Text>
       </Pressable>
       </View>

@@ -55,8 +55,6 @@ function Step2({
           </Text>
   }
 
-  console.log({COMPANIES});
-
   const FILTERS = ['ALL',...new Set(COMPANIES.map(c=> c.category))];
 
   const filterNameFormat = (name: string)=>{
