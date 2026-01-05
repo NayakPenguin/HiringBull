@@ -11,7 +11,7 @@ import {
   View,
 } from '@/components/ui';
 import { resetOnboarding } from '@/lib';
-import { navigate } from 'expo-router/build/global-state/routing';
+import { useRouter } from 'expo-router';
 
 type SettingsItem = {
   label: string;
@@ -64,6 +64,7 @@ function SettingsItemRow({ item }: { item: SettingsItem }) {
 export default function Profile() {
   const { signOut, getToken } = useAuth();
   const { user } = useUser();
+  const {navigate} = useRouter();
   const [apiResponse, setApiResponse] = useState<any>(null);
   const [isLoadingApi, setIsLoadingApi] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
