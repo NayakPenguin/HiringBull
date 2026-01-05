@@ -29,6 +29,8 @@ import Step2 from '@/app/onboarding/Step2';
 import Step0 from '@/app/onboarding/ExperienceLevel';
 import { ExperienceLevel, ProfileData } from '@/app/onboarding/types';
 import Step1 from '@/app/onboarding/Step1';
+import { useOnboarding } from '@/lib';
+
 
 
 type StepIndicatorProps = {
@@ -80,6 +82,7 @@ function StepIndicator({ currentStep, totalSteps }: StepIndicatorProps) {
 export default function Onboarding() {
   const router = useRouter();
   const { getToken } = useAuth();
+  const completeOnboarding = useOnboarding.use.completeOnboarding()
 
   const [step, setStep] = useState(1);
   const [profileData, setProfileData] = useState<ProfileData>({
@@ -150,7 +153,7 @@ export default function Onboarding() {
       }else{
         payload = {
           ...payload,
-          cgpa: profileData.cgpaOrYoe, 
+          cgpa: profileData.cgpaOrYoe,
           college_name:profileData.collegeOrCompany
         }
       }
@@ -159,6 +162,7 @@ export default function Onboarding() {
 
       registerUser(payload,{
           onSuccess:()=>{
+            completeOnboarding()
             router.replace('/payment');
           },
           onError:(e)=>{
@@ -167,7 +171,7 @@ export default function Onboarding() {
         })
     }
 
-   
+
   };
 
   const canContinue = useMemo(() => {

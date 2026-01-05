@@ -140,7 +140,7 @@ function RootNavigator() {
         <Stack.Screen name="login" options={{ headerShown: false }} />
       </Stack.Protected>
 
-      <Stack.Protected guard={hasCompletedOnboarding}>
+      <Stack.Protected guard={!hasCompletedOnboarding}>
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       </Stack.Protected>
 

@@ -51,8 +51,12 @@ export default function SSOCallback() {
     const timeout = setTimeout(() => {
       console.log('SSO Callback: Timeout reached, forcing navigation...');
       if (isSignedIn) {
+        console.log("Getting target")
+        const route = getTargetRoute()
+        console.log("target route is " , route)
         router.replace(getTargetRoute());
       } else {
+        console.log("moving to login")
         router.replace('/login');
       }
     }, 5000);
@@ -63,7 +67,7 @@ export default function SSOCallback() {
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
       <ActivityIndicator size="large" color="#000" />
-      <Text style={{ marginTop: 16, color: '#666' }}>Completing sign in...</Text>
+      <Text style={{ marginTop: 16, color: '#666' }}>SSO callback screen</Text>
     </View>
   );
 }
