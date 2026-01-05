@@ -37,7 +37,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="search"
+        name="outreach"
         options={{
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
@@ -49,7 +49,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="saved"
+        name="socialPosts"
         options={{
           tabBarIcon: ({ color }) => (
             <View

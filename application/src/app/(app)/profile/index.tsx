@@ -120,10 +120,10 @@ export default function Profile() {
         style: 'destructive',
         onPress: async () => {
           try {
-            // Reset onboarding state on logout
-            resetOnboarding();
             // Sign out from Clerk
             await signOut();
+            // Reset onboarding state on logout
+            resetOnboarding();
           } catch (error) {
             console.error('Logout error:', error);
           }

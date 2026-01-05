@@ -37,6 +37,7 @@ const _useOnboarding = create<OnboardingState>((set) => ({
     storage.delete(ONBOARDING_COMPLETED_KEY);
     storage.delete(IS_SUBSCRIBED_KEY);
     set({ hasCompletedOnboarding: false, isSubscribed: false });
+    set({userInfo: null})
   },
 
   hydrate: () => {

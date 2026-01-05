@@ -132,7 +132,6 @@ export default function Onboarding() {
     setStep((prev) => prev - 1);
   }, []);
 
-  console.log({profileData , experienceLevel , selectedCompanies})
   const handleFinish = () => {
     if(profileData && experienceLevel && selectedCompanies){
       let payload = {
@@ -163,7 +162,7 @@ export default function Onboarding() {
       registerUser(payload,{
           onSuccess:()=>{
             completeOnboarding()
-            router.replace('/payment');
+            router.replace('/');
           },
           onError:(e)=>{
             console.error(e)

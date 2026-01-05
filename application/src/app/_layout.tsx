@@ -79,6 +79,7 @@ function RootNavigator() {
     const hasCompletedOnboarding = useOnboarding.use.hasCompletedOnboarding();
     const isSubscribed = useOnboarding.use.isSubscribed();
 
+    const [isLoadingUser, setIsLoadingUser] = useState(false);
 
     // Sync auth service with Clerk
     useEffect(() => {
@@ -111,6 +112,7 @@ function RootNavigator() {
 
   const checkUserInfo = async ()=>{
     try{
+    setIsLoadingUser(true);
     const data = await getUserInfo();
     console.log(data)
     if(Boolean(data.onboarding_completed)){
@@ -119,7 +121,10 @@ function RootNavigator() {
     }
     }catch(e){
       console.error("Failed to get user info")
+    }finally{
+      setIsLoadingUser(false);
     }
+
   }
 
   useEffect(()=>{
@@ -140,14 +145,8 @@ function RootNavigator() {
         <Stack.Screen name="login" options={{ headerShown: false }} />
       </Stack.Protected>
 
-      <Stack.Protected guard={!hasCompletedOnboarding}>
+      <Stack.Protected guard={!isLoadingUser && !hasCompletedOnboarding}>
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-      </Stack.Protected>
-
-      <Stack.Protected
-        guard={hasCompletedOnboarding}
-      >
-        <Stack.Screen name="payment" options={{ headerShown: false }} />
       </Stack.Protected>
 
       <Stack.Protected
