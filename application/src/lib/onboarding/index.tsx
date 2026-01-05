@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 import { storage } from '../storage';
 import { createSelectors } from '../utils';
+import { UserInfo } from '@/features/users';
 
 const ONBOARDING_COMPLETED_KEY = 'ONBOARDING_COMPLETED';
 const IS_SUBSCRIBED_KEY = 'IS_SUBSCRIBED';
@@ -13,11 +14,14 @@ type OnboardingState = {
   subscribe: () => void;
   reset: () => void;
   hydrate: () => void;
+  userInfo: UserInfo|null;
+  setUserInfo: (userInfo: UserInfo)=> void;
 };
 
 const _useOnboarding = create<OnboardingState>((set) => ({
   hasCompletedOnboarding: false,
   isSubscribed: false,
+  userInfo: null,
 
   completeOnboarding: () => {
     storage.set(ONBOARDING_COMPLETED_KEY, true);
@@ -41,6 +45,10 @@ const _useOnboarding = create<OnboardingState>((set) => ({
     const isSubscribed = storage.getBoolean(IS_SUBSCRIBED_KEY) ?? false;
     set({ hasCompletedOnboarding, isSubscribed });
   },
+
+  setUserInfo: (userInfo:UserInfo)=>{
+    set({ userInfo });
+  }
 }));
 
 export const useOnboarding = createSelectors(_useOnboarding);
@@ -50,3 +58,4 @@ export const completeOnboarding = () =>
 export const subscribe = () => _useOnboarding.getState().subscribe();
 export const resetOnboarding = () => _useOnboarding.getState().reset();
 export const hydrateOnboarding = () => _useOnboarding.getState().hydrate();
+export const updateUserInfo = (userInfo:UserInfo) => _useOnboarding.getState().setUserInfo(userInfo);

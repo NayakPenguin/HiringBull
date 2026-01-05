@@ -1,3 +1,5 @@
+import { ExperienceLevel } from "@/app/onboarding/types";
+
 export interface DeviceRegistration {
   token: string;
   type: 'ios' | 'android';
@@ -33,5 +35,6 @@ export type UserInfo = {
     "resume_link": string,
     "onboarding_completed": boolean|null,
     "onboarding_completed_at":string|null,
-    "followedCompanies": []
+    "followedCompanies": [],
+    experience_level: ExperienceLevel,
 }

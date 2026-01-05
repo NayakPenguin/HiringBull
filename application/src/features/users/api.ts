@@ -9,7 +9,7 @@ export const registerDevice = async (data: DeviceRegistration) => {
     return res.data;
 }
   
-export const registerUser =  async (payload: UserRegistration) => {
+export const registerUser =  async (payload: Partial<UserRegistration>) => {
     const {data} = await client.put(BASE_USER_URL, payload);
     return data;
 }

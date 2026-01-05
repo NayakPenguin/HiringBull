@@ -12,6 +12,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { ClerkProvider, useAuth, useUser } from '@clerk/clerk-expo'
 import { tokenCache } from '@clerk/clerk-expo/token-cache'
+import { updateUserInfo } from '@/lib';
 
 import { APIProvider } from '@/api';
 import { getUserInfo, useRegisterDevice } from '@/features/users';
@@ -114,6 +115,7 @@ function RootNavigator() {
     console.log(data)
     if(Boolean(data.onboarding_completed)){
       completeOnboarding()
+      updateUserInfo(data);
     }
     }catch(e){
       console.error("Failed to get user info")

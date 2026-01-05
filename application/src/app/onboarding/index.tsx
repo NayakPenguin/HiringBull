@@ -23,7 +23,7 @@ import {
 } from '@/components/ui';
 
 import { Images } from '../../../assets/images';
-import useRegisterUser from '@/features/users/hooks/useRegisterUser';
+import useRegisterOrEditUser from '@/features/users/hooks/useRegisterOrEditUser';
 import { UserRegistration } from '@/features/users';
 import Step2 from '@/app/onboarding/Step2';
 import Step0 from '@/app/onboarding/ExperienceLevel';
@@ -93,7 +93,7 @@ export default function Onboarding() {
     useState<ExperienceLevel | null>(null);
   const [selectedCompanies, setSelectedCompanies] = useState<string[]>([]);
 
-  const {mutate: registerUser, isPending: isRegistering} = useRegisterUser();
+  const {mutate: registerUser, isPending: isRegistering} = useRegisterOrEditUser();
 
   useEffect(() => {
     const logToken = async () => {
