@@ -8,16 +8,19 @@ import {
 import { useOnboarding } from '@/lib';
 import { useRouter } from 'expo-router';
 import {Pressable} from 'react-native';
-import {useState, useCallback, useEffect} from 'react';
+import {useState, useCallback} from 'react';
 import useRegisterOrEditUser from '@/features/users/hooks/useRegisterOrEditUser';
 import { updateUserInfo } from '@/lib';
+import { useQueryClient } from '@tanstack/react-query';
+import QueryKeys from '@/service/queryKeys';
 
 const EditExperience = () => {
   const router = useRouter();
   const userInfo = useOnboarding.use.userInfo();
+  const queryClient = useQueryClient();
 
   const [experienceLevel, setExperienceLevel] =
-      useState<ExperienceLevel | null>(null);
+      useState<ExperienceLevel | null>(userInfo?.experience_level ?? null);
 
   const {mutate: editUser, isPending: isUpdating} = useRegisterOrEditUser();
 
@@ -30,22 +33,18 @@ const EditExperience = () => {
     return null;
   }
 
-  useEffect(()=>{
-    if(userInfo.experience_level){
-      setExperienceLevel(userInfo.experience_level)
-    }
-  },[userInfo.experience_level]);
-
   const updateExperienceLevel = ()=>{
     if(experienceLevel){
       editUser({experience_level: experienceLevel},{
-      onSuccess:(data)=>{
-        setExperienceLevel(data);
-        updateUserInfo(data);
-      }
-    })
+        onSuccess:(data)=>{
+          setExperienceLevel(data.experience_level);
+          updateUserInfo(data);
+          // Invalidate jobs query so user gets fresh recommendations
+          queryClient.invalidateQueries({ queryKey: [QueryKeys.followedJobs] });
+          router.back();
+        }
+      })
     }
-
   }
 
   const btnDisabled = userInfo.experience_level === experienceLevel;
