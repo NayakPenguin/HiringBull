@@ -35,10 +35,9 @@ function Step2({
 
   const {data:COMPANIES, isFetching: isFetchingCompanies} = useFetchOnboardedCompanies();
 
-  console.log({COMPANIES,activeFilter});
 
   const filteredCompanies = useMemo(() => {
-    let result = COMPANIES ? activeFilter === 'ALL' ? 
+    let result = COMPANIES ? activeFilter === 'ALL' ?
     COMPANIES : COMPANIES.filter((c) => c.category === activeFilter) : [];
     if (!search.trim()) return result;
     return result.filter((company) =>

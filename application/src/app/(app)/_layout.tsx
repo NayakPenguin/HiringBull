@@ -6,8 +6,17 @@ import React, { useEffect } from 'react';
 import { View } from 'react-native';
 
 export default function TabLayout() {
+    const {getToken} = useAuth()
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
+
+    useEffect(() => {
+    const logToken = async () => {
+      const token = await getToken();
+      console.log('getToken:', token);
+    };
+    logToken();
+  }, [getToken]);
 
   return (
     <Tabs

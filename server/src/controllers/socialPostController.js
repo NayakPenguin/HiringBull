@@ -46,6 +46,31 @@ export const getAllSocialPosts = catchAsync(async (req, res) => {
 });
 
 /**
+ * Get all social posts with pagination only (no filters)
+ * Query params: page, limit
+ */
+export const getAllSocialPostsOnly = catchAsync(async (req, res) => {
+    const { skip, take, page, limit } = getPagination(req.query);
+
+    // Get total count for pagination
+    const totalCount = await prisma.socialPost.count();
+
+    // Get paginated posts
+    const posts = await prisma.socialPost.findMany({
+        skip,
+        take,
+        orderBy: { created_at: 'desc' },
+    });
+
+    const pagination = getPaginationMeta(totalCount, page, limit);
+
+    res.status(httpStatus.OK).json({
+        data: posts,
+        pagination,
+    });
+});
+
+/**
  * Get a single social post by ID
  */
 export const getSocialPostById = catchAsync(async (req, res) => {

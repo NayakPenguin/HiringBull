@@ -5,21 +5,29 @@ import {
   SafeAreaView
 } from '@/components/ui';
 import {Pressable} from 'react-native';
-import {useState, useEffect, useCallback} from 'react';
+import {useState, useCallback} from 'react';
 import { updateUserInfo, useOnboarding } from "@/lib";
 import { useRouter } from "expo-router";
 import useRegisterOrEditUser from "@/features/users/hooks/useRegisterOrEditUser";
 import { isFollowedCompanyObject } from "@/features/users";
 import QueryKeys from "@/service/queryKeys";
-import { useIsFetching } from "@tanstack/react-query";
+import { useIsFetching, useQueryClient } from "@tanstack/react-query";
 
 const EditFollowedCompanies = () => {
-    const router = useRouter();
+  const router = useRouter();
   const userInfo = useOnboarding.use.userInfo();
+  const queryClient = useQueryClient();
 
-  const [selectedCompanies, setSelectedCompanies] = useState<string[]>([]);
-  
-    
+  // Initialize state from userInfo directly
+  const getInitialCompanies = () => {
+    if (userInfo?.followedCompanies && isFollowedCompanyObject(userInfo.followedCompanies)) {
+      return userInfo.followedCompanies.map(fl => fl.id);
+    }
+    return [];
+  };
+
+  const [selectedCompanies, setSelectedCompanies] = useState<string[]>(getInitialCompanies);
+
   const {mutate: editUser, isPending: isUpdating} = useRegisterOrEditUser();
 
   const fetchingOnboardingCompanies = useIsFetching({ queryKey: [QueryKeys.onboardedCompanies] })
@@ -32,14 +40,6 @@ const EditFollowedCompanies = () => {
   if(!userInfo){
     return null;
   }
-
-  useEffect(()=>{
-    if(userInfo.followedCompanies){
-        if(isFollowedCompanyObject(userInfo.followedCompanies)){
-         setSelectedCompanies(userInfo.followedCompanies.map(fl=> fl.id))
-        }
-    }
-  },[]);
 
   const handleToggleCompany = (companyId: string) => {
     setSelectedCompanies((prev) =>
@@ -61,16 +61,19 @@ const EditFollowedCompanies = () => {
 
   const updateFollowedCompanies = ()=>{
     editUser({followedCompanies:selectedCompanies}, {
-        onSuccess:(data)=>{
+      onSuccess:(data)=>{
         updateUserInfo(data);
+        // Invalidate jobs query so user gets fresh recommendations
+        queryClient.invalidateQueries({ queryKey: [QueryKeys.followedJobs] });
+        router.back();
       }
     })
-  } 
+  }
   const btnDisabled = (fetchingOnboardingCompanies > 0) || isUpdating;
   return (
     <SafeAreaView
         className="flex-1 dark:bg-neutral-950"
-        edges={['top']}
+        edges={['top', 'bottom']}
     >
       <View className='flex-1 p-2'>
         <View className='flex-1'>
@@ -98,8 +101,8 @@ const EditFollowedCompanies = () => {
         </Text>
       </Pressable>}
       </View>
-       
-        
+
+
     </SafeAreaView>
   )
 }

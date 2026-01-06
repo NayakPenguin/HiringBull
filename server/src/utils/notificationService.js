@@ -59,15 +59,22 @@ export const sendNotificationsToDevices = async (devices, title, body, data = {}
 export const sendJobNotificationToFollowers = async (companyId, jobData) => {
   const prisma = (await import('../prismaClient.js')).default;
 
-  const users = await prisma.user.findMany({
-    where: {
-      followedCompanies: {
-        some: {
-          id: companyId
-        }
-      },
-      active: true
+  const whereClause = {
+    followedCompanies: {
+      some: {
+        id: companyId
+      }
     },
+    active: true
+  };
+
+  // Filter by experience level if job has a segment
+  if (jobData.segment) {
+    whereClause.experience_level = jobData.segment;
+  }
+
+  const users = await prisma.user.findMany({
+    where: whereClause,
     select: {
       id: true,
       devices: {

@@ -177,8 +177,6 @@ export default function Onboarding() {
         }
       }
 
-      console.log({payload})
-
       registerUser(payload,{
           onSuccess:()=>{
             completeOnboarding()

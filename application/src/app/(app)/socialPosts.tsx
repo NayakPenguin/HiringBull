@@ -1,68 +1,17 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
-import React, { useCallback } from 'react';
-import { Pressable, Image } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
+import { Pressable, Image, FlatList, ActivityIndicator } from 'react-native';
 
 import {
   FocusAwareStatusBar,
   SafeAreaView,
-  ScrollView,
   Text,
   View,
 } from '@/components/ui';
-import { formatRelativeTime } from '@/lib/utils';
-
-type SocialPost = {
-  id: string;
-  name: string;
-  description: string;
-  segment: string | null;
-  source_link: string | null;
-  image_link: string | null;
-  created_at: string;
-  created_by: string | null;
-  source_name: string;
-};
-
-const DUMMY_POSTS: SocialPost[] = [
-  {
-    id: '1',
-    name: 'Atanu Nayak (SDE @Samsung)',
-    description:
-      'Hi everyone my team is hiring for SDE 2 roles, if your profile fits well please mail me at nayak.primary@gmail.com. Looking for strong problem solvers with React Native experience.',
-    segment: 'Engineering',
-    source_link: 'https://www.linkedin.com/in/kabeer-joshi-7173061aa/',
-    image_link:
-      'https://images.fonearena.com/blog/wp-content/uploads/2022/08/Samsung-Research-AI-Center.png',
-    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    created_by: null,
-    source_name: 'LinkedIn',
-  },
-  {
-    id: '2',
-    name: 'Sarah Chen (Recruiter @Google)',
-    description:
-      'We are looking for a Senior Product Designer to join our Cloud team in Bangalore. 5+ years experience required. DM me for referral!',
-    segment: 'Design',
-    source_link: 'https://twitter.com',
-    image_link: null,
-    created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-    created_by: 'admin',
-    source_name: 'Twitter',
-  },
-  {
-    id: '3',
-    name: 'Alex Rivera (EM @Microsoft)',
-    description:
-      'Hiring for our Azure DevOps team. Multiple open positions for backend engineers (C#, .NET, Go). Remote options available within India.',
-    segment: 'Engineering',
-    source_link: 'https://www.linkedin.com/in/kabeer-joshi-7173061aa/',
-    image_link: null,
-    created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    created_by: null,
-    source_name: 'LinkedIn',
-  },
-];
+import { formatRelativeTime, formatSegment } from '@/lib/utils';
+import { useFetchSocialPosts } from '@/features/social-posts';
+import { SocialPost } from '@/api';
 
 function SocialPostCard({ post }: { post: SocialPost }) {
   const handleOpenSource = useCallback(() => {
@@ -103,6 +52,26 @@ function SocialPostCard({ post }: { post: SocialPost }) {
           {post.description}
         </Text>
 
+        {/* Segment and Company Tags */}
+        {(post.segment || post.company) && (
+          <View className="mb-3 flex-row flex-wrap gap-2">
+            {post.segment && (
+              <View className="rounded-md bg-blue-100 px-2 py-1">
+                <Text className="text-xs font-medium text-blue-800">
+                  {formatSegment(post.segment)}
+                </Text>
+              </View>
+            )}
+            {post.company && (
+              <View className="rounded-md bg-green-100 px-2 py-1">
+                <Text className="text-xs font-medium text-green-800">
+                  {formatSegment(post.company)}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
+
         {post.image_link && (
           <Image
             source={{ uri: post.image_link }}
@@ -117,7 +86,7 @@ function SocialPostCard({ post }: { post: SocialPost }) {
           />
         )}
 
-        <View className="mt-2 flex-row items-center gap-2">
+        <View className="mt-2 flex-row flex-wrap items-center gap-2">
           {/* AI Summarized */}
           <Pressable
             onPress={handleOpenSource}
@@ -140,13 +109,17 @@ function SocialPostCard({ post }: { post: SocialPost }) {
             <Pressable
               onPress={handleOpenSource}
               className="flex-row items-center gap-2 rounded-full border border-blue-100 px-4 py-2 active:opacity-70 dark:border-blue-900/30 dark:bg-blue-900/20"
+              style={{ maxWidth: '100%' }}
             >
               <Ionicons name="link" size={14} />
               <Text className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
                 Source
               </Text>
-              <Text className="text-xs font-bold text-blue-600 dark:text-blue-400">
-                {post.source_name}
+              <Text
+                className="text-xs font-bold text-blue-600 dark:text-blue-400 flex-shrink"
+                numberOfLines={1}
+              >
+                {post.source}
               </Text>
             </Pressable>
           )}
@@ -157,6 +130,42 @@ function SocialPostCard({ post }: { post: SocialPost }) {
 }
 
 export default function SocialPosts() {
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = useFetchSocialPosts();
+
+  const allPosts = useMemo(() => {
+    return data?.pages.flatMap((page) => page?.data || []) || [];
+  }, [data]);
+
+  const renderItem = useCallback(({ item }: { item: SocialPost }) => {
+    return <SocialPostCard post={item} />;
+  }, []);
+
+  const renderFooter = useCallback(() => {
+    if (isFetchingNextPage) {
+      return (
+        <View className="py-4">
+          <ActivityIndicator size="small" color="#0000ff" />
+        </View>
+      );
+    }
+    if (!hasNextPage && allPosts.length > 0) {
+      return (
+        <View className="py-8 items-center justify-center">
+          <Text className="text-sm text-neutral-400 font-medium">
+            You've reached the end of the list
+          </Text>
+        </View>
+      );
+    }
+    return null;
+  }, [isFetchingNextPage, hasNextPage, allPosts.length]);
+
   return (
     <SafeAreaView
       className="flex-1 bg-white dark:bg-neutral-950"
@@ -178,7 +187,7 @@ export default function SocialPosts() {
               <Text className="font-semibold text-neutral-700">
                 employees, founders of YC-backed companies and HR
               </Text>
-              . You’ll also see{' '}
+              . You'll also see{' '}
               <Text className="font-semibold text-neutral-700">
                 posts asking candidates to fill hiring interest forms
               </Text>
@@ -233,57 +242,52 @@ export default function SocialPosts() {
           </View>
         </View>
 
-        <ScrollView
-          className="flex-1"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingHorizontal: 20,
-            paddingBottom: 20,
-            paddingTop: 10,
-          }}
-        >
-          <View className="mb-3 flex-row gap-2">
-            <Pressable
-              className="self-start items-center justify-center rounded-xl border border-neutral-200 bg-white android:shadow-md ios:shadow-sm"
-              style={{
-                paddingVertical: 5,
-                paddingHorizontal: 10,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 11,
-                  color: 'rgb(19, 128, 59)',
-                  fontWeight: '400',
-                }}
-              >
-                All Companies
-              </Text>
-            </Pressable>
-
-            <Pressable
-              className="self-start items-center justify-center rounded-xl border border-neutral-200 bg-white android:shadow-md ios:shadow-sm"
-              style={{
-                paddingVertical: 5,
-                paddingHorizontal: 10,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 11,
-                  color: 'rgb(19, 128, 59)',
-                  fontWeight: '400',
-                }}
-              >
-                All Levels
-              </Text>
-            </Pressable>
+        {(isLoading || !data) ? (
+          <View className="flex-1 items-center justify-center pt-20">
+            <ActivityIndicator size="large" color="#0000ff" />
           </View>
-
-          {DUMMY_POSTS.map((post) => (
-            <SocialPostCard key={post.id} post={post} />
-          ))}
-        </ScrollView>
+        ) : (
+          <FlatList
+            data={allPosts}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={{
+              paddingHorizontal: 20,
+              paddingBottom: 20,
+              paddingTop: 10,
+            }}
+            showsVerticalScrollIndicator={false}
+            onEndReached={() => {
+              if (hasNextPage) {
+                fetchNextPage();
+              }
+            }}
+            onEndReachedThreshold={0.5}
+            // Filter chips - commented out for now
+            // ListHeaderComponent={
+            //   <View className="mb-3 flex-row gap-2">
+            //     <Pressable className="...">
+            //       <Text>All Companies</Text>
+            //     </Pressable>
+            //     <Pressable className="...">
+            //       <Text>All Levels</Text>
+            //     </Pressable>
+            //   </View>
+            // }
+            ListEmptyComponent={
+              <View className="mt-20 items-center justify-center">
+                <Ionicons name="chatbubbles-outline" size={48} color="#a3a3a3" />
+                <Text className="mt-4 text-center text-lg font-medium text-neutral-500">
+                  No social posts found
+                </Text>
+                <Text className="mt-1 text-center text-sm text-neutral-400">
+                  Check back later for new hiring posts
+                </Text>
+              </View>
+            }
+            ListFooterComponent={renderFooter}
+          />
+        )}
       </View>
     </SafeAreaView>
   );

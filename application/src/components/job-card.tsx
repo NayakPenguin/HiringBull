@@ -4,7 +4,7 @@ import React, { useCallback } from 'react';
 import { Pressable } from 'react-native';
 
 import { Text, View } from '@/components/ui';
-import { formatRelativeTime } from '@/lib/utils';
+import { formatRelativeTime, formatSegment } from '@/lib/utils';
 
 export type CompanyType =
   | 'TECH_GIANT'
@@ -100,7 +100,7 @@ export function JobCard({ job, onSave }: JobCardProps) {
             </Text>
             <View className={`rounded-md px-2 py-0.5 ${tagStyle.bg}`}>
               <Text className={`text-[10px] font-medium ${tagStyle.text}`}>
-                {job.company_type}
+                {formatSegment(job.company_type)}
               </Text>
             </View>
           </View>

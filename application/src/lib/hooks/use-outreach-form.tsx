@@ -31,7 +31,6 @@ export const useOutreachForm = () => {
   });
 
   const onSubmit = (data: OutreachFormData) => {
-    console.log('Form data:', data);
     showMessage({
       message: 'Form Submitted',
       floating: true,

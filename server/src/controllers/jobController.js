@@ -14,11 +14,25 @@ export const getAllJobs = catchAsync(async (req, res) => {
     const { segment, companyId } = req.query;
     const { skip, take, page, limit } = getPagination(req.query);
 
-    // Build filter
-    const where = {};
-    if (segment) {
-        where.segment = segment;
+    // Get user's experience level
+    const user = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: { experience_level: true }
+    });
+
+    // Require onboarding completion
+    if (!user || !user.experience_level) {
+        return res.status(403).json({
+            code: 'ONBOARDING_REQUIRED',
+            message: 'Please complete your profile to access jobs'
+        });
     }
+
+    // Build filter - auto-filter by user's experience level
+    const where = {
+        segment: segment || user.experience_level  // Use query param if provided, else user's level
+    };
+
     if (companyId) {
         where.companyId = companyId;
     }
@@ -83,62 +97,105 @@ export const getJobById = catchAsync(async (req, res) => {
  */
 export const bulkCreateJobs = catchAsync(async (req, res) => {
     const jobsData = req.body;
+    const validJobs = [];
+    const errors = [];
 
-    const count = await prisma.job.createMany({
-        data: jobsData,
-        skipDuplicates: true,
+    // Extract unique company IDs
+    const uniqueCompanyIds = [...new Set(jobsData.map(job => job.companyId))];
+
+    // Fetch all companies in one query
+    const companies = await prisma.company.findMany({
+        where: { id: { in: uniqueCompanyIds } },
+        select: { id: true, name: true }
     });
 
-    const uniqueCompanyIds = [...new Set(jobsData.filter(job => job.companyId).map(job => job.companyId))];
+    // Create a map for quick lookup
+    const companyMap = Object.fromEntries(companies.map(c => [c.id, c.name]));
 
-    if (uniqueCompanyIds.length > 0) {
+    // Validate each job and enrich with company name
+    for (const job of jobsData) {
+        const companyName = companyMap[job.companyId];
+
+        if (!companyName) {
+            errors.push({
+                job: { title: job.title, companyId: job.companyId },
+                reason: `Company not found with ID: ${job.companyId}`
+            });
+            continue;
+        }
+
+        validJobs.push({
+            ...job,
+            company: companyName
+        });
+    }
+
+    let createdCount = 0;
+
+    // Create valid jobs
+    if (validJobs.length > 0) {
+        const result = await prisma.job.createMany({
+            data: validJobs,
+            skipDuplicates: true,
+        });
+        createdCount = result.count;
+
+        // Send notifications for each valid job
         const { sendJobNotificationToFollowers } = await import('../utils/notificationService.js');
 
-        for (const companyId of uniqueCompanyIds) {
-            const jobsForCompany = jobsData.filter(job => job.companyId === companyId);
+        for (const job of validJobs) {
+            try {
+                const createdJob = await prisma.job.findFirst({
+                    where: {
+                        title: job.title,
+                        company: job.company,
+                        companyId: job.companyId
+                    },
+                    orderBy: { created_at: 'desc' }
+                });
 
-            for (const job of jobsForCompany) {
-                try {
-                    const createdJob = await prisma.job.findFirst({
-                        where: {
-                            title: job.title,
-                            company: job.company,
-                            companyId: job.companyId
-                        },
-                        orderBy: { created_at: 'desc' }
-                    });
-
-                    if (createdJob) {
-                        await sendJobNotificationToFollowers(companyId, createdJob);
-                    }
-                } catch (error) {
-                    console.error(`Failed to send notifications for job ${job.title}:`, error.message);
+                if (createdJob) {
+                    await sendJobNotificationToFollowers(job.companyId, createdJob);
                 }
+            } catch (error) {
+                console.error(`Failed to send notifications for job ${job.title}:`, error.message);
             }
         }
     }
 
     res.status(httpStatus.CREATED).json({
         message: 'Bulk job creation completed',
-        count: count.count,
+        success: createdCount,
+        failed: errors.length,
+        errors: errors.length > 0 ? errors : undefined
     });
 });
 
 /**
  * Get jobs from user's followed companies
- * Query params: segment, page, limit
+ * Query params: page, limit
  */
 export const getJobsFromFollowedCompanies = catchAsync(async (req, res) => {
-    const { segment } = req.query;
     const { skip, take, page, limit } = getPagination(req.query);
 
     const user = await prisma.user.findUnique({
         where: { id: req.user.id },
-        select: { followedCompanies: { select: { id: true } } }
+        select: {
+            followedCompanies: { select: { id: true } },
+            experience_level: true
+        }
     });
 
     if (!user) {
         return res.status(httpStatus.NOT_FOUND).json({ message: 'User not found' });
+    }
+
+    // Require onboarding completion
+    if (!user.experience_level) {
+        return res.status(403).json({
+            code: 'ONBOARDING_REQUIRED',
+            message: 'Please complete your profile to access jobs'
+        });
     }
 
     const followedCompanyIds = user.followedCompanies.map(c => c.id);
@@ -150,13 +207,11 @@ export const getJobsFromFollowedCompanies = catchAsync(async (req, res) => {
         });
     }
 
+    // Strict filtering: only followed companies + user's experience level
     const where = {
-        companyId: { in: followedCompanyIds }
+        companyId: { in: followedCompanyIds },
+        segment: user.experience_level
     };
-
-    if (segment) {
-        where.segment = segment;
-    }
 
     const totalCount = await prisma.job.count({ where });
 

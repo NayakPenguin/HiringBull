@@ -1,6 +1,7 @@
 const QueryKeys = {
   onboardedCompanies:'onboardedCompanies',
-  followedJobs: 'followedJobs'
+  followedJobs: 'followedJobs',
+  socialPosts: 'socialPosts'
 }
 
 export default QueryKeys;

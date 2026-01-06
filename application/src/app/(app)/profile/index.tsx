@@ -69,48 +69,6 @@ export default function Profile() {
   const [isLoadingApi, setIsLoadingApi] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
-  const fetchAuthTest = async () => {
-    setIsLoadingApi(true);
-    setApiError(null);
-    setApiResponse(null);
-
-    try {
-      // Get the JWT token from Clerk
-      const token = await getToken();
-
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
-
-      console.log('Making API call with token...');
-
-      // Make the API call
-      const response = await fetch(
-        'http://localhost:4000/api/public/auth-test',
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || `API error: ${response.status}`);
-      }
-
-      console.log('API Response:', data);
-      setApiResponse(data);
-    } catch (error: any) {
-      console.error('API call error:', error);
-      setApiError(error.message || 'Failed to fetch data');
-    } finally {
-      setIsLoadingApi(false);
-    }
-  };
 
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
@@ -251,65 +209,6 @@ export default function Profile() {
             ) : null}
           </View>
 
-          {/* API Test Card */}
-          {/* <View className="mb-6 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-            <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-lg font-bold text-neutral-900 dark:text-white">
-                API Test
-              </Text>
-              <Pressable
-                onPress={fetchAuthTest}
-                disabled={isLoadingApi}
-                className={`rounded-lg px-4 py-2 ${
-                  isLoadingApi
-                    ? 'bg-neutral-200 dark:bg-neutral-800'
-                    : 'bg-neutral-900 dark:bg-white'
-                }`}
-              >
-                {isLoadingApi ? (
-                  <ActivityIndicator size="small" color="#737373" />
-                ) : (
-                  <Text className="text-sm font-semibold text-white dark:text-black">
-                    Test Auth
-                  </Text>
-                )}
-              </Pressable>
-            </View>
-
-            {apiError ? (
-              <View className="rounded-lg bg-red-50 p-3 dark:bg-red-900/20">
-                <View className="flex-row items-center gap-2 mb-1">
-                  <Ionicons name="alert-circle" size={16} color="#ef4444" />
-                  <Text className="text-sm font-semibold text-red-600 dark:text-red-400">
-                    Error
-                  </Text>
-                </View>
-                <Text className="text-sm text-red-600 dark:text-red-400">
-                  {apiError}
-                </Text>
-              </View>
-            ) : apiResponse ? (
-              <View className="rounded-lg bg-green-50 p-3 dark:bg-green-900/20">
-                <View className="flex-row items-center gap-2 mb-2">
-                  <Ionicons name="checkmark-circle" size={16} color="#22c55e" />
-                  <Text className="text-sm font-semibold text-green-600 dark:text-green-400">
-                    Success
-                  </Text>
-                </View>
-                <View className="rounded-md bg-neutral-100 p-3 dark:bg-neutral-800">
-                  <Text className="text-xs font-mono text-neutral-700 dark:text-neutral-300">
-                    {JSON.stringify(apiResponse, null, 2)}
-                  </Text>
-                </View>
-              </View>
-            ) : (
-              <View className="rounded-lg bg-neutral-50 p-3 dark:bg-neutral-800">
-                <Text className="text-sm text-neutral-500 dark:text-neutral-400">
-                  Click "Test Auth" to make an authenticated API call to the backend
-                </Text>
-              </View>
-            )}
-          </View> */}
 
           {/* Referral/Info Card */}
           <View className="mb-8 flex-row items-center gap-4 overflow-hidden rounded-xl bg-neutral-900 p-5 shadow-md dark:bg-neutral-800">

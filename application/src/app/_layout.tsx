@@ -114,7 +114,6 @@ function RootNavigator() {
     try{
     setIsLoadingUser(true);
     const data = await getUserInfo();
-    console.log(data)
     if(Boolean(data.onboarding_completed)){
       completeOnboarding()
       updateUserInfo(data);

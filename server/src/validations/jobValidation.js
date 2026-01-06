@@ -19,11 +19,9 @@ export const bulkCreateJobs = {
     body: Joi.array().items(
         Joi.object().keys({
             title: Joi.string().required(),
-            company: Joi.string().required(),
-            companyId: Joi.string().uuid().allow(null, ''),
-            segment: Joi.string().allow(null, ''),
+            companyId: Joi.string().uuid().required(),
+            segment: Joi.string().valid('INTERNSHIP', 'FRESHER_OR_LESS_THAN_1_YEAR', 'ONE_TO_THREE_YEARS').required(),
             careerpage_link: Joi.string().uri().allow(null, ''),
-            company_id: Joi.string().allow(null, ''),
             created_by: Joi.string().allow(null, ''),
         })
     ).min(1).required(),
@@ -31,7 +29,6 @@ export const bulkCreateJobs = {
 
 export const getJobsFollowed = {
     query: Joi.object().keys({
-        segment: Joi.string().allow(''),
         page: Joi.number().integer().min(1).default(1),
         limit: Joi.number().integer().min(1).max(100).default(20),
     }),
