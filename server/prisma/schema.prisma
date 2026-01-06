@@ -52,7 +52,7 @@ model User {
   years_of_experience    Float?
   resume_link            String?
   segment                String?
-  experience_level       ExperienceLevel?
+  experience_level       ExperienceLevel
   onboarding_completed   Boolean   @default(false)
   onboarding_completed_at DateTime?
   promo_code             String?   @unique

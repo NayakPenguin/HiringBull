@@ -14,11 +14,17 @@ export const getAllJobs = catchAsync(async (req, res) => {
     const { segment, companyId } = req.query;
     const { skip, take, page, limit } = getPagination(req.query);
 
-    // Build filter
-    const where = {};
-    if (segment) {
-        where.segment = segment;
-    }
+    // Get user's experience level
+    const user = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: { experience_level: true }
+    });
+
+    // Build filter - auto-filter by user's experience level
+    const where = {
+        segment: segment || user.experience_level  // Use query param if provided, else user's level
+    };
+
     if (companyId) {
         where.companyId = companyId;
     }
@@ -159,15 +165,17 @@ export const bulkCreateJobs = catchAsync(async (req, res) => {
 
 /**
  * Get jobs from user's followed companies
- * Query params: segment, page, limit
+ * Query params: page, limit
  */
 export const getJobsFromFollowedCompanies = catchAsync(async (req, res) => {
-    const { segment } = req.query;
     const { skip, take, page, limit } = getPagination(req.query);
 
     const user = await prisma.user.findUnique({
         where: { id: req.user.id },
-        select: { followedCompanies: { select: { id: true } } }
+        select: {
+            followedCompanies: { select: { id: true } },
+            experience_level: true
+        }
     });
 
     if (!user) {
@@ -183,13 +191,11 @@ export const getJobsFromFollowedCompanies = catchAsync(async (req, res) => {
         });
     }
 
+    // Strict filtering: only followed companies + user's experience level
     const where = {
-        companyId: { in: followedCompanyIds }
+        companyId: { in: followedCompanyIds },
+        segment: user.experience_level
     };
-
-    if (segment) {
-        where.segment = segment;
-    }
 
     const totalCount = await prisma.job.count({ where });
 

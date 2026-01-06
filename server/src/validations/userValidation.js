@@ -13,6 +13,11 @@ export const createUser = {
         years_of_experience: Joi.number().integer().allow(null),
         resume_link: Joi.string().uri().allow(null, ''),
         segment: Joi.string().allow(null, ''),
+        experience_level: Joi.string().valid(
+            'INTERNSHIP',
+            'FRESHER_OR_LESS_THAN_1_YEAR',
+            'ONE_TO_THREE_YEARS'
+        ).required(),
         companies: Joi.array().items(Joi.string()),
         clerkId: Joi.string().allow(null, ''),
         promo_code: Joi.string().allow(null, ''),
@@ -43,7 +48,7 @@ export const updateUser = {
             'INTERNSHIP',
             'FRESHER_OR_LESS_THAN_1_YEAR',
             'ONE_TO_THREE_YEARS'
-        ).allow(null, ''),
+        ),
         resume_link: Joi.string().uri().allow(null, ''),
         segment: Joi.string().allow(null, ''),
         companies: Joi.array().items(Joi.string().uuid()),
@@ -63,7 +68,7 @@ export const updateProfile = {
             'INTERNSHIP',
             'FRESHER_OR_LESS_THAN_1_YEAR',
             'ONE_TO_THREE_YEARS'
-        ).allow(null, '').optional(),
+        ).optional(),
         resume_link: Joi.string().uri().allow(null, '').optional(),
         followedCompanies: Joi.array().items(Joi.string().uuid()).optional()
     })
