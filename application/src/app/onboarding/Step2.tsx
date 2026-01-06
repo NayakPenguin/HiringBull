@@ -12,6 +12,7 @@ import{
 } from '@/components/ui';
 import {TextInput} from 'react-native';
 import useFetchOnboardedCompanies from "@/app/onboarding/hooks/useFetchOnboardedCompanies";
+import LogoLoader from "@/components/logo-loader";
 
 type Step2Props = {
   selectedCompanies: string[];
@@ -51,9 +52,7 @@ function Step2({
   }, [filteredCompanies, selectedCompanies]);
 
   if(!COMPANIES || isFetchingCompanies){
-    return <Text className="ml-1 text-xl font-medium text-neutral-500  dark:text-neutral-400">
-            Loading list of companies ...
-          </Text>
+    return <LogoLoader />
   }
 
   const FILTERS = ['ALL',...new Set(COMPANIES.map(c=> c.category))];
