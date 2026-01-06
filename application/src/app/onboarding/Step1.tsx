@@ -56,6 +56,8 @@ function Step1({ selectedLevel, onSelect, onBack }: Props) {
         }}
       >
         {EXPERIENCE_LEVELS.map((level) => {
+           const isDisabled =
+            level.id === 'three-to-five' || level.id === 'five-plus';
           return (
             <ExperienceCard
               key={level.id}
@@ -63,6 +65,7 @@ function Step1({ selectedLevel, onSelect, onBack }: Props) {
               onPress={() => onSelect(level.id)}
               label={level.label}
               image={level.image}
+              disabled={isDisabled}
             />
           );
         })}

@@ -25,4 +25,16 @@ export const EXPERIENCE_LEVELS:{id: UserRegistration['experience_level'],
     description: 'Building experience',
     image: Images.experience.oneToThree,
   },
+  {
+    id: 'three-to-five',
+    label: '3 - 5 Years Experience',
+    description: 'Mid-level professional',
+    image: Images.experience.threeToFive,
+  },
+  {
+    id: 'five-plus',
+    label: '5+ Years Experience',
+    description: 'Senior professional',
+    image: Images.experience.fivePlus,
+  },
 ] as const;
