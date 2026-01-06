@@ -12,7 +12,7 @@ export interface DeviceResponse {
 
 export type UserRegistration = {
   name: string;
-  experience_level:  'ONE_TO_THREE_YEARS' | 'INTERNSHIP' | 'FRESHER_OR_LESS_THAN_1_YEAR';
+  experience_level:  'ONE_TO_THREE_YEARS' | 'INTERNSHIP' | 'FRESHER_OR_LESS_THAN_1_YEAR'|'three-to-five'|'five-plus';
   resume_link: string;
   followedCompanies: string[];
 } & ({ 
