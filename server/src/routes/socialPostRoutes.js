@@ -2,6 +2,7 @@ import express from 'express';
 import { requireAuth, requireApiKey } from '../middlewares/auth.js';
 import {
     getAllSocialPosts,
+    getAllSocialPostsOnly,
     getSocialPostById,
     bulkCreateSocialPosts,
 } from '../controllers/socialPostController.js';
@@ -15,6 +16,7 @@ router.post('/bulk', requireApiKey, validate(socialPostValidation.bulkCreateSoci
 
 // Protected routes
 router.get('/', requireAuth, validate(socialPostValidation.getSocialPosts), getAllSocialPosts);
+router.get('/all', requireAuth, validate(socialPostValidation.getAllSocialPosts), getAllSocialPostsOnly);
 router.get('/:id', requireAuth, validate(socialPostValidation.getSocialPost), getSocialPostById);
 
 export default router;
