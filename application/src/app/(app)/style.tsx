@@ -2,7 +2,6 @@ import * as React from 'react';
 
 import { Buttons } from '@/components/buttons';
 import { Colors } from '@/components/colors';
-import { Inputs } from '@/components/inputs';
 import { Typography } from '@/components/typography';
 import { FocusAwareStatusBar, SafeAreaView, ScrollView } from '@/components/ui';
 
@@ -15,7 +14,6 @@ export default function Style() {
           <Typography />
           <Colors />
           <Buttons />
-          <Inputs />
         </SafeAreaView>
       </ScrollView>
     </>

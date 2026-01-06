@@ -21,7 +21,6 @@ import { formatSegment } from '@/lib/utils';
 
 
 
-
 export default function Jobs() {
   const {
     data,
@@ -161,19 +160,12 @@ export default function Jobs() {
             </View>
           </Pressable>
 
-          <View className="flex-row items-center gap-2">
-            <View className="flex-1">
-              <Input
-                placeholder="Search jobs..."
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-              />
-            </View>
-
-            <Pressable className="size-11 items-center justify-center rounded-xl border border-neutral-300 bg-neutral-100">
-              <Ionicons name="search-outline" size={24} color="black" />
-            </Pressable>
-          </View>
+          <Input 
+          isSearch
+          placeholder="Search jobs..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          />
         </View>
 
         {(isLoading || !data) ? (
