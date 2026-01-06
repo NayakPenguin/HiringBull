@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '@clerk/clerk-expo';
+import { useAuth, useUser } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -10,6 +10,7 @@ import {
   KeyboardStickyView,
 } from 'react-native-keyboard-controller';
 import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
+import * as WebBrowser from 'expo-web-browser';
 
 import {
   Checkbox,
@@ -24,7 +25,7 @@ import {
 
 import { Images } from '../../../assets/images';
 import useRegisterOrEditUser from '@/features/users/hooks/useRegisterOrEditUser';
-import { UserRegistration } from '@/features/users';
+import { checkUserVerification, UserRegistration } from '@/features/users';
 import Step2 from '@/app/onboarding/Step2';
 import Step0 from '@/app/onboarding/ExperienceLevel';
 import { ExperienceLevel, ProfileData } from '@/app/onboarding/types';
@@ -83,6 +84,8 @@ export default function Onboarding() {
   const router = useRouter();
   const { getToken } = useAuth();
   const completeOnboarding = useOnboarding.use.completeOnboarding()
+  const {user} = useUser();
+  const [isVerifiedUser, setIsVerifiedUser] = useState(false);
 
   const [step, setStep] = useState(1);
   const [profileData, setProfileData] = useState<ProfileData>({
@@ -104,6 +107,23 @@ export default function Onboarding() {
       console.log('getToken:', token);
     };
     logToken();
+
+
+    const checkIfVerified = async ()=>{
+      if(!user?.primaryEmailAddress?.emailAddress){
+        return;
+      }
+      
+      const verificationData = await checkUserVerification(user.primaryEmailAddress.emailAddress);
+      
+      if(!verificationData.registered){
+        setIsVerifiedUser(false);
+        return;
+      }
+      setIsVerifiedUser(true);
+    }
+
+    checkIfVerified();
   }, [getToken]);
 
   const handleToggleCompany = (companyId: string) => {
@@ -187,10 +207,18 @@ export default function Onboarding() {
     return true; // Step 3
   }, [step, profileData, experienceLevel]);
 
+  const openInviteEmail = async () => {
+    await WebBrowser.openBrowserAsync('https://www.hiringbull.in/join-membership');
+  };
+
   return (
     <View className="flex-1 bg-white dark:bg-neutral-900">
       <FocusAwareStatusBar />
       <SafeAreaView className="flex-1">
+        {!isVerifiedUser && <Pressable className='p-0' onPress={openInviteEmail}>
+          <Text className='text-center text-xl mb-4 leading-5 bg-primary-200 py-3 px-2'>You have not received the invite.Kindly click 
+            here to get invite </Text>
+        </Pressable>}
         <View className="flex-1 pt-4">
           <View className="px-6">
             <StepIndicator currentStep={step} totalSteps={3} />
@@ -220,7 +248,7 @@ export default function Onboarding() {
         </View>
       </SafeAreaView>
 
-      {step === 1 ? (
+      {isVerifiedUser ? step === 1 ? (
 
         <KeyboardStickyView offset={{ closed: 0, opened: 0 }}>
           <View className="border-t border-neutral-200 bg-white px-6 pb-8 pt-4 dark:border-neutral-700 dark:bg-neutral-900">
@@ -265,7 +293,7 @@ export default function Onboarding() {
             </Text>
           </Pressable>
         </View>
-      )}
+      ):null}
     </View>
   );
 }

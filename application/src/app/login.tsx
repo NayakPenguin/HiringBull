@@ -47,9 +47,6 @@ export default function Login() {
   const [error, setError] = useState('');
   const [authMode, setAuthMode] = useState<AuthMode>(null);
 
-  const openInviteEmail = async () => {
-    await WebBrowser.openBrowserAsync('https://www.hiringbull.in/join-membership');
-  };
   const handleGoogleLogin = useCallback(async () => {
     setIsLoading(true);
     setError('');
@@ -339,10 +336,6 @@ export default function Login() {
                       </Text>
                     )}
                   </Pressable>
-
-                  <Text className="text-center text-xl mb-4 leading-6">
-                    Want in? Share your email <Text className='text-center text-xl mb-4 leading-5 underline' onPress={openInviteEmail}>here</Text> and we'll send you an invite
-                  </Text>
                 </View>
               </View>
             ) : (
