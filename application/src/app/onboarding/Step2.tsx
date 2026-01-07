@@ -13,6 +13,7 @@ import{
 import {TextInput} from 'react-native';
 import useFetchOnboardedCompanies from "@/app/onboarding/hooks/useFetchOnboardedCompanies";
 import LogoLoader from "@/components/logo-loader";
+import { FILTERS } from "@/app/constants";
 
 type Step2Props = {
   selectedCompanies: string[];
@@ -30,14 +31,14 @@ function Step2({
 }: Step2Props) {
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] =
-    useState<string>('ALL');
+    useState<(typeof FILTERS)[number]['value']>('all');
   const { colorScheme } = useColorScheme();
 
   const {data:COMPANIES, isFetching: isFetchingCompanies} = useFetchOnboardedCompanies();
 
 
   const filteredCompanies = useMemo(() => {
-    let result = COMPANIES ? activeFilter === 'ALL' ?
+    let result = COMPANIES ? activeFilter === 'all' ?
     COMPANIES : COMPANIES.filter((c) => c.category === activeFilter) : [];
     if (!search.trim()) return result;
     return result.filter((company) =>
@@ -54,13 +55,6 @@ function Step2({
     return <LogoLoader />
   }
 
-  const FILTERS = ['ALL',...new Set(COMPANIES.map(c=> c.category))];
-
-  const filterNameFormat = (name: string)=>{
-    let output = name.replace('_'," ").toUpperCase();
-    output = output.charAt(0).toUpperCase()+output.slice(1).toLowerCase();
-    return output;
-  }
   return (
     <Animated.View
       entering={FadeInRight.duration(300)}
@@ -104,22 +98,22 @@ function Step2({
         >
           {FILTERS.map((filter) => (
             <Pressable
-              key={filter}
-              onPress={() => setActiveFilter(filter)}
+              key={filter.value}
+              onPress={() => setActiveFilter(filter.value)}
               className={`mr-2 rounded-full border px-4 py-2  ${
-                activeFilter === filter
+                activeFilter === filter.value
                   ? 'border-black bg-black dark:border-white dark:bg-white'
                   : 'border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800'
               }`}
             >
               <Text
                 className={`text-sm font-medium ${
-                  activeFilter === filter
+                  activeFilter === filter.value
                     ? 'text-white dark:text-black'
                     : 'text-neutral-600 dark:text-neutral-300'
                 }`}
               >
-                {filterNameFormat(filter)}
+                {filter.label}
               </Text>
             </Pressable>
           ))}
