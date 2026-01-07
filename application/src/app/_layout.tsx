@@ -149,17 +149,11 @@ function RootNavigator() {
       </Stack.Protected>
 
       <Stack.Protected
-        guard={hasCompletedOnboarding}
-      >
-        <Stack.Screen name="payment" options={{ headerShown: false }} />
-        <Stack.Screen name="edit-experience" options={{ headerShown: false }} />
-        <Stack.Screen name="edit-companies" options={{ headerShown: false}} />
-      </Stack.Protected>
-
-      <Stack.Protected
-        guard={hasCompletedOnboarding}
+        guard={!isLoadingUser && hasCompletedOnboarding}
       >
         <Stack.Screen name="(app)" options={{ headerShown: false }} />
+        <Stack.Screen name="edit-experience" options={{ headerShown: false }} />
+        <Stack.Screen name="edit-companies" options={{ headerShown: false}} />
       </Stack.Protected>
 
       {/* SSO callback route - accessible during OAuth flow */}
