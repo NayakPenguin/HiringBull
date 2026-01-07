@@ -5,16 +5,10 @@ import { Pressable } from 'react-native';
 
 import { Text, View } from '@/components/ui';
 import { formatRelativeTime, formatSegment } from '@/lib/utils';
+import { FILTERS } from '@/app/constants';
 
-export type CompanyType =
-  | 'TECH_GIANT'
-  | 'FINTECH_GIANT'
-  | 'INDIAN_STARTUP'
-  | 'GLOBAL_STARTUP'
-  | 'YCOMBINATOR'
-  | 'MASS_HIRING'
-  | 'HFT';
-
+export type CompanyType = typeof FILTERS[number]['value'];
+  
 export type Job = {
   id: string;
   company: string;

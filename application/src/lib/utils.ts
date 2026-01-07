@@ -1,3 +1,4 @@
+import { FILTERS } from '@/app/constants';
 import { Linking } from 'react-native';
 import type { StoreApi, UseBoundStore } from 'zustand';
 
@@ -27,11 +28,11 @@ export function formatRelativeTime(date: string | Date): string {
 
 export function formatSegment(segment: string): string {
   if (!segment) return '';
-  return segment
-    .split('_')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ');
+  const category = FILTERS.find(f=> f.value === segment);
+  if(!category) return '';
+  return category.label;
 }
+    
 
 type WithSelectors<S> = S extends { getState: () => infer T }
   ? S & { use: { [K in keyof T]: () => T[K] } }
