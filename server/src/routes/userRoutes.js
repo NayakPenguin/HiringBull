@@ -6,7 +6,6 @@ import {
     getAllUsers,
     getUserById,
     updateUser,
-    deleteUser,
     getCurrentUser,
     updateUserById,
     deleteUserById,
