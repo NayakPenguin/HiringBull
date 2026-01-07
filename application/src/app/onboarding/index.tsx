@@ -214,7 +214,7 @@ export default function Onboarding() {
       <FocusAwareStatusBar />
       <SafeAreaView className="flex-1">
         {!isVerifiedUser && <Pressable className='p-0' onPress={openInviteEmail}>
-          <Text className='text-center text-xl mb-4 leading-5 bg-primary-200 py-3 px-2'>You have not received the invite.Kindly click 
+          <Text className='text-center text-base text-neutral-500 mb-4 leading-5 bg-primary-200 py-3 px-2 '>You have not received the invite.Kindly click 
             here to get invite </Text>
         </Pressable>}
         <View className="flex-1 pt-4">
