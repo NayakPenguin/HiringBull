@@ -2,6 +2,7 @@
   <img alt="logo" src="./assets/icon.png" width="124px" style="border-radius:10px"/><br/>
 Mobile App </h1>
 > This Project is based on [Obytes starter](https://starter.obytes.com)
+
 # HiringBull – Expo + Android + Clerk Setup
 
 This README documents **all required setup steps** to run the app locally, including **Android**, **Expo**, and **Clerk authentication** configuration.
