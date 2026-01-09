@@ -1,4 +1,4 @@
-# HiringBull 🐂
+# HiringBull
 
 ## Where Early Careers Take Their First Big Leap  
 **Powered by algolisted.com**
