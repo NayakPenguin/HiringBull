@@ -61,9 +61,6 @@ app.use(morgan("dev"));
 // app.use(defaultLimiter);
 app.set("trust proxy", 1);
 
-// Clerk authentication (populates req.auth)
-app.use(initClerk);
-
 // Swagger documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   customSiteTitle: 'HiringBull API Documentation',
@@ -76,6 +73,9 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
     tryItOutEnabled: true
   }
 }));
+
+// Clerk authentication (populates req.auth)
+app.use(initClerk);
 
 // Swagger JSON spec
 app.get('/api-docs.json', (req, res) => {

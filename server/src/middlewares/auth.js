@@ -3,8 +3,14 @@ import { createClerkClient } from '@clerk/backend';
 import prisma from '../prismaClient.js';
 import { log } from '../utils/logger.js';
 
-// Initialize Clerk Backend client for fetching full user data
-const clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+// Lazy initialization of Clerk Backend client to ensure env vars are loaded
+let _clerkClient = null;
+const getClerkClient = () => {
+    if (!_clerkClient) {
+        _clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+    }
+    return _clerkClient;
+};
 
 /**
  * Initialize Clerk middleware for the Express app
@@ -35,7 +41,7 @@ export const requireAuth = async (req, res, next) => {
         let name = 'User';
 
         try {
-            const fullClerkUser = await clerkClient.users.getUser(clerkId);
+            const fullClerkUser = await getClerkClient().users.getUser(clerkId);
             email = fullClerkUser.emailAddresses[0]?.emailAddress || email;
             name = fullClerkUser.firstName
                 ? `${fullClerkUser.firstName}${fullClerkUser.lastName ? ' ' + fullClerkUser.lastName : ''}`
