@@ -1,10 +1,13 @@
+<img width="498" alt="ChatGPT Image Jan 3, 2026, 05_56_26 PM" src="https://github.com/user-attachments/assets/39200c4b-299d-4eac-a8b3-c9ad92add5de" />
+
 ## Where Early Careers Take Their First Big Leap  
 
 HiringBull is a **next-generation job discovery platform** designed exclusively for **students and early-career developers** who want real opportunities — not noise.
 
 We bring you **hand-picked, verified job and internship openings** directly from **official company career pages**, so every listing you see is **authentic, relevant, and worth your time**.
 
-<img width="788" height="267" alt="Screenshot 2026-01-11 at 1 52 39 PM" src="https://github.com/user-attachments/assets/f4134a02-0a69-4933-bd85-ce257bfecf67" />
+
+
 
 ---
 
@@ -49,3 +52,6 @@ HiringBull isn’t just another job board — it’s a **career launchpad**. We 
 ## 📱 Designed for Speed & Simplicity
 
 HiringBull is available as a **mobile app**, built for a **fast, clean, and distraction-free experience** — so you never miss the right opportunity.
+
+<img width="1091" height="545" alt="Screenshot 2026-01-11 at 2 07 09 PM" src="https://github.com/user-attachments/assets/727ec917-0b90-44a0-84d1-0ad17a9e6aac" />
+
