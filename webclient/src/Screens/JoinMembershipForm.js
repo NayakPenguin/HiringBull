@@ -1,5 +1,5 @@
 import React from 'react';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styled from 'styled-components';
 import OfflineBoltIcon from '@material-ui/icons/OfflineBolt';
 import logo from '../utils/logo.png';
@@ -27,6 +27,13 @@ const JoinMembershipForm = () => {
     { id: 3, label: "Payment" },
     // { id: 4, label: "Approval" },
   ];
+
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      // behavior: "smooth", // optional
+    });
+  }, [currentStep]);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -201,7 +208,7 @@ const JoinMembershipForm = () => {
                 Apply Early. Compete Less. Get Real Visibility.
                 <img src={logo} alt="" />
               </h1>
-              
+
               {/* <img className='membership-img' src={membershipGoldCoin} alt="" /> */}
 
               <h2>HiringBull is a curated membership for serious job seekers who want early access to verified openings on official company career pages and real visibility with company employees. Instead of competing with thousands on public job portals, members apply when openings are still fresh and lightly contested.</h2>
@@ -615,6 +622,94 @@ const Navbar = styled.div`
       font-weight: 300;
     }
   }
+
+  /* ========================= */
+    /* 📱 MOBILE (≤500px) */
+    /* ========================= */
+    @media (max-width: 500px) {
+      padding: 0;
+
+      .top{
+        height: 40px;
+        border-bottom: 1px solid black;
+        
+        display: flex; 
+        align-items: center;  
+        justify-content: center;
+        padding: 0 20px;
+
+        background-color: #ffc502;
+
+        font-size: 0.85rem;
+        font-weight: 300;
+        
+        span{
+          margin-right: 5px;
+          font-weight: 500;
+        }
+
+        .download-btn{
+          margin-left: 5px;
+          padding: 5px 10px;
+          background-color: black;
+          color: white;
+          border-radius: 100px;
+          cursor: pointer;
+          font-size: 0.75rem;
+        }
+      }
+
+      .bottom{
+        height: 45px;
+        border-bottom: 1px solid black;
+        background-color: black;
+
+        display: flex; 
+        align-items: center;  
+        justify-content: center;
+        padding: 0;
+
+
+        .middle{
+          height: 30px;
+          font-size: 0.85rem;
+
+          img{
+            height: 20px;
+            scale: 1.75;
+            margin: 0 20px;
+          }
+
+          svg{
+            font-size: 1.5rem;
+            margin: 0 10px;
+            fill: yellow;
+          }
+        }
+      }
+
+      .info{
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        background-color: white;
+        /* background-color: #ffc60040; */
+        /* border: 1px solid #ffc60070; */
+        border-radius: 10px;
+        
+        svg{
+          font-size: 1.25rem;
+          margin-right: 10px;
+          fill: #efc030;
+        }
+        
+        .text{
+          font-size: 0.75rem;
+          font-weight: 300;
+        }
+      }
+
+    }
 `;
 
 
@@ -628,8 +723,13 @@ const Content = styled.div`
   align-items: flex-start;
   justify-content: center;
   
-  padding: 60px 0;
+  padding: 80px 0;
   padding-top: 140px;
+  
+  @media (max-width: 500px) {
+    padding-top: 180px;
+    align-items: center;
+  }
 `
 
 const Pagination = styled.div`
@@ -700,6 +800,9 @@ const Pagination = styled.div`
     background-color: #ffc600;
   }
 
+  @media (max-width: 500px) {
+    margin-left: 0;
+  }  
 `
 
 const OneContent = styled.div`
@@ -1036,6 +1139,10 @@ const OneContent = styled.div`
         grid-column: span 1;
       }
     }
+
+    @media (max-width: 500px) {
+      width: 100%;
+    }
   }
 
   .referral{
@@ -1092,6 +1199,149 @@ const OneContent = styled.div`
     font-size: 0.85rem;
     margin-top: 50px;
     cursor: pointer;
+  }
+
+  @media (max-width: 500px) {
+    padding: 0 30px;
+    h1{
+      font-size: 1.5rem;
+      text-align: left;
+
+      img{
+        display: none;
+      }
+    }
+
+    h2{
+      font-size: 0.9rem;
+    }
+
+    .input{
+      .text{
+        width: 100%;
+      }
+    }
+
+    .input{
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      width: 100%;
+      margin-top: 20px;
+
+      .left{
+        width: 100%;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+
+        .label{
+          font-size: 0.85rem;
+          margin-bottom: 5px;
+          text-transform: uppercase;
+          letter-spacing: 0.1rem;
+          font-weight: 600;
+          
+          span{
+            text-transform: none;
+            font-weight: 300;
+            letter-spacing: 0rem;
+            font-style: italic;
+          }
+        }
+
+        input{
+          background-color: #fff;
+          border: 1px solid grey;
+          width: 100%;
+          padding: 7.5px 10px;
+          font-size: 0.85rem;
+          font-weight: 300;
+          letter-spacing: 0.1rem;
+        }
+
+        textarea{
+          background-color: #fff;
+          border: 1px solid grey;
+          width: 100%;
+          padding: 7.5px 10px;
+          font-size: 0.85rem;
+          font-weight: 300;
+          letter-spacing: 0.05rem;
+          height: 160px;
+        }
+      }
+
+      .status{
+        display: flex;
+        justify-content: flex-start;
+        width: auto;
+        margin-top: 5px;
+        width: 100%;
+        margin-left: 0;
+        
+        svg{
+          font-size: 1.25rem;
+          margin-top: 2px;
+          margin-right: 0;
+        }
+        
+        span{
+          position: relative;
+          width: auto;
+          /* border: 1px solid black; */
+          margin-left: -20px;
+        }
+        
+      } 
+      
+    }
+
+    .referral{
+      /* display: flex; */
+      /* flex-direction: column; */
+      /* align-items: center; */
+      margin-bottom: 30px;
+      width: 100%;
+
+      .input{
+        width: 100%;
+        display: flex;
+        align-items: flex-start;
+        flex-direction: column;
+
+        input{
+          background-color: #fff;
+          box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+          border: 1px solid #000;
+          width: 100%;
+          padding: 7.5px 10px;
+          font-size: 0.85rem;
+          font-weight: 300;
+          letter-spacing: 0.1rem;
+          margin-right: 10px;
+          border-radius: 10px;
+          margin-bottom: 10px;
+        }
+
+        button{
+            cursor: pointer;
+            background-color: black;
+            border: none;
+            color: white;
+            padding: 9.5px 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.1rem;
+            border-radius: 100px;
+        }
+      }
+    }
+
+    .next-btn{
+      width: 100%;
+      text-align: center;
+    }
   }
 `
 

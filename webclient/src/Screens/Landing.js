@@ -185,7 +185,7 @@ const Landing = () => {
     <Container>
       <Navbar>
         <div className="top">
-          <span>Already a member?</span> Stay ahead with the HiringBull app on Google Play Store <div className="download-btn">Download Now ↗</div>
+          <span>Already a member?</span> <p>Stay ahead with the HiringBull app on Google Play Store</p> <div className="download-btn">Download <b>HiringBull Membership App</b> Now ↗</div>
         </div>
         <div className="bottom">
           <div className="left">
@@ -458,12 +458,12 @@ const Landing = () => {
         </div>
 
       </Page>
-      <PageBetween>
+      <PageBetween className='no-mobile'>
         <div className="line"></div>
         <img src={logo} alt="" />
         <div className="line"></div>
       </PageBetween>
-      <Page>
+      <Page className='no-mobile'>
         <h1>
           Why HiringBull Works
           <img src={logo} alt="" />
@@ -536,7 +536,7 @@ const Landing = () => {
       </PageBetween>
       <Page>
         <h1>
-          Pricing & Membership Plans
+          <span>Pricing & </span> Membership Plans
           <img src={logo} alt="" />
         </h1>
         <h2>
@@ -688,21 +688,28 @@ export default Landing
 
 const Container = styled.div`
   width: 100vw; 
+
+  @media (max-width: 500px) {
+    .no-mobile{
+      display: none;
+    }
+  }
 `;
 
 const Navbar = styled.div`
-  width: 100vw; 
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);   
+  width: 100%;
+  max-width: 100%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
   display: flex;
   flex-direction: column;
 
-  .top{
+  .top {
     height: 40px;
     border-bottom: 1px solid black;
 
-    display: flex; 
-    align-items: center;  
+    display: flex;
+    align-items: center;
     justify-content: center;
     padding: 0 20px;
 
@@ -710,13 +717,13 @@ const Navbar = styled.div`
 
     font-size: 0.85rem;
     font-weight: 300;
-    
-    span{
+
+    span {
       margin-right: 5px;
       font-weight: 500;
     }
 
-    .download-btn{
+    .download-btn {
       margin-left: 5px;
       padding: 5px 10px;
       background-color: black;
@@ -724,76 +731,153 @@ const Navbar = styled.div`
       border-radius: 100px;
       cursor: pointer;
       font-size: 0.75rem;
+      white-space: nowrap;
+
+      b{
+        display: none;
+      }
     }
   }
 
-  .bottom{
+  .bottom {
     height: 45px;
     border-bottom: 1px solid black;
 
-    display: flex; 
-    align-items: center;  
+    display: flex;
+    align-items: center;
     justify-content: space-between;
     padding: 0 50px;
 
-    .left{
-      width: 120px;
+    .left {
+      width: auto;
       height: 30px;
 
-      display: flex;  
+      display: flex;
       align-items: center;
       cursor: pointer;
 
       text-transform: uppercase;
       font-size: 1.1rem;
-      font-weight: 600; 
+      font-weight: 600;
       letter-spacing: 1.5px;
 
-      img{
+      img {
         height: 26px;
         scale: 1.75;
         margin-right: 12px;
       }
     }
 
-    .right{
-      display: flex; 
-      align-items: center; 
+    .right {
+      display: flex;
+      align-items: center;
       gap: 25px;
 
-      a{
-        text-decoration: none; 
+      a {
+        text-decoration: none;
         color: black;
         font-size: 0.85rem;
         font-weight: 500;
         cursor: pointer;
       }
 
-      .type2{
-        padding: 5px 15px;  
+      .type2 {
+        padding: 5px 15px;
         border-radius: 100px;
         cursor: pointer;
 
         background-color: black;
         color: yellow;
 
-        display: flex; 
-        align-items: center; 
+        display: flex;
+        align-items: center;
         gap: 5px;
       }
 
-      svg{
-        font-size: 1.25rem;  
+      svg {
+        font-size: 1.25rem;
         fill: yellow;
       }
 
-      img{
+      img {
         height: 25px;
         margin-top: 6px;
       }
     }
   }
+
+  /* ========================= */
+  /* 📱 MOBILE (≤500px) */
+  /* ========================= */
+
+  @media (max-width: 500px) {
+    .top {
+      padding: 0 12px;
+      font-size: 0.75rem;
+
+      p{
+        display: none;
+      }
+
+      span{
+        display: none;
+      }
+
+
+      .download-btn {
+        padding: 4px 8px;
+        font-size: 0.7rem;
+
+        b{
+          display: inline;
+          color: white;
+          font-weight: 600;
+        }
+      }
+    }
+
+    .bottom {
+      padding: 0 16px;
+      height: 52px;
+
+      .left {
+        font-size: 0.9rem;
+        letter-spacing: 1px;
+
+        img {
+          height: 22px;
+          scale: 1.4;
+          margin-right: 8px;
+        }
+      }
+
+      .right {
+        gap: 12px;
+
+        /* Hide normal links on mobile */
+        a {
+          display: none;
+        }
+
+        /* Keep primary CTA */
+        .type2 {
+          padding: 5px 12px;
+          font-size: 0.75rem;
+        }
+
+        svg {
+          font-size: 1.1rem;
+        }
+
+        img {
+          height: 22px;
+          margin-top: 0;
+        }
+      }
+    }
+  }
 `;
+
 
 const Page1 = styled.div`
   position: relative;
@@ -812,7 +896,7 @@ const Page1 = styled.div`
   }
 
   .hero-title {
-    font-size: clamp(2.8rem, 4vw, 3.8rem);
+    font-size: 3.8rem;
     line-height: 1.15;
     letter-spacing: 3.5px;
     text-align: center;
@@ -898,6 +982,28 @@ const Page1 = styled.div`
     font-size: 4rem;
     fill: #888;
   }
+
+  @media (max-width: 500px) {
+    img{
+      height: 100px;
+      margin-top: -60px;
+    }
+
+    .hero-title {
+      font-size: 2.5rem;
+      line-height: 1.15;
+    }
+  
+    .hero-subtitle {
+      font-size: 1.25rem;
+    }
+
+    .apply-btn{
+      margin-top: 30px;
+      padding: 10px 20px;
+      font-size: 0.9rem;
+    }
+  }
 `;
 
 const Page = styled.div`
@@ -937,7 +1043,8 @@ const Page = styled.div`
   }
 
   .container1000{
-    width: 1000px;
+    width: 100%;
+    max-width: 1000px;
 
     margin: 40px 0;
 
@@ -1203,76 +1310,103 @@ const Page = styled.div`
     @media (max-width: 1120px) {
       width: calc(100vw - 40px);
       grid-template-columns: 1fr;
+      margin: 30px 0;
+      grid-auto-rows: auto;
+      height: auto;
 
       .square, .square-2 {
         height: auto;
+
+        .tags{
+          display: none;
+        }
       }
 
       .square-2 {
         grid-column: span 1;
       }
+
+      .square-pricing{
+        padding: 25px;
+        padding-bottom: 100px;
+
+        .apply-btn{
+          padding: 10px 20px;
+          background-color: black;    
+          color: #ffff00c4;
+          opacity: 1;
+        }
+      }
+
+      .recommended{
+        border: inherit;
+        scale: inherit;
+        background-color: inherit;
+      }
     }
   }
 
-  .request-feature{
+  .request-feature {
     margin: 40px auto 0 auto;
 
-    width: 600px;
-    display: flex; 
-    align-items: center; 
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    align-items: center;
     justify-content: space-between;
     gap: 15px;
 
     padding: 15px 25px;
-    border-radius: 100px;  
-    background: #fff;
     border-radius: 1000px;
+    background: #fff;
     box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
     border: 1px solid black;
 
-    .github-logo{
+    .github-logo {
       width: 40px;
       height: 40px;
 
-      img{
+      img {
         width: 40px;
         height: 40px;
       }
     }
 
-    .text{
+    .text {
       font-size: 1rem;
       font-weight: 300;
       color: #333;
-
       margin: 0 10px;
-    } 
+      text-align: center;
+    }
 
-    .hiringbull-logo{
+    .hiringbull-logo {
       height: 40px;
 
-      img{
+      img {
         height: 100%;
       }
     }
 
-    @media (max-width: 800px){
-      width: calc(100% - 40px);
+    /* ========================= */
+    /* 📱 MOBILE (≤500px) */
+    /* ========================= */
+    @media (max-width: 500px) {
+      width: 100%;
+      padding: 10px;
+      margin-top: 0px;
 
-      .github-logo{
-        img{
-          height: 50px;
-          width: 50px;
-        }
+      justify-content: center;
+
+      /* .github-logo, */
+      .hiringbull-logo {
+        display: none;
       }
 
-      .hiringbull-logo{
-        height: 50px;
-
-        img{
-          margin: 0;
-          height: 50px;
-        }
+      .text {
+        font-size: 0.85rem;
+        margin: 0;
+        line-height: 1.3;
       }
     }
   }
@@ -1303,11 +1437,38 @@ const Page = styled.div`
         font-weight: 300;
       }
     }
+
+    @media (max-width: 500px) {
+      display: flex;
+      align-items: flex-start;
+      margin-top: 20px;
+      padding: 0 20px;
+
+      .box{
+        margin-top: 10px;
+      }
+
+      .text{
+        .title{
+          font-size: 1rem;
+          font-weight: 500;
+        }
+
+        .desc{
+          font-size: 0.85rem;
+          font-weight: 300;
+        }
+      }
+    }
   }
 
   .faq{
     margin-top: 80px;
     margin-bottom: 40px;
+
+    @media (max-width: 500px) {
+      margin: 40px 20px;
+    }
   }
 
   .qna {
@@ -1333,6 +1494,16 @@ const Page = styled.div`
         transition: transform 0.25s ease;
         color: #555;
       }
+
+      @media (max-width: 500px) {
+        .text{
+          font-size: 1rem;
+        }
+
+        .symbol{
+          font-size: 1.5rem;
+        }
+      }
     }
   
     .answer {
@@ -1344,6 +1515,10 @@ const Page = styled.div`
       transition-duration: 250ms;
       /* transition: max-height 0.3s ease, opacity 0.2s ease; */
       opacity: 0;
+
+      @media (max-width: 500px) {
+        font-size: 0.85rem; 
+      }
     }
   
   }
@@ -1357,6 +1532,26 @@ const Page = styled.div`
 
   .qna.open .symbol {
     transform: rotate(45deg); /* + becomes × */
+  }
+
+  @media (max-width: 500px) {
+    padding: 100px 20px;
+
+    h1{
+      font-size: 1.75rem;
+
+      span{
+        display: none;
+      }
+
+      img{
+        height: 45px;
+      }
+    }
+
+    h2{
+      font-size: 1.15rem;
+    }
   }
 `;
 

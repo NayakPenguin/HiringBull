@@ -84,43 +84,41 @@ export default function Landing() {
               className="mb-10 mt-16"
             >
               {/* Logo with glow effect */}
-              <View className="flex flex-row items-center justify-center">
-                <View className="mb-8 mr-6 size-24 items-center justify-center self-start rounded-[28px] shadow-2xl dark:bg-white">
-                  <Image
-                    source={require('assets/splash-icon.png')}
-                    style={{ width: 90, height: 90, borderRadius: 28 }}
-                    contentFit="contain"
-                  />
-                </View>
-
-                {/* Brand Name */}
-                <Text className="mb-8 text-6xl font-black leading-[72px] tracking-tighter text-neutral-900 dark:text-white">
-                  Hiring
-                  <Text className="text-6xl font-black tracking-tighter text-amber-500">
-                    Bull
-                  </Text>
-                </Text>
+              <View className="w-full h-[90px] px-6 flex flex-row justify-start items-center">
+                <Image
+                  source={require('assets/logo-big.png')}
+                  style={{
+                    width: '80%',
+                    height: '100%',
+                    marginLeft: -20,
+                    marginBottom: 20,
+                  }}
+                  resizeMode="contain"
+                />
               </View>
 
               {/* Main Tagline */}
-              <View className="mb-6">
+              <View>
                 <Text className="text-[28px] font-bold leading-[38px] text-neutral-900 dark:text-white">
-                  Apply early,{'\n'}compete with{' '}
+                  Apply early.{'\n'}Don't keep searching{'\n'}
                   <Text className="text-[28px] font-black text-amber-500">
-                    50 people
-                  </Text>
-                  {'\n'}not{' '}
-                  <Text className="text-[28px] font-black text-neutral-400 line-through dark:text-neutral-600">
-                    50,000
+                    Get Notified!
                   </Text>
                 </Text>
               </View>
 
-              {/* Subtitle */}
-              <Text className="text-lg leading-7 text-neutral-600 dark:text-neutral-400">
+              {/* Stats Badge */}
+              <View className="mt-6 flex-row items-center justify-center gap-2 rounded-2xl bg-neutral-900/5 px-4 py-3 dark:bg-white/5">
+                <Ionicons name="people" size={16} color="#f59e0b" />
+                <Text className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
+                  Members only application - <Text className='text-sm font-bold text-neutral-700 dark:text-neutral-300'>HiringBull.org</Text>
+                </Text>
+              </View>
+
+              {/* <Text className="text-lg leading-7 text-neutral-600 dark:text-neutral-400">
                 Early job alerts. Direct referrals.{'\n'}Better odds at landing
                 your dream role.
-              </Text>
+              </Text> */}
             </Animated.View>
 
             {/* Features Grid */}
@@ -128,14 +126,6 @@ export default function Landing() {
               {FEATURES.map((feature, index) => (
                 <FeatureCard key={index} {...feature} />
               ))}
-            </View>
-
-            {/* Stats Badge */}
-            <View className="mb-6 flex-row items-center justify-center gap-2 rounded-2xl bg-neutral-900/5 px-4 py-3 dark:bg-white/5">
-              <Ionicons name="people" size={16} color="#f59e0b" />
-              <Text className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
-                Join 10,000+ job seekers winning faster
-              </Text>
             </View>
           </View>
         </ScrollView>
