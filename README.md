@@ -1,9 +1,10 @@
 ## Where Early Careers Take Their First Big Leap  
-**Powered by algolisted.com**
 
 HiringBull is a **next-generation job discovery platform** designed exclusively for **students and early-career developers** who want real opportunities — not noise.
 
 We bring you **hand-picked, verified job and internship openings** directly from **official company career pages**, so every listing you see is **authentic, relevant, and worth your time**.
+
+<img width="788" height="267" alt="Screenshot 2026-01-11 at 1 52 39 PM" src="https://github.com/user-attachments/assets/f4134a02-0a69-4933-bd85-ce257bfecf67" />
 
 ---
 
