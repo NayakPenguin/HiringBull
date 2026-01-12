@@ -8,6 +8,7 @@ import social1 from '../utils/social1.png';
 import social2 from '../utils/social2.png';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
+import CheckBoxIcon from '@material-ui/icons/CheckBox';
 
 const Landing = () => {
   const rows = [
@@ -179,6 +180,12 @@ const Landing = () => {
 
   const toggleFAQ = (index) => {
     setOpenIndex(openIndex === index ? null : index);
+  };
+
+  const [isDiscountApplied, setIsDiscountApplied] = useState(false);
+
+  const handleReferralClick = () => {
+    setIsDiscountApplied(!isDiscountApplied);
   };
 
   return (
@@ -544,17 +551,34 @@ const Landing = () => {
         </h2>
 
         <div className="container1000">
+          {/* --- STARTER PLAN --- */}
           <div className="square-pricing">
             <div className="title">Starter Plan - <i>1 Month</i></div>
             <div className="desc">Best for trying HiringBull</div>
             <div className="line"></div>
             <div className="price">
               <div className="current-amount">
-                <span>₹199</span> / month
+                {isDiscountApplied ? (
+                  <>
+                    <span style={{ textDecoration: 'line-through', color: '#999', fontSize: '0.8em', marginRight: '5px' }}>₹249</span>
+                    <span>₹187</span>
+                  </>
+                ) : (
+                  <span>₹249</span>
+                )}
+                / month
               </div>
+
               <div className="total-amount">
                 ( 1 Month Access )
               </div>
+
+              {/* Savings Badge */}
+              {isDiscountApplied && (
+                <div style={{ color: '#16a34a', fontSize: '0.9rem', marginTop: '5px', fontWeight: 'bold' }}>
+                  You saved a total of ₹62
+                </div>
+              )}
             </div>
             <div className="advantage-points">
               <div className="point"><CheckCircleIcon /> Early alerts from verified career pages you select</div>
@@ -563,6 +587,8 @@ const Landing = () => {
             </div>
             <a href="/join-membership" className='apply-btn'>Apply for Membership <OfflineBoltIcon /></a>
           </div>
+
+          {/* --- GROWTH PLAN (Most Popular) --- */}
           <div className="square-pricing recommended">
             <div className="tag">Most Popular</div>
             <div className="title">Growth Plan - <i>3 Months</i></div>
@@ -570,11 +596,35 @@ const Landing = () => {
             <div className="line"></div>
             <div className="price">
               <div className="current-amount">
-                <span>₹149</span> / month
+                {isDiscountApplied ? (
+                  <>
+                    <span style={{ textDecoration: 'line-through', color: '#999', fontSize: '0.8em', marginRight: '5px' }}>₹199</span>
+                    {/* 449 / 3 months approx 150 */}
+                    <span>₹150</span>
+                  </>
+                ) : (
+                  <span>₹199</span>
+                )}
+                / month
               </div>
               <div className="total-amount">
-                ( 3 Month Access - <span>₹447</span> Total )
+                ( 3 Month Access -
+                {isDiscountApplied ? (
+                  <>
+                    <span style={{ textDecoration: 'line-through', color: '#888', margin: '0 5px' }}>₹599</span>
+                    <span>₹449</span>
+                  </>
+                ) : (
+                  <span>₹599</span>
+                )}
+                Total )
               </div>
+              {/* Savings Badge */}
+              {isDiscountApplied && (
+                <div style={{ color: '#16a34a', fontSize: '0.9rem', marginTop: '5px', fontWeight: 'bold' }}>
+                  You saved a total of ₹150
+                </div>
+              )}
             </div>
             <div className="advantage-points">
               <div className="point"><CheckCircleIcon /> All Starter features included</div>
@@ -583,17 +633,43 @@ const Landing = () => {
             </div>
             <a href="/join-membership" className='apply-btn'>Apply for Membership <OfflineBoltIcon /></a>
           </div>
+
+          {/* --- PRO PLAN --- */}
           <div className="square-pricing">
             <div className="title">Pro Plan - <i>6 Months</i></div>
             <div className="desc">Maximum Advantage 🔥</div>
             <div className="line"></div>
             <div className="price">
               <div className="current-amount">
-                <span>₹119</span> / month
+                {isDiscountApplied ? (
+                  <>
+                    <span style={{ textDecoration: 'line-through', color: '#999', fontSize: '0.8em', marginRight: '5px' }}>₹167</span>
+                    {/* 749 / 6 months approx 125 */}
+                    <span>₹125</span>
+                  </>
+                ) : (
+                  <span>₹167</span>
+                )}
+                / month
               </div>
               <div className="total-amount">
-                ( 6 Month Access - <span>₹714</span> Total )
+                ( 6 Month Access -
+                {isDiscountApplied ? (
+                  <>
+                    <span style={{ textDecoration: 'line-through', color: '#888', margin: '0 5px' }}>₹999</span>
+                    <span>₹749</span>
+                  </>
+                ) : (
+                  <span>₹999</span>
+                )}
+                Total )
               </div>
+              {/* Savings Badge */}
+              {isDiscountApplied && (
+                <div style={{ color: '#16a34a', fontSize: '0.9rem', marginTop: '5px', fontWeight: 'bold' }}>
+                  You saved a total of ₹250
+                </div>
+              )}
             </div>
             <div className="advantage-points">
               <div className="point"><CheckCircleIcon /> All Growth features included</div>
@@ -604,10 +680,27 @@ const Landing = () => {
           </div>
         </div>
 
+        {/* --- REFERRAL SECTION --- */}
         <div className="referral">
-          <div className="box"></div>
-          <div className="text">
-            <div className="title">Click to check new prices - Unlock an instant 25% discount</div>
+          {/* Added onClick and dynamic styles for the box */}
+          <div
+            className="box"
+            onClick={handleReferralClick}
+            style={{
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: isDiscountApplied ? '#e6fffa' : 'white',
+              borderColor: isDiscountApplied ? '#16a34a' : '#ddd'
+            }}
+          >
+            {isDiscountApplied && <CheckBoxIcon style={{ color: '#16a34a' }} />}
+          </div>
+          <div className="text" onClick={handleReferralClick} style={{ cursor: 'pointer' }}>
+            <div className="title">
+              {isDiscountApplied ? "Discount Applied Successfully!" : "Click to check new prices - Unlock an instant 25% discount"}
+            </div>
             <div className="desc">
               Have a friend already with HiringBull Membership? Share their registered membership email to unlock a flat 25% off your plan - and your friend earns 25% of your plan value as a referral reward.
             </div>
@@ -713,20 +806,26 @@ const Navbar = styled.div`
     justify-content: center;
     padding: 0 20px;
 
-    background-color: #ffc502;
+    background-color: #000000;
+    color: white;
 
     font-size: 0.85rem;
     font-weight: 300;
 
     span {
+      color: white;
       margin-right: 5px;
       font-weight: 500;
+    }
+
+    p{
+      color: #d4d1d1;
     }
 
     .download-btn {
       margin-left: 5px;
       padding: 5px 10px;
-      background-color: black;
+      background-color: #312f2f;
       color: white;
       border-radius: 100px;
       cursor: pointer;
@@ -741,7 +840,8 @@ const Navbar = styled.div`
 
   .bottom {
     height: 45px;
-    border-bottom: 1px solid black;
+    /* background-color: whitesmoke; */
+    border-bottom: 1px solid #e1dbdb;
 
     display: flex;
     align-items: center;
@@ -787,7 +887,7 @@ const Navbar = styled.div`
         cursor: pointer;
 
         background-color: black;
-        color: yellow;
+        color: #ffffff;
 
         display: flex;
         align-items: center;
@@ -796,7 +896,7 @@ const Navbar = styled.div`
 
       svg {
         font-size: 1.25rem;
-        fill: yellow;
+        fill: #ffc502;
       }
 
       img {
@@ -930,7 +1030,7 @@ const Page1 = styled.div`
     margin-top: 30px;
     padding: 12px 25px;
     background-color: black;    
-    color: yellow;
+    color: white;
     border-radius: 100px;
     cursor: pointer;
     font-size: 1.1rem;
@@ -945,7 +1045,7 @@ const Page1 = styled.div`
 
   svg{
     font-size: 1.5rem;  
-    fill: yellow;
+    fill: #ffc502;
   }
 
   .dancing-scroll-action {
@@ -985,7 +1085,7 @@ const Page1 = styled.div`
 
   @media (max-width: 500px) {
     img{
-      height: 100px;
+      height: 60px;
       margin-top: -60px;
     }
 
@@ -1083,7 +1183,8 @@ const Page = styled.div`
           font-weight: 500;
           margin-right: 15px;
 
-          background-color: #fff5cc;
+          background-color: #faeff0;
+          border: 1px solid #d9c8c8;
         } 
 
         img{
@@ -1244,7 +1345,7 @@ const Page = styled.div`
         bottom: 25px;
         padding: 12px 25px;
         background-color: black;    
-        color: #ffff00c4;
+        color: white;
         border-radius: 100px;
         cursor: pointer;
         font-size: 0.9rem;
@@ -1269,11 +1370,11 @@ const Page = styled.div`
         &:hover{
           opacity: 1;
           transition-duration: 250ms;
-          color: yellow;
+          color: white;
           scale: 1.05;
 
           svg{
-            fill: yellow;
+            fill: #ffc502;
           }
         }
       }
@@ -1333,7 +1434,6 @@ const Page = styled.div`
         .apply-btn{
           padding: 10px 20px;
           background-color: black;    
-          color: #ffff00c4;
           opacity: 1;
         }
       }
@@ -1723,7 +1823,7 @@ const Table = styled.div`
 
   /* Warn State */
   .warn {
-    background-color: #f9d0d0; /* Very light yellow bg */
+    background-color: #f9d0d0; /* Very light #ffc502 bg */
     color: #b45309;
   }
 
