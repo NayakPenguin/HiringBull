@@ -194,7 +194,7 @@ function OptionCard({ selected, onPress, children }: OptionCardProps) {
   return (
     <Pressable
       onPress={onPress}
-      className={`mb-3 flex-row items-center rounded-xl border bg-neutral-200 p-4 ${'android:shadow-lg ios:shadow-sm border-1 border-black'}`}
+      className={`mb-3 flex-row items-center rounded-xl border bg-neutral-200 p-4 android:shadow-lg ios:shadow-sm border-1 border-neutral-${selected ? 500 : 200}`}
     >
       <View className="flex-1">{children}</View>
       <Ionicons
