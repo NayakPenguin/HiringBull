@@ -16,6 +16,7 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
           printf "%s" "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
@@ -24,11 +25,12 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no \
               -i ~/.ssh/id_ed25519 \
-              ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            cd ~/apps/hiringbull-api
-            git pull origin main
-            cd server
-            npm install
-            pm2 reload hiringbull-api || pm2 start src/index.js --name hiringbull-api
-            pm2 save
-          EOF
+              ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+              "bash -lc '
+                cd ~/apps/hiringbull-api &&
+                git pull origin main &&
+                cd server &&
+                npm install &&
+                pm2 reload hiringbull-api || pm2 start src/index.js --name hiringbull-api &&
+                pm2 save
+              '"
