@@ -16,22 +16,18 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          printf "%s" "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_ed25519
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no \
-              -i ~/.ssh/id_ed25519 \
-              ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
-              "bash -lc '
-                cd ${{ secrets.APP_DIR }} &&
-                git pull origin main &&
-                npm install &&
-                npx prisma generate &&
-                npx prisma migrate deploy &&
-                pm2 reload hiringbull-api || pm2 start src/index.js --name hiringbull-api &&
-                pm2 save
-              '"
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            cd ${{ secrets.APP_DIR }}
+            git pull origin main
+            npm install
+            npx prisma generate
+            npx prisma migrate deploy
+            pm2 restart 0
+            pm2 save
+          EOF
