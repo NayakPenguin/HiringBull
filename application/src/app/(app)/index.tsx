@@ -197,7 +197,7 @@ export default function Jobs() {
     if (isFetchingNextPage) {
       return (
         <View className="py-4">
-          <ActivityIndicator size="small" color="#0000ff" />
+          <ActivityIndicator size="small" color="#A3A3A3" />
         </View>
       );
     }
@@ -250,7 +250,7 @@ export default function Jobs() {
 
         {isLoading || !data ? (
           <View className="flex-1 items-center justify-center pt-20">
-            <ActivityIndicator size="large" color="#0000ff" />
+            <ActivityIndicator size="large" color="#A3A3A3" />
           </View>
         ) : (
           <FlatList
