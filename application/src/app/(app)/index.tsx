@@ -41,9 +41,10 @@ const FILTER_TAGS = [
 ];
 
 export default function Jobs() {
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    useFetchFollowedJobs();
-  console.log('data', data);
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useFetchFollowedJobs();
+  
+  console.log('data-update', data);
+  console.log('FIRST JOB 👉', data?.pages?.[0]?.data?.[0]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
