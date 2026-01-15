@@ -20,9 +20,14 @@ export const bulkCreateJobs = {
         Joi.object().keys({
             title: Joi.string().required(),
             companyId: Joi.string().uuid().required(),
-            segment: Joi.string().valid('INTERNSHIP', 'FRESHER_OR_LESS_THAN_1_YEAR', 'ONE_TO_THREE_YEARS').required(),
+            segment: Joi.string().valid(
+                'INTERNSHIP',
+                'FRESHER_OR_LESS_THAN_1_YEAR',
+                'ONE_TO_THREE_YEARS'
+            ).required(),
             careerpage_link: Joi.string().uri().allow(null, ''),
             created_by: Joi.string().allow(null, ''),
+            tags: Joi.array().items(Joi.string()).default([]) 
         })
     ).min(1).required(),
 };

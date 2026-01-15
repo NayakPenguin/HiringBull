@@ -195,12 +195,12 @@ export const bulkCreateJobs = catchAsync(async (req, res) => {
         // Send notifications for each valid job
         const { sendJobNotificationToFollowers } = await import('../utils/notificationService.js');
 
-        console.log('\n===========================================');
-        console.log('🎯 BULK JOB CREATE - Sending notifications');
-        console.log('===========================================');
-        console.log(`Total valid jobs created: ${createdCount}`);
-        console.log(`Processing notifications for each job...`);
-        console.log('===========================================\n');
+        // console.log('\n===========================================');
+        // console.log('🎯 BULK JOB CREATE - Sending notifications');
+        // console.log('===========================================');
+        // console.log(`Total valid jobs created: ${createdCount}`);
+        // console.log(`Processing notifications for each job...`);
+        // console.log('===========================================\n');
 
         for (const job of validJobs) {
             try {
