@@ -1,10 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import * as Linking from 'expo-linking';
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Pressable } from 'react-native';
 
-import { Text, View } from '@/components/ui';
-import { formatRelativeTime, formatSegment } from '@/lib/utils';
+import { Image, Text, View } from '@/components/ui';
+import { formatRelativeTime } from '@/lib/utils';
 
 export type CompanyType =
   | 'TECH_GIANT'
@@ -26,6 +25,10 @@ export type Job = {
   created_by: string | null;
   isSaved?: boolean;
   company_type: CompanyType | string;
+  location?: string;
+  salary_range?: string;
+  job_type?: string;
+  company_logo?: string;
 };
 
 type JobCardProps = {
@@ -34,101 +37,115 @@ type JobCardProps = {
 };
 
 export function JobCard({ job, onSave }: JobCardProps) {
-  const handleOpenLink = useCallback(() => {
-    Linking.openURL(job.careerpage_link);
-  }, [job.careerpage_link]);
+  const [isSaved, setIsSaved] = useState(job.isSaved || false);
 
-  // Define nice pastel themes for accents only
-  const getCardTheme = () => {
-    if (job.segment.includes('<1')) {
-      return {
-        text: 'text-blue-700 dark:text-blue-300',
-      };
-    }
-    if (job.segment.includes('1-3') || job.segment.includes('1-2')) {
-      return {
-        text: 'text-blue-700 dark:text-blue-300',
-      };
-    }
-    if (
-      job.segment.includes('Senior') ||
-      job.segment.includes('3-5') ||
-      job.segment.includes('2-4')
-    ) {
-      return {
-        text: 'text-blue-700 dark:text-blue-300',
-      };
-    }
-    return {
-      text: 'text-blue-700 dark:text-blue-300',
-    };
-  };
+  const handleStarPress = useCallback(() => {
+    const newSavedState = !isSaved;
+    setIsSaved(newSavedState);
+    onSave();
+  }, [isSaved, onSave]);
 
-  const getTagStyle = (type: string) => {
-    switch (type) {
-      case 'TECH_GIANT':
-        return { bg: 'bg-blue-100', text: 'text-blue-800' };
-      case 'FINTECH_GIANT':
-        return { bg: 'bg-green-100', text: 'text-green-800' };
-      case 'INDIAN_STARTUP':
-        return { bg: 'bg-amber-100', text: 'text-amber-800' };
-      case 'GLOBAL_STARTUP':
-        return { bg: 'bg-pink-100', text: 'text-pink-800' };
-      case 'YCOMBINATOR':
-        return { bg: 'bg-orange-100', text: 'text-orange-800' };
-      case 'MASS_HIRING':
-        return { bg: 'bg-gray-100', text: 'text-gray-800' };
-      case 'HFT':
-        return { bg: 'bg-indigo-100', text: 'text-indigo-800' };
-      default:
-        return { bg: 'bg-gray-100', text: 'text-gray-800' };
+  const formatSalary = useCallback((salary?: string): string => {
+    if (!salary) return '';
+    const monthlyMatch = salary.match(/\$?(\d+)[Kk]\/[Mm]o/i);
+    if (monthlyMatch) {
+      return `$${monthlyMatch[1]}K/Mo`;
     }
-  };
+    return salary;
+  }, []);
 
-  const theme = getCardTheme();
-  const tagStyle = getTagStyle(job.company_type);
+  const getTags = useCallback(() => {
+    const tags: string[] = [];
+    if (job.segment) {
+      if (job.segment.toLowerCase().includes('design')) {
+        tags.push('Design');
+      }
+    }
+    if (job.job_type) {
+      tags.push(job.job_type);
+    }
+    if (job.segment) {
+      // Extract level from segment
+      if (job.segment.toLowerCase().includes('senior')) {
+        tags.push('Senior designer');
+      } else if (job.segment.toLowerCase().includes('lead')) {
+        tags.push('Lead designer');
+      }
+    }
+    // Default tags if none found
+    if (tags.length === 0) {
+      tags.push('Design', 'Full time', 'Senior designer');
+    }
+    return tags;
+  }, [job.segment, job.job_type]);
+
+  const companyLocation = `${job.company} inc${job.location ? ` · ${job.location}` : ''}`;
+  const tags = getTags();
+  const formattedSalary = formatSalary(job.salary_range);
 
   return (
-    <View className="mb-4 rounded-xl border border-neutral-200 bg-white p-5 android:shadow-md ios:shadow-sm">
-      <View className="mb-3 flex-row items-center justify-between">
-        <View className="flex-1">
-          <View className="mb-1 flex-row items-center gap-2">
-            <Text
-              className={`text-sm font-bold uppercase tracking-wider ${theme.text}`}
-            >
-              {job.company}
+    <View
+      className={`android:shadow-md ios:shadow-sm mb-4 rounded-xl border bg-white p-4 ${
+        isSaved ? 'border-neutral-400' : 'border-neutral-200'
+      }`}
+    >
+      <View className="flex-row items-start gap-3">
+        {job.company_logo ? (
+          <Image
+            source={{ uri: job.company_logo }}
+            className="rounded-xl"
+            style={{ width: 48, height: 48 }}
+            contentFit="cover"
+          />
+        ) : (
+          <View
+            className="items-center justify-center rounded-xl bg-neutral-200"
+            style={{ width: 48, height: 48 }}
+          >
+            <Text className="text-lg font-bold text-neutral-500">
+              {job.company.charAt(0).toUpperCase()}
             </Text>
-            <View className={`rounded-md px-2 py-0.5 ${tagStyle.bg}`}>
-              <Text className={`text-[10px] font-medium ${tagStyle.text}`}>
-                {formatSegment(job.company_type)}
-              </Text>
-            </View>
           </View>
+        )}
 
-          <Text className="text-lg font-bold leading-tight text-neutral-900">
+        <View className="flex-1">
+          <Text className="mb-1 text-base font-bold text-neutral-900">
             {job.title}
           </Text>
+
+          <Text className="mb-2 text-sm text-neutral-600">
+            {companyLocation}
+          </Text>
+
+          <View className="mb-3 flex-row flex-wrap gap-2">
+            {tags.map((tag, index) => (
+              <View key={index} className="rounded-lg bg-neutral-100 px-2 py-1">
+                <Text className="text-xs font-medium text-neutral-600">
+                  {tag}
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          <View className="flex-row items-center justify-between border-t border-neutral-100 pt-2">
+            <Text className="text-xs text-neutral-400">
+              {formatRelativeTime(job.created_at)}
+            </Text>
+            {formattedSalary && (
+              <Text className="text-sm font-bold text-neutral-900">
+                {formattedSalary}
+              </Text>
+            )}
+          </View>
         </View>
-      </View>
 
-      <Text className="mb-4 text-sm font-medium text-neutral-600">
-        {job.segment}
-      </Text>
-
-      <View className="flex-row items-center justify-between border-t border-neutral-200/50 pt-4">
-        <Text className="text-[10px] font-bold uppercase tracking-tighter text-neutral-400">
-          Posted : {formatRelativeTime(job.created_at)}
-        </Text>
-        <View className="flex-row items-center gap-7">
-          {/* <Pressable hitSlop={12} onPress={onSave}>
+        <View className="flex-col items-center gap-3">
+          <Pressable hitSlop={12} onPress={handleStarPress}>
             <Ionicons
-              name={job.isSaved ? 'star' : 'star-outline'}
+              name={isSaved ? 'star' : 'star-outline'}
               size={20}
-              color={job.isSaved ? '#FFD700' : '#000000'}
+              color={isSaved ? '#FFD700' : '#000000'}
             />
-          </Pressable> */}
-          <Pressable hitSlop={12} onPress={handleOpenLink}>
-            <Ionicons name="paper-plane-outline" size={20} color="#000000" />
           </Pressable>
         </View>
       </View>

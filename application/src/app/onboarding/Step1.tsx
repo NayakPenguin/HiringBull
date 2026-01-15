@@ -93,7 +93,7 @@ function ExperienceCard({
       className={`mb-3 flex-row items-center overflow-hidden rounded-2xl border p-3 ${
         disabled
           ? 'border-neutral-200 bg-neutral-100 opacity-50 dark:border-neutral-800 dark:bg-neutral-900'
-          : 'android:shadow-md ios:shadow-sm border-1 border-black bg-white dark:border-white dark:bg-neutral-800'
+          : `android:shadow-md ios:shadow-sm border-1 border-neutral-${selected ? 500 : 200} bg-white dark:border-white dark:bg-neutral-800`
       }`}
     >
       <Image source={image} className="size-14 rounded-xl" contentFit="cover" />

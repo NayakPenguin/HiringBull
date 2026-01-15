@@ -1,17 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useAuth, useUser } from '@clerk/clerk-expo';
-import React, { useState } from 'react';
-import { Alert, Pressable, Image, Linking } from 'react-native';
-
-import {
-  FocusAwareStatusBar,
-  SafeAreaView,
-  ScrollView,
-  Text,
-  View,
-} from '@/components/ui';
-import { resetOnboarding } from '@/lib';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import React from 'react';
+import { Alert, Pressable, ScrollView } from 'react-native';
+
+import { FocusAwareStatusBar, SafeAreaView, Text, View } from '@/components/ui';
+import { resetOnboarding } from '@/lib';
 
 type SettingsItem = {
   label: string;
@@ -26,14 +20,12 @@ function SettingsItemRow({ item }: { item: SettingsItem }) {
   return (
     <Pressable
       onPress={item.onPress}
-      className="mb-4 flex-row items-center justify-between rounded-xl border border-neutral-200 bg-white p-5 shadow-sm active:opacity-70 dark:border-neutral-800 dark:bg-neutral-900"
+      className="android:shadow-md ios:shadow-sm mb-3 flex-row items-center justify-between rounded-xl border border-neutral-200 bg-white p-4 active:opacity-70"
     >
-      <View className="flex-row items-center gap-4">
+      <View className="flex-row items-center gap-3">
         <View
-          className={`size-10 items-center justify-center rounded-full ${
-            item.isDestructive
-              ? 'bg-red-50 dark:bg-red-900/20'
-              : 'bg-neutral-100 dark:bg-neutral-800'
+          className={`size-10 items-center justify-center rounded-xl ${
+            item.isDestructive ? 'bg-danger-50' : 'bg-neutral-100'
           }`}
         >
           <Ionicons
@@ -43,32 +35,22 @@ function SettingsItemRow({ item }: { item: SettingsItem }) {
           />
         </View>
         <Text
-          className={`text-base font-bold ${
-            item.isDestructive
-              ? 'text-red-500 dark:text-red-400'
-              : 'text-neutral-900 dark:text-white'
+          className={`text-base font-semibold ${
+            item.isDestructive ? 'text-danger-600' : 'text-neutral-900'
           }`}
         >
           {item.label}
         </Text>
       </View>
-      <Ionicons
-        name="chevron-forward"
-        size={20}
-        color={item.isDestructive ? '#ef4444' : '#d4d4d4'}
-      />
+      <Ionicons name="chevron-forward" size={18} color="#a3a3a3" />
     </Pressable>
   );
 }
 
 export default function Profile() {
-  const { signOut, getToken } = useAuth();
+  const { signOut } = useAuth();
   const { user } = useUser();
-  const {navigate} = useRouter();
-  const [apiResponse, setApiResponse] = useState<any>(null);
-  const [isLoadingApi, setIsLoadingApi] = useState(false);
-  const [apiError, setApiError] = useState<string | null>(null);
-
+  const { navigate } = useRouter();
 
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
@@ -78,9 +60,7 @@ export default function Profile() {
         style: 'destructive',
         onPress: async () => {
           try {
-            // Sign out from Clerk
             await signOut();
-            // Reset onboarding state on logout
             resetOnboarding();
           } catch (error) {
             console.error('Logout error:', error);
@@ -92,21 +72,21 @@ export default function Profile() {
 
   const SETTINGS: SettingsItem[] = [
     {
-      label: 'Report issue',
-      icon: 'warning-outline',
-      iconColor: '#f59e0b', // amber-500
-    },
-    {
-      label: 'Change segment',
+      label: 'Edit Experience',
       icon: 'layers-outline',
-      iconColor: '#3b82f6', // blue-500
-      onPress:()=> navigate('/edit-experience'),
+      iconColor: '#13803b', // primary-500
+      onPress: () => navigate('/edit-experience'),
     },
     {
-      label: 'Update Companies',
+      label: 'Edit Companies',
       icon: 'business-outline',
-      iconColor: '#8b5cf6', // violet-500
-      onPress:()=> navigate('/edit-companies'),
+      iconColor: '#13803b', // primary-500
+      onPress: () => navigate('/edit-companies'),
+    },
+    {
+      label: 'Report Issue',
+      icon: 'warning-outline',
+      iconColor: '#f59e0b',
     },
     {
       label: 'Logout',
@@ -123,67 +103,26 @@ export default function Profile() {
     user?.emailAddresses?.[0]?.emailAddress?.split('@')[0] ||
     'User';
   const email = user?.primaryEmailAddress?.emailAddress || '';
+  const initials = displayName
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
-    <SafeAreaView
-      className="flex-1 bg-white dark:bg-neutral-950"
-      edges={['top']}
-    >
+    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
       <FocusAwareStatusBar />
       <View className="flex-1 pt-6">
-        <View className="px-5 pb-4 border-b border-neutral-200 shadow-sm bg-white dark:bg-neutral-950 dark:border-neutral-800">
-          <Text className="text-3xl font-black text-neutral-900 dark:text-white">
-            Profile
-          </Text>
+        <View className="border-b border-neutral-200 bg-white px-5 pb-4 shadow-sm">
+          <Text className="text-3xl font-black text-neutral-900">Profile</Text>
           <Text className="mb-4 text-base font-medium text-neutral-500">
-            Manage your account and preferences. We’re here to help you get the most out of your job search. ❤️
+            Manage your account and preferences. We’re here to help you get the
+            most out of your job search.
           </Text>
-          <Pressable
-            onPress={() => {
-              Linking.openURL('https://github.com/NayakPenguin/HiringBull');
-            }}
-            className="mb-4 self-start flex-row items-center rounded-full border border-neutral-300"
-            style={{
-              paddingVertical: 5,
-              paddingHorizontal: 10,
-              backgroundColor: '#fff',
-            }}
-          >
-            <View className="flex-row items-center gap-2">
-              <Image
-                source={{
-                  uri: 'https://icones.pro/wp-content/uploads/2021/06/icone-github-noir.png',
-                }}
-                style={{ width: 22, height: 22 }}
-                resizeMode="contain"
-              />
-
-              <Text
-                style={{
-                  fontSize: 11, // ~0.8rem
-                  color: 'rgb(19, 128, 59)',
-                  fontWeight: '100',
-                }}
-              >
-                Contribute to our open-source code on GitHub
-              </Text>
-
-              <Text
-                style={{
-                  fontSize: 16,
-                  color: 'rgb(19, 128, 59)',
-                  fontWeight: '100',
-                  marginLeft: -6,
-                }}
-              >
-                ↗
-              </Text>
-            </View>
-          </Pressable>
         </View>
 
         <ScrollView
-          className="flex-1"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
             paddingHorizontal: 20,
@@ -191,45 +130,54 @@ export default function Profile() {
             paddingTop: 20,
           }}
         >
-          {/* User Info Card */}
-          <View className="mb-6 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-            <Text className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-              Signed in as
-            </Text>
-            <Text className="mt-1 text-2xl font-black text-neutral-900 dark:text-white">
-              {displayName}
-            </Text>
-            {email ? (
-              <View className="mt-4 flex-row items-center gap-2 rounded-lg bg-neutral-100 px-3 py-2 self-start dark:bg-neutral-800">
-                <Ionicons name="mail-outline" size={16} color="#737373" />
-                <Text className="text-sm font-medium text-neutral-600 dark:text-neutral-300">
-                  {email}
+          <View className="android:shadow-md ios:shadow-sm mb-6 rounded-xl border border-neutral-200 bg-white p-5">
+            <View className="flex-row items-center gap-4">
+              <View className="size-16 items-center justify-center rounded-full bg-primary-100">
+                <Text className="text-xl font-bold text-primary-700">
+                  {initials}
                 </Text>
               </View>
-            ) : null}
+              <View className="flex-1">
+                <Text className="text-xl font-bold text-neutral-900">
+                  {displayName}
+                </Text>
+                {email ? (
+                  <View className="mt-1 flex-row items-center gap-1">
+                    <Ionicons name="mail-outline" size={14} color="#737373" />
+                    <Text className="text-sm font-medium text-neutral-600">
+                      {email}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
+            </View>
           </View>
 
-
-          {/* Referral/Info Card */}
-          <View className="mb-8 flex-row items-center gap-4 overflow-hidden rounded-xl bg-neutral-900 p-5 shadow-md dark:bg-neutral-800">
-            <View className="size-12 shrink-0 items-center justify-center rounded-full bg-white/20">
-              <Ionicons name="gift-outline" size={24} color="white" />
-            </View>
-            <View className="flex-1">
-              <Text className="text-base font-bold leading-6 text-white">
-                Enjoying the product? Share it with friends and earn a flat ₹100
-                referral bonus when they sign up using your email.
-              </Text>
-            </View>
+          <View className="mb-6">
+            <Text className="mb-3 text-xs font-bold uppercase tracking-wider text-neutral-400">
+              Settings
+            </Text>
+            {SETTINGS.map((item, index) => (
+              <SettingsItemRow key={index} item={item} />
+            ))}
           </View>
 
-          {/* Settings List */}
-          <Text className="mb-4 text-xs font-bold uppercase tracking-widest text-neutral-400">
-            Settings
-          </Text>
-          {SETTINGS.map((item, index) => (
-            <SettingsItemRow key={index} item={item} />
-          ))}
+          <View className="rounded-xl border-2 border-primary-200 bg-primary-50 p-4">
+            <View className="flex-row items-start gap-3">
+              <View className="mt-1 size-10 shrink-0 items-center justify-center rounded-full bg-primary-100">
+                <Ionicons name="gift-outline" size={20} color="#13803b" />
+              </View>
+              <View className="flex-1">
+                <Text className="mb-1 text-sm font-bold text-primary-900">
+                  Refer & Earn
+                </Text>
+                <Text className="text-sm font-medium leading-5 text-primary-700">
+                  Share HiringBull with friends and earn ₹100 when they sign up
+                  using your email.
+                </Text>
+              </View>
+            </View>
+          </View>
         </ScrollView>
       </View>
     </SafeAreaView>

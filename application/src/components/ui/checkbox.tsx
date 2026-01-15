@@ -80,7 +80,7 @@ export const CheckboxIcon = ({ checked = false }: IconProps) => {
         width: SIZE,
         borderColor: color,
       }}
-      className="items-center justify-center  border-2"
+      className="items-center justify-center  border-2 rounded-md"
       from={{ backgroundColor: 'transparent', borderColor: '#CCCFD6' }}
       animate={{
         backgroundColor: checked ? color : 'transparent',

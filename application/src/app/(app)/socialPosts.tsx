@@ -1,10 +1,11 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Pressable, Image, FlatList, ActivityIndicator } from 'react-native';
 
 import {
   FocusAwareStatusBar,
+  Input,
   SafeAreaView,
   Text,
   View,
@@ -21,7 +22,7 @@ function SocialPostCard({ post }: { post: SocialPost }) {
   }, [post.source_link]);
 
   return (
-    <View className="mb-4 rounded-xl border border-neutral-200 bg-white android:shadow-md ios:shadow-sm">
+    <View className="mb-4 rounded-xl border border-neutral-400 bg-white android:shadow-md ios:shadow-sm">
       <View className="relative overflow-hidden p-5">
         {/* Decorative Quote Icon */}
         <View className="absolute -right-4 -top-4 opacity-5">
@@ -33,7 +34,7 @@ function SocialPostCard({ post }: { post: SocialPost }) {
         </View>
 
         <View className="mb-3 flex-row items-center gap-3">
-          <View className="size-10 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800">
+          <View className="size-10 items-center justify-center rounded-full bg-yellow-400 dark:bg-neutral-800">
             <Text className="text-lg font-bold text-neutral-700 dark:text-neutral-300">
               {post.name.charAt(0)}
             </Text>
@@ -130,17 +131,27 @@ function SocialPostCard({ post }: { post: SocialPost }) {
 }
 
 export default function SocialPosts() {
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-  } = useFetchSocialPosts();
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+    useFetchSocialPosts();
+  const [searchQuery, setSearchQuery] = useState('');
 
   const allPosts = useMemo(() => {
     return data?.pages.flatMap((page) => page?.data || []) || [];
   }, [data]);
+  const filteredPosts = useMemo(() => {
+    if (!searchQuery.trim()) return allPosts;
+
+    const query = searchQuery.toLowerCase();
+
+    return allPosts.filter((post) => {
+      return (
+        post.name?.toLowerCase().includes(query) ||
+        post.description?.toLowerCase().includes(query) ||
+        post.company?.toLowerCase().includes(query) ||
+        post.segment?.toLowerCase().includes(query)
+      );
+    });
+  }, [allPosts, searchQuery]);
 
   const renderItem = useCallback(({ item }: { item: SocialPost }) => {
     return <SocialPostCard post={item} />;
@@ -150,7 +161,7 @@ export default function SocialPosts() {
     if (isFetchingNextPage) {
       return (
         <View className="py-4">
-          <ActivityIndicator size="small" color="#0000ff" />
+          <ActivityIndicator size="small" color="#A3A3A3" />
         </View>
       );
     }
@@ -167,88 +178,47 @@ export default function SocialPosts() {
   }, [isFetchingNextPage, hasNextPage, allPosts.length]);
 
   return (
-    <SafeAreaView
-      className="flex-1 bg-white dark:bg-neutral-950"
-      edges={['top']}
-    >
+    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
       <FocusAwareStatusBar />
       <View className="flex-1 pt-6">
-        <View className="flex-row items-center justify-between px-5 pb-4 border-b border-neutral-200 shadow-sm bg-white dark:bg-neutral-950 dark:border-neutral-800">
-          <View className="mr-4 flex-1">
-            <Text className="text-3xl font-black text-neutral-900 dark:text-white">
-              Social posts
-            </Text>
-            <Text className="mb-4 text-base font-medium text-neutral-500">
-              We surface{' '}
-              <Text className="font-semibold text-neutral-700">
-                hiring posts that usually get buried in feeds
-              </Text>
-              , including updates shared by{' '}
-              <Text className="font-semibold text-neutral-700">
-                employees, founders of YC-backed companies and HR
-              </Text>
-              . You'll also see{' '}
-              <Text className="font-semibold text-neutral-700">
-                posts asking candidates to fill hiring interest forms
-              </Text>
-              , all curated in one place so you can{' '}
-              <Text className="font-semibold text-neutral-700">
-                respond faster and with context
-              </Text>
-              .
-            </Text>
+        <View className="border-b border-neutral-200 bg-white px-5 pb-4 shadow-sm">
+          <Text className="text-3xl font-black text-neutral-900">
+            Social Posts
+          </Text>
+          <Text className="mb-4 text-base font-medium text-neutral-500">
+            Personalized job alerts, delivered fast , so you get noticed before
+            everyone else.
+          </Text>
+
+          <View className="flex-row items-center gap-2">
+            <View className="flex-1">
+              <Input
+                isSearch
+                placeholder="Search Jobs"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+            </View>
             <Pressable
-              onPress={() => {
-                Linking.openURL('https://github.com/NayakPenguin/HiringBull');
-              }}
-              className="mb-4 self-start flex-row items-center rounded-full border border-neutral-300"
+              onPress={() => console.log('filter')}
+              className="items-center justify-center rounded-xl bg-neutral-900"
               style={{
-                paddingVertical: 5,
-                paddingHorizontal: 10,
-                backgroundColor: '#fff',
+                width: 48,
+                height: 48,
               }}
             >
-              <View className="flex-row items-center gap-2">
-                <Image
-                  source={{
-                    uri: 'https://icones.pro/wp-content/uploads/2021/06/icone-github-noir.png',
-                  }}
-                  style={{ width: 22, height: 22 }}
-                  resizeMode="contain"
-                />
-
-                <Text
-                  style={{
-                    fontSize: 11, // ~0.8rem
-                    color: 'rgb(19, 128, 59)',
-                    fontWeight: '100',
-                  }}
-                >
-                  Contribute to our open-source code on GitHub
-                </Text>
-
-                <Text
-                  style={{
-                    fontSize: 16,
-                    color: 'rgb(19, 128, 59)',
-                    fontWeight: '100',
-                    marginLeft: -6,
-                  }}
-                >
-                  ↗
-                </Text>
-              </View>
+              <Ionicons name="options-outline" size={24} color="#ffffff" />
             </Pressable>
           </View>
         </View>
 
-        {(isLoading || !data) ? (
+        {isLoading || !data ? (
           <View className="flex-1 items-center justify-center pt-20">
-            <ActivityIndicator size="large" color="#0000ff" />
+            <ActivityIndicator size="large" color="#A3A3A3" />
           </View>
         ) : (
           <FlatList
-            data={allPosts}
+            data={filteredPosts}
             renderItem={renderItem}
             keyExtractor={(item) => item.id}
             contentContainerStyle={{
@@ -276,7 +246,11 @@ export default function SocialPosts() {
             // }
             ListEmptyComponent={
               <View className="mt-20 items-center justify-center">
-                <Ionicons name="chatbubbles-outline" size={48} color="#a3a3a3" />
+                <Ionicons
+                  name="chatbubbles-outline"
+                  size={48}
+                  color="#a3a3a3"
+                />
                 <Text className="mt-4 text-center text-lg font-medium text-neutral-500">
                   No social posts found
                 </Text>
