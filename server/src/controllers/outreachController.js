@@ -65,46 +65,61 @@ import prisma from '../prismaClient.js';
  *         description: Internal server error
  */
 export const createOutreachRequest = async (req, res) => {
-    try {
-        const userId = req.user.id;
-        const { email, companyName, reason, jobId, resumeLink, message } = req.body;
+  try {
+    const userId = req.user.id;
+    const { email, companyName, reason, jobId, resumeLink, message } = req.body;
 
-        // 1. Enforce monthly limit (max 3)
-        const startOfMonth = new Date();
-        startOfMonth.setDate(1);
-        startOfMonth.setHours(0, 0, 0, 0);
+    const result = await prisma.$transaction(async (tx) => {
+      // 1️⃣ Fetch token count
+      const user = await tx.user.findUnique({
+        where: { id: userId },
+        select: { tokens_left: true },
+      });
 
-        const monthlyCount = await prisma.outreachRequest.count({
-            where: {
-                userId,
-                createdAt: { gte: startOfMonth },
-            },
-        });
+      if (!user) {
+        throw new Error('User not found');
+      }
 
-        if (monthlyCount >= 3) {
-            return res.status(403).json({
-                message: 'Monthly outreach limit reached (3 requests)',
-            });
-        }
+      // 2️⃣ Enforce token availability
+      if (user.tokens_left <= 0) {
+        return { error: 'NO_TOKENS' };
+      }
 
-        // 2. Create outreach request
-        const outreach = await prisma.outreachRequest.create({
-            data: {
-                userId,
-                email,
-                companyName,
-                reason,
-                jobId,
-                resumeLink,
-                message,
-            },
-        });
+      // 3️⃣ Decrement token
+      await tx.user.update({
+        where: { id: userId },
+        data: {
+          tokens_left: { decrement: 1 },
+        },
+      });
 
-        return res.status(201).json(outreach);
-    } catch (error) {
-        console.error('Create outreach error:', error);
-        return res.status(500).json({ message: 'Internal server error' });
+      // 4️⃣ Create outreach request
+      const outreach = await tx.outreachRequest.create({
+        data: {
+          userId,
+          email,
+          companyName,
+          reason,
+          jobId,
+          resumeLink,
+          message,
+        },
+      });
+
+      return { outreach };
+    });
+
+    if (result?.error === 'NO_TOKENS') {
+      return res.status(403).json({
+        message: 'No tokens left',
+      });
     }
+
+    return res.status(201).json(result.outreach);
+  } catch (error) {
+    console.error('Create outreach error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
 };
 
 /**
