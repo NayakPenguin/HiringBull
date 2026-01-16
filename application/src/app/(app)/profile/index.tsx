@@ -2,7 +2,7 @@ import { useAuth, useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Alert, Pressable, ScrollView } from 'react-native';
+import { Alert, Clipboard, Pressable, ScrollView } from 'react-native';
 
 import { FocusAwareStatusBar, SafeAreaView, Text, View } from '@/components/ui';
 import { resetOnboarding } from '@/lib';
@@ -46,7 +46,15 @@ function SettingsItemRow({ item }: { item: SettingsItem }) {
     </Pressable>
   );
 }
-
+const handleCopyReferral = async (email: string) => {
+  if (!email) return;
+  try {
+    await Clipboard.setString(email);
+    Alert.alert('Copied!', `Referral code "${email}" copied to clipboard.`);
+  } catch (err) {
+    console.error('Copy failed:', err);
+  }
+};
 export default function Profile() {
   const { signOut } = useAuth();
   const { user } = useUser();
@@ -115,8 +123,13 @@ export default function Profile() {
       <FocusAwareStatusBar />
       <View className="flex-1 pt-6">
         <View className="border-b border-neutral-200 bg-white px-5 pb-4 shadow-sm">
-          <Text className="text-3xl font-black text-neutral-900">Profile</Text>
-          <Text className="mb-4 text-base font-medium text-neutral-500">
+          <Text
+            className="text-3xl  text-neutral-900 "
+            style={{ fontFamily: 'Montez' }}
+          >
+            Profile
+          </Text>
+          <Text className="my-2 text-base font-medium text-neutral-500">
             Manage your account and preferences. We’re here to help you get the
             most out of your job search.
           </Text>
@@ -173,8 +186,21 @@ export default function Profile() {
                 </Text>
                 <Text className="text-sm font-medium leading-5 text-primary-700">
                   Share HiringBull with friends and earn ₹100 when they sign up
-                  using your email.
+                  using your referral code.
                 </Text>
+
+                {/* Referral code row */}
+                {email && (
+                  <Pressable
+                    onPress={() => handleCopyReferral(email)}
+                    className="mt-3 flex-row items-center justify-between rounded-lg border border-primary-300 bg-primary-100 px-3 py-2"
+                  >
+                    <Text className="text-sm font-medium text-primary-900">
+                      {email}
+                    </Text>
+                    <Ionicons name="copy-outline" size={16} color="#13803b" />
+                  </Pressable>
+                )}
               </View>
             </View>
           </View>

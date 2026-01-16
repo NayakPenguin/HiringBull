@@ -1,6 +1,6 @@
 import { useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useState } from 'react';
 import { type TextInput } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 
@@ -8,6 +8,7 @@ import {
   Button,
   ControlledInput,
   FocusAwareStatusBar,
+  Input,
   SafeAreaView,
   Text,
   View,
@@ -59,6 +60,7 @@ export default function Search() {
   const resumeLinkRef = React.useRef<TextInput>(null);
   const messageRef = React.useRef<TextInput>(null);
   const companyRef = React.useRef<{ present: () => void }>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const remaining = getRemaining();
   const canSendNow = canSend() && isFormValid;
@@ -87,23 +89,27 @@ export default function Search() {
       <View className="flex-1 pt-6">
         {/* Header */}
         <View className="border-b border-neutral-200 bg-white px-5 pb-4 shadow-sm">
-          <Text className="text-3xl font-black text-neutral-900">Outreach</Text>
-          <Text className="mb-4 text-base font-medium text-neutral-500">
-            Get{' '}
-            <Text className="font-semibold text-neutral-700">
-              real visibility with employees from the companies you choose
-            </Text>
-            . Your request is shared in a{' '}
-            <Text className="font-semibold text-neutral-700">
-              verified WhatsApp group
-            </Text>
-            , ensuring it reaches the right people. To stay meaningful and
-            spam-free,{' '}
-            <Text className="font-semibold text-neutral-700">
-              up to 3 reviewed requests are allowed each month
-            </Text>
-            .
+          <Text
+            className="text-3xl text-neutral-900"
+            style={{ fontFamily: 'Montez' }}
+          >
+            Outreach
           </Text>
+          <Text className="my-2 text-base font-medium text-neutral-500">
+            You can do up to 3 outreaches per month. Fill out a form with what
+            you want to say to employees of the listed companies, and we’ll send
+            it to a group of those company employees.
+          </Text>
+          <View className="mt-2 flex-row items-center gap-2">
+            <View className="flex-1">
+              <Input
+                isSearch
+                placeholder="Search Jobs"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+            </View>
+          </View>
         </View>
 
         <KeyboardAwareScrollView
@@ -192,7 +198,6 @@ export default function Search() {
               disabled={remaining === 0}
             />
 
-            {/* Remaining Count Info */}
             {remaining > 0 ? (
               <View className="mb-4 mt-2 rounded-lg bg-primary-50 px-4 py-3">
                 <View className="flex-row items-center gap-2">

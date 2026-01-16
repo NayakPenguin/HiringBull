@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useCallback, useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Pressable } from 'react-native';
 
 import { Image, Text, View } from '@/components/ui';
@@ -29,6 +29,8 @@ export type Job = {
   salary_range?: string;
   job_type?: string;
   company_logo?: string;
+  companyRel?: { logo?: string };
+  tags?: string[];
 };
 
 type JobCardProps = {
@@ -38,50 +40,26 @@ type JobCardProps = {
 
 export function JobCard({ job, onSave }: JobCardProps) {
   const [isSaved, setIsSaved] = useState(job.isSaved || false);
+  const [expanded, setExpanded] = useState(false);
+
+  const tags = useMemo(() => Array.from(new Set(job.tags || [])), [job.tags]);
+
+  const visibleTags = expanded ? tags : tags.slice(0, 3);
+  const hiddenCount = tags.length - visibleTags.length;
 
   const handleStarPress = useCallback(() => {
-    const newSavedState = !isSaved;
-    setIsSaved(newSavedState);
+    setIsSaved((prev) => !prev);
     onSave();
-  }, [isSaved, onSave]);
+  }, [onSave]);
 
-  const formatSalary = useCallback((salary?: string): string => {
+  const formatSalary = useCallback((salary?: string) => {
     if (!salary) return '';
-    const monthlyMatch = salary.match(/\$?(\d+)[Kk]\/[Mm]o/i);
-    if (monthlyMatch) {
-      return `$${monthlyMatch[1]}K/Mo`;
-    }
-    return salary;
+    const match = salary.match(/\$?(\d+)[Kk]\/[Mm]o/i);
+    return match ? `$${match[1]}K/Mo` : salary;
   }, []);
 
-  const getTags = useCallback(() => {
-    const tags: string[] = [];
-    if (job.segment) {
-      if (job.segment.toLowerCase().includes('design')) {
-        tags.push('Design');
-      }
-    }
-    if (job.job_type) {
-      tags.push(job.job_type);
-    }
-    if (job.segment) {
-      // Extract level from segment
-      if (job.segment.toLowerCase().includes('senior')) {
-        tags.push('Senior designer');
-      } else if (job.segment.toLowerCase().includes('lead')) {
-        tags.push('Lead designer');
-      }
-    }
-    // Default tags if none found
-    if (tags.length === 0) {
-      tags.push('Design', 'Full time', 'Senior designer');
-    }
-    return tags;
-  }, [job.segment, job.job_type]);
-
-  const companyLocation = `${job.company} inc${job.location ? ` · ${job.location}` : ''}`;
-  const tags = getTags();
   const formattedSalary = formatSalary(job.salary_range);
+  const companyLocation = `${job.company} inc${job.location ? ` · ${job.location}` : ''}`;
 
   return (
     <View
@@ -90,17 +68,18 @@ export function JobCard({ job, onSave }: JobCardProps) {
       }`}
     >
       <View className="flex-row items-start gap-3">
-        {job.company_logo ? (
+        {/* Company Logo */}
+        {job.companyRel?.logo ? (
           <Image
-            source={{ uri: job.company_logo }}
+            source={{ uri: job.companyRel.logo }}
             className="rounded-xl"
-            style={{ width: 48, height: 48 }}
+            style={{ width: 50, height: 50 }}
             contentFit="cover"
           />
         ) : (
           <View
             className="items-center justify-center rounded-xl bg-neutral-200"
-            style={{ width: 48, height: 48 }}
+            style={{ width: 50, height: 50 }}
           >
             <Text className="text-lg font-bold text-neutral-500">
               {job.company.charAt(0).toUpperCase()}
@@ -112,25 +91,38 @@ export function JobCard({ job, onSave }: JobCardProps) {
           <Text className="mb-1 text-base font-bold text-neutral-900">
             {job.title}
           </Text>
-
           <Text className="mb-2 text-sm text-neutral-600">
             {companyLocation}
           </Text>
 
-          <View className="mb-3 flex-row flex-wrap gap-2">
-            {tags.map((tag, index) => (
-              <View key={index} className="rounded-lg bg-neutral-100 px-2 py-1">
-                <Text className="text-xs font-medium text-neutral-600">
-                  {tag}
-                </Text>
+          <View className="flex-row flex-wrap gap-2">
+            {visibleTags.map((tag) => (
+              <View key={tag} className="rounded-md bg-gray-100 px-2 py-1">
+                <Text className="text-xs font-medium text-gray-800">{tag}</Text>
               </View>
             ))}
+            {!expanded && hiddenCount > 0 && (
+              <Pressable
+                onPress={() => setExpanded(true)}
+                className="rounded-md bg-gray-200 px-2 py-1"
+              >
+                <Text className="text-xs font-medium text-gray-600">
+                  +{hiddenCount} more
+                </Text>
+              </Pressable>
+            )}
           </View>
 
-          <View className="flex-row items-center justify-between border-t border-neutral-100 pt-2">
-            <Text className="text-xs text-neutral-400">
-              {formatRelativeTime(job.created_at)}
-            </Text>
+          {/* Footer */}
+          <View className="mt-3 flex-row items-center justify-between border-t border-neutral-100 pt-2">
+            <View>
+              <Text className="text-xs text-neutral-400 mb-1">
+                Add these keywords to your resume to improve ATS matching.
+              </Text>
+              <Text className="text-xs text-neutral-400">
+                {formatRelativeTime(job.created_at)}
+              </Text>
+            </View>
             {formattedSalary && (
               <Text className="text-sm font-bold text-neutral-900">
                 {formattedSalary}
