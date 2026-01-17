@@ -20,7 +20,7 @@ const catchAsync = (fn) => (req, res, next) => {
  *         description: Not found
  */
 export const getCurrentUser = catchAsync(async (req, res) => {
-  const user = await prisma.user.findUnique({
+  let user = await prisma.user.findUnique({
     where: { id: req.user.id },
     include: { devices: true, followedCompanies: true }
   });
@@ -30,6 +30,80 @@ export const getCurrentUser = catchAsync(async (req, res) => {
     error.statusCode = httpStatus.NOT_FOUND;
     throw error;
   }
+
+  const now = new Date();
+
+  /**
+   * =====================================
+   * 🔐 FIRST-TIME TOKEN INITIALIZATION
+   * =====================================
+   */
+  if (!user.tokens_last_update) {
+    user = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        tokens_left: 3,
+        tokens_last_update: now
+      },
+      include: { devices: true, followedCompanies: true }
+    });
+
+    return res.status(httpStatus.OK).json(user);
+  }
+
+  const lastUpdate = new Date(user.tokens_last_update);
+
+  /**
+   * =====================================
+   * 🔐 PRODUCTION TOKEN RENEWAL (30 DAYS)
+   * =====================================
+   */
+
+  const diffInDays = Math.floor(
+    (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
+  if (diffInDays >= 30) {
+    user = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        tokens_left: 3,
+        tokens_last_update: now
+      },
+      include: { devices: true, followedCompanies: true }
+    });
+  }
+
+  /**
+   * =====================================
+   * 🧪 TEST TOKEN RENEWAL (2 MINUTES)
+   * =====================================
+   */
+
+  // const diffInMinutes = Math.floor(
+  //   (now.getTime() - lastUpdate.getTime()) / (1000 * 60)
+  // );
+
+  // console.log('====================================');
+  // console.log(
+  //   'GET USER DETAILS',
+  //   'diffInMinutes:',
+  //   diffInMinutes,
+  //   'lastUpdate:',
+  //   lastUpdate.toISOString()
+  // );
+  // console.log('====================================');
+
+  // if (diffInMinutes >= 2) {
+  //   user = await prisma.user.update({
+  //     where: { id: user.id },
+  //     data: {
+  //       tokens_left: 3,
+  //       tokens_last_update: now
+  //     },
+  //     include: { devices: true, followedCompanies: true }
+  //   });
+  // }
 
   res.status(httpStatus.OK).json(user);
 });

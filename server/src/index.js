@@ -18,7 +18,7 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 app.get("/", (req, res) => {
-  res.send({ status: "ok", message: "Testing backend auto deployment! 9 JAN 2026" });
+  res.send({ status: "ok", message: "Welcome to HiringBull API!" });
 });
 
 app.use(helmet());

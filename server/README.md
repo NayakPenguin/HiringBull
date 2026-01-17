@@ -59,7 +59,7 @@ Create a `.env` file in the root of the `server/` directory:
 ## � API Reference
 
 ### Base URL
-`https://hiringbull-api.scale8ai.com/api/`
+`https://api.hiringbull.org/`
 
 ---
 

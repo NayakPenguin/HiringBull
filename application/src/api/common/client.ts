@@ -2,7 +2,7 @@ import axios, { AxiosRequestConfig, AxiosError } from 'axios';
 import { authService } from '@/service/auth-service';
 
 
-const BASE_URL = 'https://hiringbull-api.scale8ai.com/';
+const BASE_URL = 'https://api.hiringbull.org/';
 
 
 export const client = axios.create({

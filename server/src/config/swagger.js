@@ -22,7 +22,7 @@ const options = {
         description: 'Development server',
       },
       {
-        url: 'https://hiringbull-api.scale8ai.com',
+        url: 'https://api.hiringbull.org/',
         description: 'Production server',
       },
     ],

@@ -103,6 +103,7 @@ model Job {
   segment         String?
   title           String
   careerpage_link String?
+  tags            String[] @default([])
   company_id      String?
   created_at      DateTime @default(now())
   created_by      String?
