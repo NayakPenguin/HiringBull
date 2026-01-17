@@ -1,14 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  ScrollView,
-} from 'react-native';
+import { ActivityIndicator, FlatList, View as RNView } from 'react-native';
+import { Pressable, ScrollView } from 'react-native';
 
-import { type Job as ApiJob } from '@/api/jobs';
-import { type Job, JobCard } from '@/components/job-card';
+import { type Job as ApiJob, JobCard } from '@/components/job-card';
 import {
   Checkbox,
   FocusAwareStatusBar,
@@ -20,8 +15,6 @@ import {
   View,
 } from '@/components/ui';
 import { useFetchFollowedJobs } from '@/features/jobs';
-import { formatSegment } from '@/lib/utils';
-
 const FILTER_TAGS = [
   'Design',
   'Full time',
@@ -41,23 +34,19 @@ const FILTER_TAGS = [
 ];
 
 export default function Jobs() {
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useFetchFollowedJobs();
-  
-  console.log('data-update', data);
-  console.log('FIRST JOB 👉', data?.pages?.[0]?.data?.[0]);
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    refetch,
+  } = useFetchFollowedJobs();
 
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const { ref, present, dismiss } = useModal();
-
-  const allJobs = useMemo(() => {
-    return data?.pages.flatMap((page) => page?.data || []) || [];
-  }, [data]);
-
-  const handleSaveJob = useCallback((jobId: string) => {
-    // TODO: Implement save job functionality
-    console.log('Save job:', jobId);
-  }, []);
 
   const handleFilterPress = useCallback(() => {
     present();
@@ -69,146 +58,70 @@ export default function Jobs() {
     );
   }, []);
 
-  const getJobTags = useCallback((job: ApiJob): string[] => {
-    const tags: string[] = [];
-    const segment = formatSegment(job.experience_level || job.segment || '');
+  // Pull-to-refresh
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refetch]);
 
-    // Extract tags from segment
-    if (segment.toLowerCase().includes('design')) {
-      tags.push('Design');
-    }
-    if (segment.toLowerCase().includes('senior')) {
-      tags.push('Senior');
-    }
-    if (segment.toLowerCase().includes('junior')) {
-      tags.push('Junior');
-    }
-    if (segment.toLowerCase().includes('lead')) {
-      tags.push('Lead');
-    }
+  // Flatten all pages
+  const allJobs = useMemo(
+    () => data?.pages.flatMap((page) => page.data || []) || [],
+    [data]
+  );
 
-    // Add job type
-    if (job.job_type) {
-      const jobType = job.job_type.toLowerCase();
-      if (jobType.includes('full time') || jobType.includes('fulltime')) {
-        tags.push('Full time');
-      }
-      if (jobType.includes('part time') || jobType.includes('parttime')) {
-        tags.push('Part time');
-      }
-      if (jobType.includes('remote')) {
-        tags.push('Remote');
-      }
-    }
-
-    // Extract tech stack from title and description
-    const titleLower = job.title?.toLowerCase() || '';
-    const descriptionLower = job.description?.toLowerCase() || '';
-    const combinedText = `${titleLower} ${descriptionLower}`;
-
-    if (
-      combinedText.includes('react native') ||
-      combinedText.includes('react-native')
-    ) {
-      tags.push('React Native');
-    } else if (
-      combinedText.includes('react.js') ||
-      combinedText.includes('reactjs')
-    ) {
-      tags.push('React.js');
-    }
-    if (combinedText.includes('javascript')) {
-      tags.push('JavaScript');
-    }
-    if (combinedText.includes('typescript')) {
-      tags.push('TypeScript');
-    }
-    if (combinedText.includes('python')) {
-      tags.push('Python');
-    }
-    if (combinedText.includes('java') && !combinedText.includes('javascript')) {
-      tags.push('Java');
-    }
-    if (combinedText.includes('c++') || combinedText.includes('cpp')) {
-      tags.push('C++');
-    }
-    if (
-      combinedText.includes('ui/ux') ||
-      combinedText.includes('ui ') ||
-      combinedText.includes('ux ')
-    ) {
-      tags.push('UI/UX');
-    }
-
-    return tags;
-  }, []);
-
+  // Filter jobs by search and selected tags
   const filteredJobs = useMemo(() => {
     return allJobs.filter((job) => {
       if (!job) return false;
 
-      // Search filter
       const query = searchQuery.toLowerCase();
-      const title = job.title?.toLowerCase() || '';
-      const company = job.company?.toLowerCase() || '';
-      const matchesSearch = title.includes(query) || company.includes(query);
+      const matchesSearch =
+        job.title?.toLowerCase().includes(query) ||
+        job.company?.toLowerCase().includes(query);
 
-      // Tag filter
-      if (selectedTags.length === 0) {
-        return matchesSearch;
-      }
+      if (!matchesSearch) return false;
 
-      const jobTags = getJobTags(job);
-      const matchesTag = selectedTags.some((tag) =>
+      if (!selectedTags.length) return true;
+
+      const jobTags = Array.from(new Set(job.tags || []));
+      return selectedTags.some((tag) =>
         jobTags.some((jobTag) => jobTag.toLowerCase() === tag.toLowerCase())
       );
-
-      return matchesSearch && matchesTag;
     });
-  }, [allJobs, searchQuery, selectedTags, getJobTags]);
+  }, [allJobs, searchQuery, selectedTags]);
 
-  // Map API job to UI Job type
-  const mapJobData = useCallback((apiJob: ApiJob): Job => {
-    return {
-      id: apiJob.id,
-      company: apiJob.company,
-      segment: formatSegment(apiJob.experience_level || apiJob.segment),
-      title: apiJob.title,
-      careerpage_link: apiJob.apply_link,
-      company_id: apiJob.companyId,
-      created_at: apiJob.posted_date || apiJob.created_at,
-      created_by: null,
-      isSaved: false,
-      company_type: apiJob.company_type || 'TECH_GIANT',
-      location: apiJob.location || '',
-      salary_range: apiJob.salary_range || '',
-      job_type: apiJob.job_type || '',
-      company_logo: apiJob.companyRel?.logo || '',
-    };
+  // Save job callback
+  const handleSaveJob = useCallback((jobId: string) => {
+    console.log('Save job:', jobId);
   }, []);
 
   const renderItem = useCallback(
-    ({ item }: { item: any }) => (
-      <JobCard job={mapJobData(item)} onSave={() => handleSaveJob(item.id)} />
+    ({ item }: { item: ApiJob }) => (
+      <JobCard job={item} onSave={() => handleSaveJob(item.id)} />
     ),
-    [handleSaveJob, mapJobData]
+    [handleSaveJob]
   );
 
   const renderFooter = useCallback(() => {
     if (isFetchingNextPage) {
       return (
-        <View className="py-4">
+        <RNView className="py-4">
           <ActivityIndicator size="small" color="#A3A3A3" />
-        </View>
+        </RNView>
       );
     }
     if (!hasNextPage && allJobs.length > 0) {
       return (
-        <View className="items-center justify-center py-8">
+        <RNView className="items-center justify-center py-8">
           <Text className="text-sm font-medium text-neutral-400">
             You&apos;ve reached the end of the list
           </Text>
-        </View>
+        </RNView>
       );
     }
     return null;
@@ -219,15 +132,17 @@ export default function Jobs() {
       <FocusAwareStatusBar />
       <View className="flex-1 pt-6">
         <View className="border-b border-neutral-200 bg-white px-5 pb-4 shadow-sm">
-          <Text className="text-3xl font-black text-neutral-900">
+          <Text
+            className="text-3xl text-neutral-900"
+            style={{ fontFamily: 'Montez' }}
+          >
             Explore Jobs
           </Text>
-          <Text className="mb-4 text-base font-medium text-neutral-500">
+          <Text className="my-4 text-base font-medium text-neutral-500">
             Personalized job alerts, delivered fast, so you get noticed before
             everyone else.
           </Text>
-
-          <View className="flex-row items-center gap-2">
+          <View className="mt-2 flex-row items-center gap-2">
             <View className="flex-1">
               <Input
                 isSearch
@@ -236,13 +151,11 @@ export default function Jobs() {
                 onChangeText={setSearchQuery}
               />
             </View>
+
             <Pressable
               onPress={handleFilterPress}
               className="items-center justify-center rounded-xl bg-neutral-900"
-              style={{
-                width: 48,
-                height: 48,
-              }}
+              style={{ width: 48, height: 48 }}
             >
               <Ionicons name="options-outline" size={24} color="#ffffff" />
             </Pressable>
@@ -257,18 +170,16 @@ export default function Jobs() {
           <FlatList
             data={filteredJobs}
             renderItem={renderItem}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item, index) => `${item.id}-${index}`}
             contentContainerStyle={{
               paddingHorizontal: 20,
               paddingBottom: 20,
               paddingTop: 10,
             }}
+            refreshing={isRefreshing && !isFetchingNextPage}
+            onRefresh={onRefresh}
             showsVerticalScrollIndicator={false}
-            onEndReached={() => {
-              if (hasNextPage) {
-                fetchNextPage();
-              }
-            }}
+            onEndReached={() => hasNextPage && fetchNextPage()}
             onEndReachedThreshold={0.5}
             ListEmptyComponent={
               <View className="mt-20 items-center justify-center">
@@ -315,7 +226,6 @@ export default function Jobs() {
                       <Checkbox
                         checked={isSelected}
                         onChange={() => handleToggleTag(tag)}
-                        accessibilityLabel={`Filter by ${tag}`}
                       />
                       <Text
                         className={`text-sm font-medium ${

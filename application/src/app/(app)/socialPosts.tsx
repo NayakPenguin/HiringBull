@@ -112,10 +112,6 @@ function SocialPostCard({ post }: { post: SocialPost }) {
               className="flex-row items-center gap-2 rounded-full border border-blue-100 px-4 py-2 active:opacity-70 dark:border-blue-900/30 dark:bg-blue-900/20"
               style={{ maxWidth: '100%' }}
             >
-              <Ionicons name="link" size={14} />
-              <Text className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
-                Source
-              </Text>
               <Text
                 className="text-xs font-bold text-blue-600 dark:text-blue-400 flex-shrink"
                 numberOfLines={1}
@@ -131,9 +127,25 @@ function SocialPostCard({ post }: { post: SocialPost }) {
 }
 
 export default function SocialPosts() {
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    useFetchSocialPosts();
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    refetch,
+  } = useFetchSocialPosts();
   const [searchQuery, setSearchQuery] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refetch]);
 
   const allPosts = useMemo(() => {
     return data?.pages.flatMap((page) => page?.data || []) || [];
@@ -182,15 +194,18 @@ export default function SocialPosts() {
       <FocusAwareStatusBar />
       <View className="flex-1 pt-6">
         <View className="border-b border-neutral-200 bg-white px-5 pb-4 shadow-sm">
-          <Text className="text-3xl font-black text-neutral-900">
+          <Text
+            className="text-3xl text-neutral-900"
+            style={{ fontFamily: 'Montez' }}
+          >
             Social Posts
           </Text>
-          <Text className="mb-4 text-base font-medium text-neutral-500">
+          <Text className="my-2 text-base font-medium text-neutral-500">
             Personalized job alerts, delivered fast , so you get noticed before
             everyone else.
           </Text>
 
-          <View className="flex-row items-center gap-2">
+          <View className="flex-row items-center gap-2 mt-2">
             <View className="flex-1">
               <Input
                 isSearch
@@ -199,16 +214,6 @@ export default function SocialPosts() {
                 onChangeText={setSearchQuery}
               />
             </View>
-            <Pressable
-              onPress={() => console.log('filter')}
-              className="items-center justify-center rounded-xl bg-neutral-900"
-              style={{
-                width: 48,
-                height: 48,
-              }}
-            >
-              <Ionicons name="options-outline" size={24} color="#ffffff" />
-            </Pressable>
           </View>
         </View>
 
@@ -226,6 +231,8 @@ export default function SocialPosts() {
               paddingBottom: 20,
               paddingTop: 10,
             }}
+            refreshing={isRefreshing}
+            onRefresh={onRefresh}
             showsVerticalScrollIndicator={false}
             onEndReached={() => {
               if (hasNextPage) {
@@ -233,17 +240,6 @@ export default function SocialPosts() {
               }
             }}
             onEndReachedThreshold={0.5}
-            // Filter chips - commented out for now
-            // ListHeaderComponent={
-            //   <View className="mb-3 flex-row gap-2">
-            //     <Pressable className="...">
-            //       <Text>All Companies</Text>
-            //     </Pressable>
-            //     <Pressable className="...">
-            //       <Text>All Levels</Text>
-            //     </Pressable>
-            //   </View>
-            // }
             ListEmptyComponent={
               <View className="mt-20 items-center justify-center">
                 <Ionicons

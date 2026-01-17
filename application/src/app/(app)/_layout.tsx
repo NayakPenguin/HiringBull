@@ -1,22 +1,38 @@
 import { useAuth } from '@clerk/clerk-expo';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import AppLoading from 'expo-app-loading';
 import { Tabs } from 'expo-router';
 import { useColorScheme } from 'nativewind';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
+import * as Font from 'expo-font';
 
 export default function TabLayout() {
-    const {getToken} = useAuth()
+  const { getToken } = useAuth();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-    useEffect(() => {
+  useEffect(() => {
     const logToken = async () => {
       const token = await getToken();
       console.log('getToken:', token);
     };
     logToken();
   }, [getToken]);
+  const [loaded, setLoaded] = useState(false);
+  const loadFonts = async () => {
+    await Font.loadAsync({
+      Montez: require('../../../assets/fonts/Montez-Regular.ttf'),
+    });
+  };
+  if (!loaded)
+    return (
+      <AppLoading
+        startAsync={loadFonts}
+        onFinish={() => setLoaded(true)}
+        onError={console.warn}
+      />
+    );
 
   return (
     <Tabs
