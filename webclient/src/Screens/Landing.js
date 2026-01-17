@@ -248,7 +248,7 @@ const Landing = () => {
           </div>
         </div>
       </PageGap>
-      <Page>
+      <Page id='features'>
         <h1>
           Features
           <img src={logo} alt="" />
@@ -470,7 +470,7 @@ const Landing = () => {
         <img src={logo} alt="" />
         <div className="line"></div>
       </PageBetween>
-      <Page className='no-mobile'>
+      <Page className='no-mobile' id="compare">
         <h1>
           Why HiringBull Works
           <img src={logo} alt="" />
@@ -541,7 +541,7 @@ const Landing = () => {
         <img src={logo} alt="" />
         <div className="line"></div>
       </PageBetween>
-      <Page>
+      <Page id="pricing">
         <h1>
           <span>Pricing & </span> Membership Plans
           <img src={logo} alt="" />
@@ -712,7 +712,7 @@ const Landing = () => {
         <img src={logo} alt="" />
         <div className="line"></div>
       </PageBetween>
-      <Page>
+      <Page id="faq">
         <h1>
           Frequently Asked Questions
           <img src={logo} alt="" />
@@ -748,8 +748,8 @@ const Landing = () => {
 
           <div className="col">
             <div className="heading">Product</div>
-            <a href="#how">How it works</a>
             <a href="#features">Features</a>
+            <a href="#compare">Compare</a>
             <a href="#pricing">Pricing</a>
             <a href="#faq">FAQ</a>
           </div>
@@ -757,8 +757,8 @@ const Landing = () => {
           <div className="col">
             <div className="heading">Support</div>
             <a href="/join-membership">Apply for Membership</a>
-            <a href="#contact">Contact</a>
-            <a href="#referral">Referral Program</a>
+            <a href="mailto:team@hiringbull.org">Contact</a>
+            <a href="/referral-program">Referral Program</a>
           </div>
 
           <div className="col">
