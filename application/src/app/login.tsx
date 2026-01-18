@@ -4,8 +4,8 @@ import * as AuthSession from 'expo-auth-session';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Platform, Pressable } from 'react-native';
-import Animated, { FadeInRight } from 'react-native-reanimated';
+import { ActivityIndicator, Image, Platform, Pressable } from 'react-native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 
 import {
   FocusAwareStatusBar,
@@ -15,22 +15,19 @@ import {
   View,
 } from '@/components/ui';
 
-type Step = 'email' | 'otp';
-type AuthMode = 'signIn' | 'signUp' | null;
+/* ----------------------------- Utils ----------------------------- */
 
-// Preloads the browser for Android devices to reduce authentication load time
 const useWarmUpBrowser = () => {
   useEffect(() => {
     if (Platform.OS !== 'android') return;
-    void WebBrowser.warmUpAsync();
-    return () => {
-      void WebBrowser.coolDownAsync();
-    };
+    WebBrowser.warmUpAsync();
+    return () => WebBrowser.coolDownAsync();
   }, []);
 };
 
-// Handle any pending authentication sessions
 WebBrowser.maybeCompleteAuthSession();
+
+/* ----------------------------- Screen ----------------------------- */
 
 export default function Login() {
   useWarmUpBrowser();
@@ -48,394 +45,222 @@ export default function Login() {
   } = useSignUp();
   const { startSSOFlow } = useSSO();
 
-  const [step, setStep] = useState<Step>('email');
+  const [step, setStep] = useState<'email' | 'otp'>('email');
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
+  const [authMode, setAuthMode] = useState<'signIn' | 'signUp' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [authMode, setAuthMode] = useState<AuthMode>(null);
+
+  /* ----------------------------- Google ----------------------------- */
 
   const handleGoogleLogin = useCallback(async () => {
     setIsLoading(true);
     setError('');
 
     try {
-      // Per Clerk AI recommendation: just use path, scheme auto-detected
       const redirectUrl = AuthSession.makeRedirectUri({
         path: 'sso-callback',
       });
-      console.log('Starting SSO flow with redirect URL:', redirectUrl);
 
-      const { createdSessionId, setActive, signIn, signUp } =
-        await startSSOFlow({
-          strategy: 'oauth_google',
-          redirectUrl,
-        });
+      const { createdSessionId, setActive } = await startSSOFlow({
+        strategy: 'oauth_google',
+        redirectUrl,
+      });
 
-      // Session was created successfully - set it active and navigate
       if (createdSessionId) {
         await setActive!({ session: createdSessionId });
         router.replace('/');
-        return;
       }
-
-      // On Android, the session might be established asynchronously via maybeCompleteAuthSession()
-      // The _layout.tsx guards will automatically navigate when auth state changes
-      // So we don't show an error here - just log for debugging
-      console.log(
-        'OAuth returned without session - waiting for async auth state update...',
-        {
-          signIn: signIn
-            ? {
-                status: signIn.status,
-                firstFactor: signIn.firstFactorVerification?.status,
-              }
-            : null,
-          signUp: signUp ? { status: signUp.status } : null,
-        }
-      );
-
-      // Keep loading state briefly to allow for async session establishment
-      // The layout guards will navigate automatically when isSignedIn becomes true
     } catch (err: any) {
-      console.error('Google OAuth error:', JSON.stringify(err, null, 2));
-      setError(err?.errors?.[0]?.message || 'Google sign-in failed');
-      setIsLoading(false);
+      setError('Google sign-in failed');
     } finally {
       setIsLoading(false);
     }
-    // Note: We don't set isLoading to false here because the layout guards will unmount this component
-  }, [startSSOFlow, router]);
+  }, [router, startSSOFlow]);
 
-  const handleInitialContinue = async () => {
-    if (
-      !isSignInLoaded ||
-      !isSignUpLoaded ||
-      !signIn ||
-      !signUp ||
-      email.length === 0
-    )
-      return;
+  /* ----------------------------- Email Step ----------------------------- */
+
+  const handleContinue = async () => {
+    if (!email || !isSignInLoaded || !isSignUpLoaded) return;
 
     setIsLoading(true);
     setError('');
 
     try {
-      // First, try to sign in (existing user)
-      const signInAttempt = await signIn.create({
-        identifier: email,
-      });
+      const attempt = await signIn.create({ identifier: email });
 
-      // Prepare email code verification
-      const emailFactor = signInAttempt.supportedFirstFactors?.find(
-        (factor) => factor.strategy === 'email_code'
+      const factor = attempt.supportedFirstFactors?.find(
+        (f) => f.strategy === 'email_code'
       );
 
-      if (emailFactor && 'emailAddressId' in emailFactor) {
+      if (factor && 'emailAddressId' in factor) {
         await signIn.prepareFirstFactor({
           strategy: 'email_code',
-          emailAddressId: emailFactor.emailAddressId,
+          emailAddressId: factor.emailAddressId,
         });
       }
 
       setAuthMode('signIn');
       setStep('otp');
-    } catch (signInError: any) {
-      // If user doesn't exist, create a new one
-      if (signInError?.errors?.[0]?.code === 'form_identifier_not_found') {
-        try {
-          await signUp.create({
-            emailAddress: email,
-          });
-
-          // Prepare email verification for new user
-          await signUp.prepareEmailAddressVerification({
-            strategy: 'email_code',
-          });
-
-          setAuthMode('signUp');
-          setStep('otp');
-        } catch (signUpError: any) {
-          setError(signUpError?.errors?.[0]?.message || 'Failed to send code');
-        }
-      } else {
-        setError(signInError?.errors?.[0]?.message || 'Failed to send code');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleVerify = async () => {
-    if (
-      !isSignInLoaded ||
-      !isSignUpLoaded ||
-      !signIn ||
-      !signUp ||
-      otp.length !== 6
-    )
-      return;
-
-    setIsLoading(true);
-    setError('');
-
-    try {
-      if (authMode === 'signIn') {
-        // Verify sign in
-        const signInAttempt = await signIn.attemptFirstFactor({
-          strategy: 'email_code',
-          code: otp,
-        });
-
-        if (signInAttempt.status === 'complete') {
-          await setActiveSignIn({ session: signInAttempt.createdSessionId });
-          router.replace('/');
-          return;
-        } else {
-          console.log('Sign in status:', signInAttempt.status);
-          setError('Verification incomplete. Please try again.');
-        }
-      } else if (authMode === 'signUp') {
-        // Verify sign up
-        const signUpAttempt = await signUp.attemptEmailAddressVerification({
-          code: otp,
-        });
-
-        if (signUpAttempt.status === 'complete') {
-          await setActiveSignUp({ session: signUpAttempt.createdSessionId });
-          router.replace('/');
-          return;
-        } else if (signUpAttempt.status === 'missing_requirements') {
-          // User created but may need additional setup
-          // For now, just set active and proceed
-          if (signUpAttempt.createdSessionId) {
-            await setActiveSignUp({ session: signUpAttempt.createdSessionId });
-            router.replace('/');
-            return;
-          }
-          console.log('Sign up missing requirements:', signUpAttempt);
-          setError('Additional verification required.');
-        } else {
-          console.log('Sign up status:', signUpAttempt.status);
-          setError('Verification incomplete. Please try again.');
-        }
-      }
-    } catch (err: any) {
-      // console.error('Verification error:', err);
-      setError(err?.errors?.[0]?.message || 'Invalid verification code');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleResendCode = async () => {
-    if (!signIn || !signUp) return;
-
-    setIsLoading(true);
-    setError('');
-    setOtp('');
-
-    try {
-      if (authMode === 'signIn') {
-        const emailFactor = signIn.supportedFirstFactors?.find(
-          (factor) => factor.strategy === 'email_code'
-        );
-        if (emailFactor && 'emailAddressId' in emailFactor) {
-          await signIn.prepareFirstFactor({
-            strategy: 'email_code',
-            emailAddressId: emailFactor.emailAddressId,
-          });
-        }
-      } else if (authMode === 'signUp') {
+    } catch (e: any) {
+      if (e?.errors?.[0]?.code === 'form_identifier_not_found') {
+        await signUp.create({ emailAddress: email });
         await signUp.prepareEmailAddressVerification({
           strategy: 'email_code',
         });
+        setAuthMode('signUp');
+        setStep('otp');
+      } else {
+        setError('Unable to send code');
       }
-    } catch (err: any) {
-      setError(err?.errors?.[0]?.message || 'Failed to resend code');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleBack = () => {
-    setStep('email');
-    setOtp('');
+  /* ----------------------------- OTP ----------------------------- */
+
+  const handleVerify = async () => {
+    if (otp.length !== 6) return;
+
+    setIsLoading(true);
     setError('');
-    setAuthMode(null);
+
+    try {
+      if (authMode === 'signIn') {
+        const res = await signIn.attemptFirstFactor({
+          strategy: 'email_code',
+          code: otp,
+        });
+        if (res.status === 'complete') {
+          await setActiveSignIn({ session: res.createdSessionId });
+          router.replace('/');
+        }
+      }
+
+      if (authMode === 'signUp') {
+        const res = await signUp.attemptEmailAddressVerification({ code: otp });
+        if (res.status === 'complete') {
+          await setActiveSignUp({ session: res.createdSessionId });
+          router.replace('/');
+        }
+      }
+    } catch {
+      setError('Invalid or expired code');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+  /* ----------------------------- UI ----------------------------- */
+
   return (
-    <View className="flex-1 bg-white dark:bg-neutral-900">
+    <Animated.View
+      className="flex-1 bg-white"
+      entering={FadeInUp.duration(400)}
+    >
       <FocusAwareStatusBar />
-      <SafeAreaView className="flex-1">
-        <View className="flex-1 px-6 pt-12">
-          {step === 'otp' && (
+
+      {/* ---------------- HERO ---------------- */}
+      <View className="items-center pt-20">
+
+        <Image
+          source={require('../../assets/images/experience/hero-logo.png')}
+          className="mt-6 h-[320px] w-full"
+          resizeMode="contain"
+        />
+      </View>
+
+      {/* ---------------- CARD ---------------- */}
+      <Animated.View
+        entering={FadeInUp.duration(400)}
+        className="flex-1 rounded-t-3xl bg-white px-6 pt-8"
+      >
+        <Text className="font-bold text-center text-3xl text-neutral-900">
+          Welcome
+        </Text>
+
+        <Text className="mt-2 text-center text-neutral-500">
+          Find your dream job effortlessly
+        </Text>
+
+        {/* GOOGLE */}
+        <Pressable
+          onPress={handleGoogleLogin}
+          className="mt-8 flex-row items-center justify-center rounded-xl border border-neutral-200 py-4"
+        >
+          <Ionicons name="logo-google" size={20} />
+          <Text className="ml-3 text-base font-semibold">
+            Signup with Google
+          </Text>
+        </Pressable>
+
+        {/* DIVIDER */}
+        <View className="my-6 flex-row items-center gap-3">
+          <View className="h-[1px] flex-1 bg-neutral-200" />
+          <Text className="text-sm text-neutral-400">
+            or continue with email
+          </Text>
+          <View className="h-[1px] flex-1 bg-neutral-200" />
+        </View>
+
+        {/* EMAIL / OTP */}
+        {step === 'email' ? (
+          <>
+            <Input
+              placeholder="example@gmail.com"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+
             <Pressable
-              onPress={handleBack}
-              className="mb-8 flex-row items-center self-start"
+              onPress={handleContinue}
+              disabled={!email || isLoading}
+              className="mt-6 rounded-xl bg-neutral-900 py-4"
             >
-              <Ionicons
-                name="arrow-back"
-                size={20}
-                className="text-neutral-900 dark:text-white"
-                color="#525252"
-              />
-              <Text className="ml-2 text-sm font-medium text-neutral-600 dark:text-neutral-400">
-                Change email
+              {isLoading ? (
+                <ActivityIndicator style={{color:"white"}} />
+              ) : (
+                <Text className="text-center text-lg font-bold text-white">
+                  Continue to Proceed
+                </Text>
+              )}
+            </Pressable>
+          </>
+        ) : (
+          <>
+            <Input
+              placeholder="000000"
+              value={otp}
+              onChangeText={setOtp}
+              keyboardType="number-pad"
+              maxLength={6}
+              className="text-center text-2xl tracking-widest"
+            />
+
+            <Pressable
+              onPress={handleVerify}
+              className="mt-6 rounded-xl bg-yellow-400 py-4"
+            >
+              <Text className="text-center text-lg font-bold">
+                Verify & Continue
               </Text>
             </Pressable>
-          )}
+          </>
+        )}
 
-          <Animated.View
-            entering={FadeInRight.duration(300)}
-            key={step}
-            className="flex-1"
-          >
-            <Text className="mb-2 text-3xl font-bold dark:text-white">
-              {step === 'email' ? 'Welcome' : 'Check your inbox'}
-            </Text>
-            <Text className="mb-8 text-base text-neutral-500">
-              {step === 'email'
-                ? 'Enter your email to continue'
-                : `We've sent a 6-digit code to ${email}`}
-            </Text>
+        {error ? (
+          <Text className="mt-4 text-center text-sm text-red-500">{error}</Text>
+        ) : null}
 
-            {error ? (
-              <View className="mb-4 rounded-lg bg-red-50 p-3 dark:bg-red-900/20">
-                <Text className="text-sm text-red-600 dark:text-red-400">
-                  {error == 'Sign-in incomplete. Please try again.' ? (
-                    <>Something went wrong, please try again!</>
-                  ) : (
-                    <>Your OTP is wrong or expired. Please try again.</>
-                  )}
-                </Text>
-              </View>
-            ) : null}
-
-            {step === 'email' ? (
-              <View>
-                <Pressable
-                  onPress={handleGoogleLogin}
-                  className="mb-8 flex-row items-center justify-center rounded-xl border border-neutral-200 bg-white py-4 active:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:active:bg-neutral-700"
-                >
-                  <Ionicons name="logo-google" size={20} color={''} />
-                  <Text className="ml-3 text-base font-semibold dark:text-white">
-                    Continue with Google
-                  </Text>
-                </Pressable>
-
-                <View className="mb-8 flex-row items-center gap-4">
-                  <View className="h-[1px] flex-1 bg-neutral-200 dark:bg-neutral-800" />
-                  <Text className="text-sm text-neutral-400">
-                    Or continue with email
-                  </Text>
-                  <View className="h-[1px] flex-1 bg-neutral-200 dark:bg-neutral-800" />
-                </View>
-
-                <View className="gap-4">
-                  <Input
-                    placeholder="name@email.com"
-                    value={email}
-                    onChangeText={setEmail}
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                    returnKeyType="go"
-                    onSubmitEditing={handleInitialContinue}
-                    editable={!isLoading}
-                  />
-
-                  <Pressable
-                    onPress={handleInitialContinue}
-                    disabled={email.length === 0 || isLoading}
-                    className={`items-center justify-center rounded-xl py-4 ${
-                      email.length > 0 && !isLoading
-                        ? 'bg-neutral-900 dark:bg-white'
-                        : 'bg-neutral-200 dark:bg-neutral-800'
-                    }`}
-                  >
-                    {isLoading ? (
-                      <ActivityIndicator color="#fff" />
-                    ) : (
-                      <Text
-                        className={`text-base font-semibold ${
-                          email.length > 0
-                            ? 'text-white dark:text-black'
-                            : 'text-neutral-500'
-                        }`}
-                      >
-                        Continue
-                      </Text>
-                    )}
-                  </Pressable>
-                </View>
-              </View>
-            ) : (
-              <View className="gap-4">
-                <Input
-                  placeholder="000000"
-                  value={otp}
-                  onChangeText={setOtp}
-                  keyboardType="number-pad"
-                  maxLength={6}
-                  autoFocus
-                  returnKeyType="go"
-                  onSubmitEditing={handleVerify}
-                  className="text-center text-2xl tracking-widest"
-                  editable={!isLoading}
-                />
-
-                <Pressable
-                  onPress={handleVerify}
-                  disabled={otp.length !== 6 || isLoading}
-                  className={`items-center justify-center rounded-xl py-4 ${
-                    otp.length === 6 && !isLoading
-                      ? 'bg-neutral-900 dark:bg-white'
-                      : 'bg-neutral-200 dark:bg-neutral-800'
-                  }`}
-                >
-                  {isLoading ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <Text
-                      className={`text-base font-semibold ${
-                        otp.length === 6
-                          ? 'text-white dark:text-black'
-                          : 'text-neutral-500'
-                      }`}
-                    >
-                      Verify & Continue
-                    </Text>
-                  )}
-                </Pressable>
-
-                <Pressable
-                  className="mt-4 items-center"
-                  onPress={handleResendCode}
-                  disabled={isLoading}
-                >
-                  <Text className="text-sm font-medium text-neutral-900 dark:text-white">
-                    Resend Code
-                  </Text>
-                </Pressable>
-              </View>
-            )}
-            {/* Disclaimer */}
-            <View className="mt-auto pb-8">
-              <Text className="text-center text-xs text-neutral-400 leading-5">
-                By clicking continue, you agree to our{' '}
-                <Text className="text-neutral-900 dark:text-white underline">
-                  Terms of Service
-                </Text>{' '}
-                and{' '}
-                <Text className="text-neutral-900 dark:text-white underline">
-                  Privacy Policy
-                </Text>
-              </Text>
-            </View>
-          </Animated.View>
-        </View>
-      </SafeAreaView>
-    </View>
+        {/* TERMS */}
+        <Text className="mt-8 pb-6 text-center text-xs text-neutral-400">
+          By continuing, you agree to our Terms & Privacy Policy
+        </Text>
+      </Animated.View>
+    </Animated.View>
   );
 }
