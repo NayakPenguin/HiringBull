@@ -139,8 +139,8 @@ export default function Jobs() {
             Explore Jobs
           </Text>
           <Text className="my-4 text-base font-medium text-neutral-500">
-            Personalized job alerts, delivered fast, so you get noticed before
-            everyone else.
+            Personalized job openings based on your experience and preferences.
+            New roles appear quickly, often within 10 minutes of being posted.
           </Text>
           <View className="mt-2 flex-row items-center gap-2">
             <View className="flex-1">

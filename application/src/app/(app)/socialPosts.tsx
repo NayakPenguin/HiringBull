@@ -201,8 +201,8 @@ export default function SocialPosts() {
             Social Posts
           </Text>
           <Text className="my-2 text-base font-medium text-neutral-500">
-            Personalized job alerts, delivered fast , so you get noticed before
-            everyone else.
+            AI summarized hiring posts from platforms like LinkedIn, X, and
+            Reddit. Find relevant opportunities without scrolling through noise.
           </Text>
 
           <View className="flex-row items-center gap-2 mt-2">

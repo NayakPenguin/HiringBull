@@ -1,7 +1,7 @@
 import { useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
-import { type TextInput } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { FlatList, Image, Pressable, TextInput } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 
 import {
@@ -9,6 +9,7 @@ import {
   ControlledInput,
   FocusAwareStatusBar,
   Input,
+  Modal,
   SafeAreaView,
   Text,
   View,
@@ -16,229 +17,260 @@ import {
 import { useOutreachForm } from '@/lib/hooks/use-outreach-form';
 import { useSendLimitStore } from '@/lib/stores/send-limit-store';
 
-// Local component for this form with ref support
-const ControlledInputWithRef = React.forwardRef<
-  TextInput,
-  {
-    control: any;
-    name: string;
-    placeholder: string;
-    returnKeyType?: 'done' | 'next' | 'default';
-    onSubmitEditing?: () => void;
-    multiline?: boolean;
-    numberOfLines?: number;
-    style?: any;
-    className?: string;
-    disabled?: boolean;
-  }
->(({ control, name, ...props }, ref) => {
-  return (
-    <View className="mb-4">
-      <ControlledInput control={control} name={name} {...props} ref={ref} />
-    </View>
-  );
-});
+type Company = {
+  id: string;
+  name: string;
+  icon: any;
+};
 
-export default function Search() {
-  const { form, onSubmit } = useOutreachForm();
-  const { control, watch } = form;
+const COMPANIES: Company[] = [
+  {
+    id: 'amazon',
+    name: 'Amazon',
+    icon: require('../../../assets/images/experience/five-plus.jpeg'),
+  },
+  {
+    id: 'chatgpt',
+    name: 'Chatgpt',
+    icon: require('../../../assets/images/experience/chat-gpt.png'),
+  },
+  {
+    id: 'twitter',
+    name: 'Twitter',
+    icon: require('../../../assets/images/experience/twitter.png'),
+  },
+  {
+    id: 'microsoft',
+    name: 'Microsoft',
+    icon: require('../../../assets/images/experience/microsoft.png'),
+  },
+  {
+    id: 'paypal',
+    name: 'Paypal',
+    icon: require('../../../assets/images/experience/paypal.png'),
+  },
+  {
+    id: 'apple',
+    name: 'Apple',
+    icon: require('../../../assets/images/experience/apple.png'),
+  },
+  {
+    id: 'uber',
+    name: 'Uber',
+    icon: require('../../../assets/images/experience/uber.png'),
+  },
+  {
+    id: 'nike',
+    name: 'Nike',
+    icon: require('../../../assets/images/experience/nike.png'),
+  },
+];
+const ControlledInputWithRef = React.forwardRef<TextInput, any>(
+  ({ control, name, ...props }, ref) => {
+    return (
+      <View className="mb-4">
+        <ControlledInput ref={ref} control={control} name={name} {...props} />
+      </View>
+    );
+  }
+);
+function CompanyCard({
+  company,
+  selected,
+  onPress,
+}: {
+  company: Company;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className={`relative aspect-square flex-1 items-center justify-center rounded-xl border bg-white ${selected ? 'border-primary-600' : 'border-neutral-200'
+        }`}
+    >
+      {selected && (
+        <View className="absolute -right-2 -top-2 size-6 items-center justify-center rounded-full bg-primary-600">
+          <Ionicons name="checkmark" size={14} color="white" />
+        </View>
+      )}
+
+      <Image source={company.icon} className="size-10" resizeMode="contain" />
+    </Pressable>
+  );
+}
+export default function Outreach() {
   const { user } = useUser();
+  const { form, onSubmit } = useOutreachForm();
+  const { control, watch, setValue, reset } = form;
 
   const { canSend, getRemaining, increment, resetIfNewMonth } =
     useSendLimitStore();
 
-  // Watch required fields for validation
-  const email = watch('email');
-  const message = watch('message');
-
-  // Check if all required fields are filled
-  const isFormValid = Boolean(email?.trim() && message?.trim());
-  console.log(isFormValid, email);
-
-  const emailRef = React.useRef<TextInput>(null);
-  const jobIdRef = React.useRef<TextInput>(null);
-  const resumeLinkRef = React.useRef<TextInput>(null);
-  const messageRef = React.useRef<TextInput>(null);
-  const companyRef = React.useRef<{ present: () => void }>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const remaining = getRemaining();
+
+  const email = watch('email');
+  const message = watch('message');
+  const isFormValid = Boolean(email?.trim() && message?.trim());
   const canSendNow = canSend() && isFormValid;
 
-  React.useEffect(() => {
+  const messageRef = useRef<TextInput>(null);
+
+  useEffect(() => {
     resetIfNewMonth();
   }, [resetIfNewMonth]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (user?.primaryEmailAddress?.emailAddress) {
-      form.setValue('email', user.primaryEmailAddress.emailAddress);
+      setValue('email', user.primaryEmailAddress.emailAddress);
     }
-  }, [user, form]);
+  }, [user]);
 
-  const handleSendMessage = () => {
-    if (canSendNow) {
-      increment();
-      onSubmit();
-      form.reset({ email });
+  useEffect(() => {
+    if (selectedCompany) {
+      setValue('company', selectedCompany.id);
     }
+  }, [selectedCompany]);
+  const modalRef = useRef<{ present: () => void; dismiss: () => void }>(null);
+  const handleSend = () => {
+    if (!canSendNow) return;
+
+    increment();
+    onSubmit();
+    reset({ email });
+    modalRef.current?.dismiss();
   };
 
+  const filteredCompanies = COMPANIES.filter((c) =>
+    c.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-white">
       <FocusAwareStatusBar />
-      <View className="flex-1 pt-6">
-        {/* Header */}
-        <View className="border-b border-neutral-200 bg-white px-5 pb-4 shadow-sm">
-          <Text
-            className="text-3xl text-neutral-900"
-            style={{ fontFamily: 'Montez' }}
-          >
-            Outreach
-          </Text>
-          <Text className="my-2 text-base font-medium text-neutral-500">
-            You can do up to 3 outreaches per month. Fill out a form with what
-            you want to say to employees of the listed companies, and we’ll send
-            it to a group of those company employees.
-          </Text>
-          <View className="mt-2 flex-row items-center gap-2">
-            <View className="flex-1">
-              <Input
-                isSearch
-                placeholder="Search Jobs"
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-              />
-            </View>
+
+      {/* HEADER */}
+      <View className="border-b border-neutral-200 px-5 pb-4 pt-6">
+        <Text className="text-3xl" style={{ fontFamily: 'Montez' }}>
+          Outreach
+        </Text>
+
+        <Text className="mt-2 text-base text-neutral-500">
+          Reach employees from your target companies through verified WhatsApp
+          groups. To keep it spam free, up to 3 reviewed requests are allowed
+          each month.
+        </Text>
+
+        <View className="mt-4">
+          <Input
+            isSearch
+            placeholder="Search companies"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+      </View>
+
+      {/* CONTENT */}
+      <View className="flex-1 pt-4">
+        <View className="mb-3 flex-row items-center gap-2">
+          <View className="rounded-full bg-yellow-400 px-3 py-1">
+            <Text className="text-sm font-semibold">
+              {remaining} Outreach Left
+            </Text>
           </View>
         </View>
 
-        <KeyboardAwareScrollView
-          alwaysBounceVertical={false}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+        <FlatList
+          data={filteredCompanies}
+          numColumns={4}
+          columnWrapperStyle={{ gap: 12 }}
           contentContainerStyle={{
-            paddingHorizontal: 20,
-            paddingBottom: 24,
-            paddingTop: 20,
+            gap: 12,
+            padding: 12,
           }}
-          bottomOffset={20}
-        >
-          {/* Stats Cards */}
-          <View className="mb-6 flex-row gap-3">
-            <View className="android:shadow-md ios:shadow-sm flex-1 rounded-xl border border-neutral-200 bg-white p-4">
-              <View className="mb-2 flex-row items-center gap-2">
-                <View className="size-8 items-center justify-center rounded-lg bg-primary-100">
-                  <Ionicons name="business-outline" size={16} color="#13803b" />
-                </View>
-                <Text className="text-xs font-medium text-neutral-500">
-                  Companies
-                </Text>
-              </View>
-              <Text className="text-2xl font-bold text-neutral-900">12</Text>
-            </View>
-
-            <View className="android:shadow-md ios:shadow-sm flex-1 rounded-xl border border-neutral-200 bg-white p-4">
-              <View className="mb-2 flex-row items-center gap-2">
-                <View className="size-8 items-center justify-center rounded-lg bg-primary-100">
-                  <Ionicons name="people-outline" size={16} color="#13803b" />
-                </View>
-                <Text className="text-xs font-medium text-neutral-500">
-                  Employees & HRs
-                </Text>
-              </View>
-              <Text className="text-2xl font-bold text-neutral-900">85</Text>
-            </View>
-          </View>
-
-          {/* Form Section */}
-          <View>
-            <Text className="mb-4 text-xl font-bold text-neutral-900">
-              Frame your Message
-            </Text>
-
-            <ControlledInputWithRef
-              placeholder="Enter your email"
-              control={control}
-              name="email"
-              ref={emailRef}
-              returnKeyType="next"
-              onSubmitEditing={() => companyRef.current?.present()}
-              disabled={remaining === 0}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <CompanyCard
+              company={item}
+              selected={selectedCompany?.id === item.id}
+              onPress={() => {
+                setSelectedCompany(item);
+                modalRef.current?.present();
+              }}
             />
-
-            <ControlledInputWithRef
-              placeholder="Enter Job ID (Optional)"
-              control={control}
-              name="jobId"
-              ref={jobIdRef}
-              returnKeyType="next"
-              onSubmitEditing={() => resumeLinkRef.current?.focus()}
-              disabled={remaining === 0}
-            />
-
-            <ControlledInputWithRef
-              placeholder="Enter resume link (Optional)"
-              control={control}
-              name="resumeLink"
-              ref={resumeLinkRef}
-              returnKeyType="next"
-              onSubmitEditing={() => messageRef.current?.focus()}
-              disabled={remaining === 0}
-            />
-
-            <ControlledInputWithRef
-              placeholder="Enter a short message"
-              control={control}
-              name="message"
-              ref={messageRef}
-              multiline
-              numberOfLines={4}
-              returnKeyType="done"
-              className="min-h-[120px]"
-              disabled={remaining === 0}
-            />
-
-            {remaining > 0 ? (
-              <View className="mb-4 mt-2 rounded-lg bg-primary-50 px-4 py-3">
-                <View className="flex-row items-center gap-2">
-                  <Ionicons
-                    name="information-circle-outline"
-                    size={18}
-                    color="#13803b"
-                  />
-                  <Text className="flex-1 text-sm font-medium text-primary-700">
-                    {remaining} request{remaining !== 1 ? 's' : ''} remaining
-                    this month
-                  </Text>
-                </View>
-              </View>
-            ) : (
-              <View className="mb-4 mt-2 rounded-lg bg-neutral-100 px-4 py-3">
-                <View className="flex-row items-center gap-2">
-                  <Ionicons
-                    name="alert-circle-outline"
-                    size={18}
-                    color="#737373"
-                  />
-                  <Text className="flex-1 text-sm font-medium text-neutral-600">
-                    Monthly limit reached. Requests reset next month.
-                  </Text>
-                </View>
-              </View>
-            )}
-
-            <Button
-              label={
-                remaining > 0 ? `Send Message` : 'Send Message (Limit Reached)'
-              }
-              onPress={handleSendMessage}
-              className="mt-2"
-              disabled={!canSendNow}
-              size="lg"
-            />
-          </View>
-        </KeyboardAwareScrollView>
+          )}
+        />
+        <View className="flex-row items-center rounded-lg bg-neutral-200 p-1 m-4">
+          <Ionicons name="information-circle" size={20} className="mr-2" />
+          <Text className="text-neutral-500">
+            3 outreach credits per month, reset monthly
+          </Text>
+        </View>
       </View>
+
+      {/* MODAL */}
+      <Modal
+        ref={modalRef}
+        snapPoints={['70%']}
+        onClose={() => setIsModalOpen(false)}
+      >
+        <KeyboardAwareScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ padding: 20 }}
+        >
+          <Text className="mb-1 text-xl font-bold">
+            Message {selectedCompany?.name}
+          </Text>
+
+          <Text className="mb-4 text-sm text-neutral-500">
+            This message will be sent to employees & HRs
+          </Text>
+
+          <ControlledInputWithRef
+            placeholder="Your Email"
+            control={control}
+            name="email"
+            disabled={remaining === 0}
+          />
+
+          <ControlledInputWithRef
+            placeholder="Job ID (Optional)"
+            control={control}
+            name="jobId"
+            disabled={remaining === 0}
+          />
+
+          <ControlledInputWithRef
+            placeholder="Resume Link (Optional)"
+            control={control}
+            name="resumeLink"
+            disabled={remaining === 0}
+          />
+
+          <ControlledInputWithRef
+            placeholder="Write your message"
+            control={control}
+            name="message"
+            multiline
+            numberOfLines={4}
+            className="min-h-[120px]"
+            ref={messageRef}
+            disabled={remaining === 0}
+          />
+
+          <Button
+            label="Send Message"
+            disabled={!canSendNow}
+            onPress={handleSend}
+            className="mt-4"
+          />
+        </KeyboardAwareScrollView>
+      </Modal>
     </SafeAreaView>
   );
 }
