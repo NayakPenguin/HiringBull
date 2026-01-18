@@ -4,8 +4,8 @@ import {
   View,
   SafeAreaView
 } from '@/components/ui';
-import {Pressable} from 'react-native';
-import {useState, useCallback} from 'react';
+import { Pressable } from 'react-native';
+import { useState, useCallback } from 'react';
 import { updateUserInfo, useOnboarding } from "@/lib";
 import { useRouter } from "expo-router";
 import useRegisterOrEditUser from "@/features/users/hooks/useRegisterOrEditUser";
@@ -28,7 +28,7 @@ const EditFollowedCompanies = () => {
 
   const [selectedCompanies, setSelectedCompanies] = useState<string[]>(getInitialCompanies);
 
-  const {mutate: editUser, isPending: isUpdating} = useRegisterOrEditUser();
+  const { mutate: editUser, isPending: isUpdating } = useRegisterOrEditUser();
 
   const fetchingOnboardingCompanies = useIsFetching({ queryKey: [QueryKeys.onboardedCompanies] })
 
@@ -37,7 +37,7 @@ const EditFollowedCompanies = () => {
   }, []);
 
 
-  if(!userInfo){
+  if (!userInfo) {
     return null;
   }
 
@@ -49,7 +49,7 @@ const EditFollowedCompanies = () => {
     );
   };
 
-   const handleSelectAll = (companyIds: string[], select: boolean) => {
+  const handleSelectAll = (companyIds: string[], select: boolean) => {
     setSelectedCompanies((prev) => {
       if (select) {
         return companyIds;
@@ -59,9 +59,9 @@ const EditFollowedCompanies = () => {
     });
   }
 
-  const updateFollowedCompanies = ()=>{
-    editUser({followedCompanies:selectedCompanies}, {
-      onSuccess:(data)=>{
+  const updateFollowedCompanies = () => {
+    editUser({ followedCompanies: selectedCompanies }, {
+      onSuccess: (data) => {
         updateUserInfo(data);
         // Invalidate jobs query so user gets fresh recommendations
         queryClient.invalidateQueries({ queryKey: [QueryKeys.followedJobs] });
@@ -72,8 +72,8 @@ const EditFollowedCompanies = () => {
   const btnDisabled = (fetchingOnboardingCompanies > 0) || isUpdating;
   return (
     <SafeAreaView
-        className="flex-1 dark:bg-neutral-950"
-        edges={['top', 'bottom']}
+      className="flex-1 dark:bg-neutral-950"
+      edges={['top', 'bottom']}
     >
       <View className='flex-1 p-2'>
         <View className='flex-1'>
@@ -83,23 +83,21 @@ const EditFollowedCompanies = () => {
             onBack={handleBack}
             onSelectAll={handleSelectAll}
             label="Edit Companies"
-            />
+          />
         </View>
-        {fetchingOnboardingCompanies <1 && <Pressable
-        onPress={updateFollowedCompanies}
-        disabled={btnDisabled }
-        className={`h-14 items-center justify-center rounded-xl ${
-              !btnDisabled ? 'bg-black dark:bg-white' : 'bg-neutral-300'
-        }`}
-      >
-        <Text
-          className={`text-lg font-semibold ${
-            !btnDisabled ? 'text-white dark:text-black' : 'text-neutral-500'
-          }`}
+        {fetchingOnboardingCompanies < 1 && <Pressable
+          onPress={updateFollowedCompanies}
+          disabled={btnDisabled}
+          className={`h-14 items-center justify-center rounded-xl ${!btnDisabled ? 'bg-black dark:bg-white' : 'bg-neutral-300'
+            }`}
         >
-          {fetchingOnboardingCompanies ? 'Fetching companies...' : isUpdating ? 'Updating...' : 'Update'}
-        </Text>
-      </Pressable>}
+          <Text
+            className={`text-lg font-semibold ${!btnDisabled ? 'text-white dark:text-black' : 'text-neutral-500'
+              }`}
+          >
+            {fetchingOnboardingCompanies ? 'Fetching companies...' : isUpdating ? 'Updating...' : 'Update'}
+          </Text>
+        </Pressable>}
       </View>
 
 

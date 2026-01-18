@@ -3,7 +3,7 @@ import { useColorScheme } from 'nativewind';
 import { Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 // import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
-import { Checkbox, Text, View, ScrollView, Input } from '@/components/ui';
+import { Checkbox, Text, View, ScrollView, Input, Image } from '@/components/ui';
 import { TextInput } from 'react-native';
 import useFetchOnboardedCompanies from '@/app/onboarding/hooks/useFetchOnboardedCompanies';
 import LogoLoader from '@/components/logo-loader';
@@ -103,7 +103,7 @@ function Step2({
               className={`mr-2 rounded-full border px-4 py-2  ${
                 activeFilter === filter
                   ? 'border-black bg-black dark:border-white dark:bg-white'
-                  : 'border-black bg-white dark:border-neutral-700 dark:bg-neutral-800 border-1'
+                  : 'border-1 border-black bg-white dark:border-neutral-700 dark:bg-neutral-800'
               }`}
             >
               <Text
@@ -162,13 +162,11 @@ function Step2({
               onPress={() => onToggle(company.id)}
             >
               <View className="flex-row items-center">
-                <View className="mr-3 size-10 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800">
-                  <Ionicons
-                    name="business"
-                    size={20}
-                    color={colorScheme === 'dark' ? '#ffffff' : '#000000'}
-                  />
-                </View>
+                <Image
+                  source={company?.logo}
+                  className="mr-3 size-10 items-center justify-center rounded-full bg-neutral-800 dark:bg-neutral-800"
+                />
+
                 <Text className="text-lg font-semibold">{company.name}</Text>
               </View>
             </OptionCard>

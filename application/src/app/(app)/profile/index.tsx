@@ -130,8 +130,8 @@ export default function Profile() {
             Profile
           </Text>
           <Text className="my-2 text-base font-medium text-neutral-500">
-            Manage your account and preferences. We’re here to help you get the
-            most out of your job search.
+            Manage your account, experience, and preferences to get more
+            relevant jobs and recommendations.
           </Text>
         </View>
 

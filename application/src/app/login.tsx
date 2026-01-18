@@ -14,6 +14,7 @@ import {
   Text,
   View,
 } from '@/components/ui';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 
 /* ----------------------------- Utils ----------------------------- */
 
@@ -156,111 +157,117 @@ export default function Login() {
   /* ----------------------------- UI ----------------------------- */
 
   return (
-    <Animated.View
-      className="flex-1 bg-white"
-      entering={FadeInUp.duration(400)}
-    >
-      <FocusAwareStatusBar />
+    <KeyboardAwareScrollView keyboardShouldPersistTaps="handled">
 
-      {/* ---------------- HERO ---------------- */}
-      <View className="items-center pt-20">
 
-        <Image
-          source={require('../../assets/images/experience/hero-logo.png')}
-          className="mt-6 h-[320px] w-full"
-          resizeMode="contain"
-        />
-      </View>
-
-      {/* ---------------- CARD ---------------- */}
       <Animated.View
+        className="flex-1 bg-white"
         entering={FadeInUp.duration(400)}
-        className="flex-1 rounded-t-3xl bg-white px-6 pt-8"
       >
-        <Text className="font-bold text-center text-3xl text-neutral-900">
-          Welcome
-        </Text>
+        <FocusAwareStatusBar />
 
-        <Text className="mt-2 text-center text-neutral-500">
-          Find your dream job effortlessly
-        </Text>
+        {/* ---------------- HERO ---------------- */}
+        <View className="items-center pt-20">
 
-        {/* GOOGLE */}
-        <Pressable
-          onPress={handleGoogleLogin}
-          className="mt-8 flex-row items-center justify-center rounded-xl border border-neutral-200 py-4"
-        >
-          <Ionicons name="logo-google" size={20} />
-          <Text className="ml-3 text-base font-semibold">
-            Signup with Google
-          </Text>
-        </Pressable>
-
-        {/* DIVIDER */}
-        <View className="my-6 flex-row items-center gap-3">
-          <View className="h-[1px] flex-1 bg-neutral-200" />
-          <Text className="text-sm text-neutral-400">
-            or continue with email
-          </Text>
-          <View className="h-[1px] flex-1 bg-neutral-200" />
+          <Image
+            source={require('../../assets/images/experience/hero-logo.png')}
+            className="mt-6 h-[320px] w-full"
+            resizeMode="contain"
+          />
         </View>
 
-        {/* EMAIL / OTP */}
-        {step === 'email' ? (
-          <>
-            <Input
-              placeholder="example@gmail.com"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
+        {/* ---------------- CARD ---------------- */}
+        <Animated.View
+          entering={FadeInUp.duration(400)}
+          className="flex-1 rounded-t-3xl bg-white px-6 pt-8"
+        >
+          <Text className="font-bold text-center text-3xl text-neutral-900">
+            Welcome
+          </Text>
 
-            <Pressable
-              onPress={handleContinue}
-              disabled={!email || isLoading}
-              className="mt-6 rounded-xl bg-neutral-900 py-4"
-            >
-              {isLoading ? (
-                <ActivityIndicator style={{color:"white"}} />
-              ) : (
+          <Text className="mt-2 text-center text-neutral-500">
+            Find your dream job effortlessly
+          </Text>
+
+          {/* GOOGLE */}
+          <Pressable
+            onPress={handleGoogleLogin}
+            className="mt-8 flex-row items-center justify-center rounded-xl border border-neutral-200 py-4"
+          >
+            <Ionicons name="logo-google" size={20} />
+            <Text className="ml-3 text-base font-semibold">
+              Signup with Google
+            </Text>
+          </Pressable>
+
+          {/* DIVIDER */}
+          <View className="my-6 flex-row items-center gap-3">
+            <View className="h-[1px] flex-1 bg-neutral-200" />
+            <Text className="text-sm text-neutral-400">
+              or continue with email
+            </Text>
+            <View className="h-[1px] flex-1 bg-neutral-200" />
+          </View>
+
+          {/* EMAIL / OTP */}
+          
+          {step === 'email' ? (
+            <>
+              <Input
+                placeholder="example@gmail.com"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+
+              />
+              {error ? (
+                <Text className="mb-4 text-left text-sm text-red-500">{error}</Text>
+              ) : null}
+              <Pressable
+                onPress={handleContinue}
+                disabled={!email || isLoading}
+                className="mt-6 rounded-xl bg-neutral-900 py-4"
+              >
+                {isLoading ? (
+                  <ActivityIndicator style={{ color: 'white' }} />
+                ) : (
+                  <Text className="text-center text-lg font-bold text-white">
+                    Continue to Proceed
+                  </Text>
+                )}
+              </Pressable>
+            </>
+          ) : (
+            <>
+              <Input
+                placeholder="000000"
+                value={otp}
+                onChangeText={setOtp}
+                keyboardType="number-pad"
+                maxLength={6}
+                className="text-center text-2xl tracking-widest"
+              />
+
+              <Pressable
+                onPress={handleVerify}
+                className="mt-6 rounded-xl bg-neutral-900 py-4"
+              >
                 <Text className="text-center text-lg font-bold text-white">
-                  Continue to Proceed
+                  Verify & Continue
                 </Text>
-              )}
-            </Pressable>
-          </>
-        ) : (
-          <>
-            <Input
-              placeholder="000000"
-              value={otp}
-              onChangeText={setOtp}
-              keyboardType="number-pad"
-              maxLength={6}
-              className="text-center text-2xl tracking-widest"
-            />
+              </Pressable>
+            </>
+          )}
+          
+          
 
-            <Pressable
-              onPress={handleVerify}
-              className="mt-6 rounded-xl bg-yellow-400 py-4"
-            >
-              <Text className="text-center text-lg font-bold">
-                Verify & Continue
-              </Text>
-            </Pressable>
-          </>
-        )}
-
-        {error ? (
-          <Text className="mt-4 text-center text-sm text-red-500">{error}</Text>
-        ) : null}
-
-        {/* TERMS */}
-        <Text className="mt-8 pb-6 text-center text-xs text-neutral-400">
-          By continuing, you agree to our Terms & Privacy Policy
-        </Text>
+          {/* TERMS */}
+          <Text className="mt-8 pb-6 text-center text-xs text-neutral-400">
+            By continuing, you agree to our Terms & Privacy Policy
+          </Text>
+        </Animated.View>
       </Animated.View>
-    </Animated.View>
+    </KeyboardAwareScrollView>
   );
 }

@@ -86,9 +86,8 @@ function CompanyCard({
   return (
     <Pressable
       onPress={onPress}
-      className={`relative aspect-square flex-1 items-center justify-center rounded-xl border bg-white ${
-        selected ? 'border-primary-600' : 'border-neutral-200'
-      }`}
+      className={`relative aspect-square flex-1 items-center justify-center rounded-xl border bg-white ${selected ? 'border-primary-600' : 'border-neutral-200'
+        }`}
     >
       {selected && (
         <View className="absolute -right-2 -top-2 size-6 items-center justify-center rounded-full bg-primary-600">
@@ -161,8 +160,9 @@ export default function Outreach() {
         </Text>
 
         <Text className="mt-2 text-base text-neutral-500">
-          You can do up to 3 outreaches per month. Fill out a form and we’ll
-          send it to employees of selected companies.
+          Reach employees from your target companies through verified WhatsApp
+          groups. To keep it spam free, up to 3 reviewed requests are allowed
+          each month.
         </Text>
 
         <View className="mt-4">
@@ -176,7 +176,7 @@ export default function Outreach() {
       </View>
 
       {/* CONTENT */}
-      <View className="flex-1 px-5 pt-5">
+      <View className="flex-1 pt-4">
         <View className="mb-3 flex-row items-center gap-2">
           <View className="rounded-full bg-yellow-400 px-3 py-1">
             <Text className="text-sm font-semibold">
@@ -189,7 +189,10 @@ export default function Outreach() {
           data={filteredCompanies}
           numColumns={4}
           columnWrapperStyle={{ gap: 12 }}
-          contentContainerStyle={{ gap: 12, paddingVertical: 12 }}
+          contentContainerStyle={{
+            gap: 12,
+            padding: 12,
+          }}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <CompanyCard
@@ -202,9 +205,11 @@ export default function Outreach() {
             />
           )}
         />
-        <View className="flex-row items-center bg-neutral-200 p-1 rounded-lg">
+        <View className="flex-row items-center rounded-lg bg-neutral-200 p-1 m-4">
           <Ionicons name="information-circle" size={20} className="mr-2" />
-          <Text>3 outreach credits per month,reset monthly</Text>
+          <Text className="text-neutral-500">
+            3 outreach credits per month, reset monthly
+          </Text>
         </View>
       </View>
 
