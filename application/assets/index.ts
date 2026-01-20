@@ -1,3 +1,3 @@
 export const Images = {
-    appLogo: require('./adaptive-icon.png'),
+  appLogo: require('./icon.png'),
 } as const;

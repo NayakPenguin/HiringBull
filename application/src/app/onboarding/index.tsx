@@ -12,6 +12,7 @@ import { FocusAwareStatusBar, SafeAreaView, Text, View } from '@/components/ui';
 import { checkUserVerification, UserRegistration } from '@/features/users';
 import useRegisterOrEditUser from '@/features/users/hooks/useRegisterOrEditUser';
 import { useOnboarding } from '@/lib';
+import NoActiveMembership from '../no-membership';
 
 
 type StepIndicatorProps = {
@@ -177,6 +178,9 @@ export default function Onboarding() {
       'https://www.hiringbull.in/join-membership'
     );
   };
+  if (!isVerifiedUser) {
+    return <NoActiveMembership />;
+  }
 
   return (
     <View className="flex-1 bg-white dark:bg-neutral-900">
@@ -252,7 +256,7 @@ export default function Onboarding() {
             )}
             <Pressable
               onPress={step < 3 ? handleContinue : handleFinish}
-              disabled={!canContinue}
+              disabled={!canContinue || isRegistering}
               className={`h-14 items-center justify-center rounded-xl ${
                 canContinue ? 'bg-black dark:bg-white' : 'bg-neutral-300'
               }`}

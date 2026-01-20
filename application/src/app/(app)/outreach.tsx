@@ -109,7 +109,6 @@ export default function Outreach() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const remaining = getRemaining();
 
@@ -177,13 +176,35 @@ export default function Outreach() {
 
       {/* CONTENT */}
       <View className="flex-1 pt-4">
-        <View className="mb-3 flex-row items-center gap-2">
+        {/* <View className="mb-3 flex-row items-center gap-2 ml-4">
           <View className="rounded-full bg-yellow-400 px-3 py-1">
             <Text className="text-sm font-semibold">
               {remaining} Outreach Left
             </Text>
           </View>
-        </View>
+        </View> */}
+        {remaining === 0 ? (
+          <View className="mb-3 ml-4 flex-row items-center">
+            <View className="flex-row items-center gap-2 rounded-full bg-neutral-200 px-3 py-1.5">
+              <Ionicons name="lock-closed" size={14} color="#555" />
+              <Text className="text-sm font-medium text-neutral-600">
+                Tokens expired for this month
+              </Text>
+            </View>
+          </View>
+        ) : (
+          <View className="mb-3 ml-4 flex-row items-center">
+            <View className="flex-row items-center gap-2 rounded-full bg-yellow-100 px-3 py-1.5">
+              <View className="h-6 w-6 items-center justify-center rounded-full bg-yellow-400">
+                <Ionicons name="flash" size={14} color="#000" />
+              </View>
+              <Text className="text-sm font-semibold text-yellow-900">
+                <Text className="font-bold">{remaining}</Text> Outreach Left
+              </Text>
+            </View>
+          </View>
+        )}
+
 
         <FlatList
           data={filteredCompanies}
@@ -200,25 +221,32 @@ export default function Outreach() {
               selected={selectedCompany?.id === item.id}
               onPress={() => {
                 setSelectedCompany(item);
-                modalRef.current?.present();
               }}
             />
           )}
         />
         <View className="flex-row items-center rounded-lg bg-neutral-200 p-1 m-4">
           <Ionicons name="information-circle" size={20} className="mr-2" />
-          <Text className="text-neutral-500">
+          <Text className="text-neutral-500 text-sm">
             3 outreach credits per month, reset monthly
           </Text>
         </View>
+        <View className="px-4 mt-2">
+          <Button
+            label={
+              selectedCompany
+                ? `Draft message to ${selectedCompany.name}`
+                : 'Select a company to draft message'
+            }
+            disabled={!selectedCompany || remaining === 0}
+            onPress={() => modalRef.current?.present()}
+          />
+        </View>
+
       </View>
 
       {/* MODAL */}
-      <Modal
-        ref={modalRef}
-        snapPoints={['70%']}
-        onClose={() => setIsModalOpen(false)}
-      >
+      <Modal ref={modalRef} snapPoints={['70%']}>
         <KeyboardAwareScrollView
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20 }}
@@ -249,6 +277,12 @@ export default function Outreach() {
             placeholder="Resume Link (Optional)"
             control={control}
             name="resumeLink"
+            disabled={remaining === 0}
+          />
+          <ControlledInputWithRef
+            placeholder="Reason"
+            control={control}
+            name="reason"
             disabled={remaining === 0}
           />
 

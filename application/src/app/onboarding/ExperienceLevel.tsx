@@ -69,7 +69,19 @@ function Step0({ data, onChange, onContinue, canContinue }: Props) {
               blurOnSubmit={false}
             />
           </View>
-
+          <Pressable
+            onPress={() => updateField('isExperienced', !data.isExperienced)}
+            className="flex-row items-center gap-3 py-2"
+          >
+            <Checkbox
+              checked={data.isExperienced}
+              onChange={() => updateField('isExperienced', !data.isExperienced)}
+              accessibilityLabel="I am an experienced professional"
+            />
+            <Text className="text-base text-neutral-900 dark:text-white">
+              I am an experienced professional
+            </Text>
+          </Pressable>
           <View>
             <Text className="mb-2 font-medium text-neutral-900 dark:text-white">
               {data.isExperienced ? 'Current Company' : 'College Name'}
@@ -131,19 +143,7 @@ function Step0({ data, onChange, onContinue, canContinue }: Props) {
               onSubmitEditing={handleSubmit}
             />
           </View>
-          <Pressable
-            onPress={() => updateField('isExperienced', !data.isExperienced)}
-            className="flex-row items-center gap-3 py-2"
-          >
-            <Checkbox
-              checked={data.isExperienced}
-              onChange={() => updateField('isExperienced', !data.isExperienced)}
-              accessibilityLabel="I am an experienced professional"
-            />
-            <Text className="text-base text-neutral-900 dark:text-white">
-              I am an experienced professional
-            </Text>
-          </Pressable>
+          
         </View>
       </KeyboardAwareScrollView>
     </View>

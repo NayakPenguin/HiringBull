@@ -5,16 +5,10 @@ import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Platform, Pressable } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 
-import {
-  FocusAwareStatusBar,
-  Input,
-  SafeAreaView,
-  Text,
-  View,
-} from '@/components/ui';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
+import { FocusAwareStatusBar, Input, Text, View } from '@/components/ui';
 
 /* ----------------------------- Utils ----------------------------- */
 
@@ -158,8 +152,6 @@ export default function Login() {
 
   return (
     <KeyboardAwareScrollView keyboardShouldPersistTaps="handled">
-
-
       <Animated.View
         className="flex-1 bg-white"
         entering={FadeInUp.duration(400)}
@@ -168,7 +160,6 @@ export default function Login() {
 
         {/* ---------------- HERO ---------------- */}
         <View className="items-center pt-20">
-
           <Image
             source={require('../../assets/images/experience/hero-logo.png')}
             className="mt-6 h-[320px] w-full"
@@ -181,7 +172,7 @@ export default function Login() {
           entering={FadeInUp.duration(400)}
           className="flex-1 rounded-t-3xl bg-white px-6 pt-8"
         >
-          <Text className="font-bold text-center text-3xl text-neutral-900">
+          <Text className="text-center text-3xl font-bold text-neutral-900">
             Welcome
           </Text>
 
@@ -202,15 +193,15 @@ export default function Login() {
 
           {/* DIVIDER */}
           <View className="my-6 flex-row items-center gap-3">
-            <View className="h-[1px] flex-1 bg-neutral-200" />
+            <View className="h-px flex-1 bg-neutral-200" />
             <Text className="text-sm text-neutral-400">
               or continue with email
             </Text>
-            <View className="h-[1px] flex-1 bg-neutral-200" />
+            <View className="h-px flex-1 bg-neutral-200" />
           </View>
 
           {/* EMAIL / OTP */}
-          
+
           {step === 'email' ? (
             <>
               <Input
@@ -219,11 +210,22 @@ export default function Login() {
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
-
               />
               {error ? (
-                <Text className="mb-4 text-left text-sm text-red-500">{error}</Text>
+                <View className="mt-4 flex-row items-center">
+                  <Ionicons
+                    name="information-circle"
+                    size={20}
+                    color={'#ef4444'}
+                    className='mr-2'
+                  />
+
+                  <Text className="text-left text-sm text-red-500">
+                    {error}
+                  </Text>
+                </View>
               ) : null}
+
               <Pressable
                 onPress={handleContinue}
                 disabled={!email || isLoading}
@@ -253,14 +255,16 @@ export default function Login() {
                 onPress={handleVerify}
                 className="mt-6 rounded-xl bg-neutral-900 py-4"
               >
-                <Text className="text-center text-lg font-bold text-white">
-                  Verify & Continue
-                </Text>
+                {isLoading ? (
+                  <ActivityIndicator style={{ color: 'white' }} />
+                ) : (
+                  <Text className="text-center text-lg font-bold text-white">
+                    Continue to Proceed
+                  </Text>
+                )}
               </Pressable>
             </>
           )}
-          
-          
 
           {/* TERMS */}
           <Text className="mt-8 pb-6 text-center text-xs text-neutral-400">
