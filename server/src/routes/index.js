@@ -14,7 +14,7 @@ import authTestRoutes from './authTest.js'; // ✅ ADD
 const router = express.Router();
 
 // 🔓 Public routes
-router.use('/public', testingRoutes);
+// router.use('/public', testingRoutes);
 router.use('/webhooks', webhookRoutes);
 
 // 🔐 Auth test route (Clerk only)

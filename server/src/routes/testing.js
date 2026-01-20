@@ -9,7 +9,7 @@ import Razorpay from "razorpay";
 import crypto from "crypto";
 import prisma from "../prismaClient.js";
 
-// const router = express.Router();
+const router = express.Router();
 
 // const razorpay = new Razorpay({
 //   key_id: process.env.RAZORPAY_KEY_ID,      // TEST KEY
