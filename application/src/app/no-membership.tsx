@@ -45,17 +45,28 @@ export default function NoActiveMembership() {
             <FontAwesome6 name="crown" size={20} color="#facc15" />
           </View>
 
-          <Text className="mb-4 text-base font-semibold text-black">
-            If you’ve applied within the last 48 hours, please hang tight.
+          <Text className="mb-4 text-base font-bold text-black">
+            Hiring Bull is a members-only platform and requires an active
+            membership plan to access its features.
           </Text>
 
           <Text className="mb-4 text-base font-semibold text-black">
-            Our team carefully reviews each and every application before
-            granting access to the platform.
+            Your membership is usually activated within 2 minutes of completing
+            the membership process, giving you immediate access to the platform.
           </Text>
 
           <Text className="mb-4 text-base font-semibold text-black">
-            Once approved, you’ll automatically get full access to all features.
+            However, all memberships go through a manual review during the first
+            48 hours. If your application is not approved during this period,
+            your access may be revoked and a full refund will be processed
+            automatically.
+          </Text>
+
+          <Text className="mb-4 text-base font-semibold text-black">
+            We do this to ensure our services reach the first 1,000 members at a
+            given experience level especially those who truly need the early
+            advantage. That’s why every application is carefully and manually
+            reviewed by our team.
           </Text>
         </View>
       </ScrollView>
@@ -74,9 +85,9 @@ export default function NoActiveMembership() {
           onPress={() =>
             Linking.openURL('https://hiringbull.org/join-membership')
           }
-          className="rounded-xl bg-yellow-400 py-4"
+          className="rounded-xl bg-black py-4"
         >
-          <Text className="text-center text-base font-bold text-black">
+          <Text className="text-center text-base font-bold text-white">
             Apply Now
           </Text>
         </Pressable>

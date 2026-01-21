@@ -34,7 +34,7 @@ function SocialPostCard({ post }: { post: SocialPost }) {
         </View>
 
         <View className="mb-3 flex-row items-center gap-3">
-          <View className="size-10 items-center justify-center rounded-full bg-yellow-400 dark:bg-neutral-800">
+          <View className="size-10 items-center justify-center rounded-full bg-yellow-300 dark:bg-neutral-100">
             <Text className="text-lg font-bold text-neutral-700 dark:text-neutral-300">
               {post.name.charAt(0)}
             </Text>

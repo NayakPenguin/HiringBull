@@ -25,46 +25,47 @@ type Company = {
 
 const COMPANIES: Company[] = [
   {
+    id: 'google',
+    name: 'Google',
+    icon: "https://hiringbull-images.s3.ap-south-1.amazonaws.com/google.png",
+  },
+  {
     id: 'amazon',
     name: 'Amazon',
-    icon: require('../../../assets/images/experience/five-plus.jpeg'),
-  },
-  {
-    id: 'chatgpt',
-    name: 'Chatgpt',
-    icon: require('../../../assets/images/experience/chat-gpt.png'),
-  },
-  {
-    id: 'twitter',
-    name: 'Twitter',
-    icon: require('../../../assets/images/experience/twitter.png'),
+    icon: "https://hiringbull-images.s3.ap-south-1.amazonaws.com/amazon.png",
   },
   {
     id: 'microsoft',
     name: 'Microsoft',
-    icon: require('../../../assets/images/experience/microsoft.png'),
+    icon: "https://hiringbull-images.s3.ap-south-1.amazonaws.com/microsoft.png",
   },
   {
-    id: 'paypal',
-    name: 'Paypal',
-    icon: require('../../../assets/images/experience/paypal.png'),
+    id: 'salesforce',
+    name: 'Salesforce',
+    icon: "https://hiringbull-images.s3.ap-south-1.amazonaws.com/salesforce.png",
   },
   {
-    id: 'apple',
-    name: 'Apple',
-    icon: require('../../../assets/images/experience/apple.png'),
+    id: 'samsung',
+    name: 'Samsung',
+    icon: "https://hiringbull-images.s3.ap-south-1.amazonaws.com/samsung.jpeg",
   },
   {
-    id: 'uber',
-    name: 'Uber',
-    icon: require('../../../assets/images/experience/uber.png'),
+    id: 'oracle',
+    name: 'Oracle',
+    icon: "https://cabinetm-beta.s3.amazonaws.com/00000175-f643-6db2-8d63-54349eb41198.jpg",
   },
   {
-    id: 'nike',
-    name: 'Nike',
-    icon: require('../../../assets/images/experience/nike.png'),
+    id: 'swiggy',
+    name: 'Swiggy',
+    icon: "https://hiringbull-images.s3.ap-south-1.amazonaws.com/swiggy.png",
+  },
+  {
+    id: 'nvidia',
+    name: 'NVIDIA',
+    icon: "https://hiringbull-images.s3.ap-south-1.amazonaws.com/nvidia.png",
   },
 ];
+
 const ControlledInputWithRef = React.forwardRef<TextInput, any>(
   ({ control, name, ...props }, ref) => {
     return (
@@ -95,7 +96,7 @@ function CompanyCard({
         </View>
       )}
 
-      <Image source={company.icon} className="size-10" resizeMode="contain" />
+      <Image source={{ uri: company.icon }} className="size-10" resizeMode="contain" />
     </Pressable>
   );
 }
@@ -159,9 +160,8 @@ export default function Outreach() {
         </Text>
 
         <Text className="mt-2 text-base text-neutral-500">
-          Reach employees from your target companies through verified WhatsApp
-          groups. To keep it spam free, up to 3 reviewed requests are allowed
-          each month.
+          Reach employees from your target companies, we send it to WhatsApp
+          groups with company employees.
         </Text>
 
         <View className="mt-4">
@@ -235,7 +235,7 @@ export default function Outreach() {
           <Button
             label={
               selectedCompany
-                ? `Draft message to ${selectedCompany.name}`
+                ? `Draft message to ${selectedCompany.name} Network`
                 : 'Select a company to draft message'
             }
             disabled={!selectedCompany || remaining === 0}

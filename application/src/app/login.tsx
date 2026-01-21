@@ -159,9 +159,19 @@ export default function Login() {
         <FocusAwareStatusBar />
 
         {/* ---------------- HERO ---------------- */}
-        <View className="items-center pt-20">
+        <View className="items-center pt-20 bg-yellow-50">
           <Image
-            source={require('../../assets/images/experience/hero-logo.png')}
+            // source={require('../../assets/images/experience/hero-logo.png')}
+            source={require('../../assets/images/experience/HBLongLogo.png')}
+            className="h-[80px] w-[160px]"
+            resizeMode="contain"
+          />
+        </View>
+        
+        <View className="items-center bg-yellow-50">
+          <Image
+            // source={require('../../assets/images/experience/hero-logo.png')}
+            source={require('../../assets/images/experience/appSample.png')}
             className="mt-6 h-[320px] w-full"
             resizeMode="contain"
           />
@@ -176,12 +186,12 @@ export default function Login() {
             Welcome
           </Text>
 
-          <Text className="mt-2 text-center text-neutral-500">
+          <Text className="mt-2 my-5 text-center text-neutral-500">
             Find your dream job effortlessly
           </Text>
 
           {/* GOOGLE */}
-          <Pressable
+          {/* <Pressable
             onPress={handleGoogleLogin}
             className="mt-8 flex-row items-center justify-center rounded-xl border border-neutral-200 py-4"
           >
@@ -189,16 +199,16 @@ export default function Login() {
             <Text className="ml-3 text-base font-semibold">
               Signup with Google
             </Text>
-          </Pressable>
+          </Pressable> */}
 
           {/* DIVIDER */}
-          <View className="my-6 flex-row items-center gap-3">
+          {/* <View className="my-6 flex-row items-center gap-3">
             <View className="h-px flex-1 bg-neutral-200" />
             <Text className="text-sm text-neutral-400">
               or continue with email
             </Text>
             <View className="h-px flex-1 bg-neutral-200" />
-          </View>
+          </View> */}
 
           {/* EMAIL / OTP */}
 

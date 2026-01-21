@@ -50,7 +50,7 @@ function Step2({
     return <LogoLoader />;
   }
 
-  const FILTERS = ['ALL', ...new Set(COMPANIES.map((c) => c.category))];
+  const FILTERS = ['ALL', 'TECH_GIANT', 'INDIAN_STARTUP', 'GLOBAL_STARTUP', 'HFT', 'MASS_HIRING', 'FINTECH_GIANT', 'YCOMBINATOR'];
 
   const filterNameFormat = (name: string) => {
     let output = name.replace('_', ' ').toUpperCase();
@@ -164,7 +164,7 @@ function Step2({
               <View className="flex-row items-center">
                 <Image
                   source={company?.logo}
-                  className="mr-3 size-10 items-center justify-center rounded-full bg-neutral-800 dark:bg-neutral-800"
+                  className="mr-3 size-10 items-center justify-center rounded-full bg-neutral-200"
                 />
 
                 <Text className="text-lg font-semibold">{company.name}</Text>
@@ -192,7 +192,7 @@ function OptionCard({ selected, onPress, children }: OptionCardProps) {
   return (
     <Pressable
       onPress={onPress}
-      className={`mb-3 flex-row items-center rounded-xl border bg-neutral-200 p-4 android:shadow-lg ios:shadow-sm border-1 border-neutral-${selected ? 500 : 200}`}
+      className={`mb-3 flex-row items-center rounded-xl border bg-neutral-50 p-4 android:shadow-lg ios:shadow-sm border-1 border-neutral-${selected ? 800 : 400}`}
     >
       <View className="flex-1">{children}</View>
       <Ionicons
