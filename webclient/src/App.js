@@ -10,6 +10,7 @@ import Refund from "./Screens/Refund";
 import Referral from "./Screens/Referral";
 import TrailJobs from "./Screens/TrailJobs";
 import TestPayment from "./Screens/TestPayment";
+import AddJobs from "./Screens/AddJobs";
 
 
 
@@ -26,6 +27,7 @@ const App = () => {
         <Route path="/referral-program" element={<Referral />} />
         <Route path="/jobs" element={<TrailJobs />} />
         <Route path="/test-payment" element={<TestPayment />} />
+        <Route path="/add-jobs-manual" element={<AddJobs />} />
       </Routes>
     </Container>
   )
