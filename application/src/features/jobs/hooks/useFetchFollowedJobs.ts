@@ -2,6 +2,7 @@ import { fetchFollowedJobs, JobsResponse } from '@/api';
 import QueryKeys from '@/service/queryKeys';
 import { useAuth } from '@clerk/clerk-expo';
 import { useInfiniteQuery } from '@tanstack/react-query';
+const TEN_MINUTES = 10 * 60 * 1000;
 
 export const useFetchFollowedJobs = () => {
   const { isSignedIn } = useAuth();
@@ -19,5 +20,9 @@ export const useFetchFollowedJobs = () => {
       }
       return undefined;
     },
+    staleTime: TEN_MINUTES,
+    cacheTime: 30 * 60 * 1000, // keep cache for 30 mins
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
   });
 };

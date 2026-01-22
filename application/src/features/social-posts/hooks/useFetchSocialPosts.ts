@@ -2,7 +2,7 @@ import { fetchSocialPosts, SocialPostsResponse } from '@/api';
 import QueryKeys from '@/service/queryKeys';
 import { useAuth } from '@clerk/clerk-expo';
 import { useInfiniteQuery } from '@tanstack/react-query';
-
+const TEN_MINUTES = 10 * 60 * 1000;
 export const useFetchSocialPosts = () => {
   const { isSignedIn } = useAuth();
   return useInfiniteQuery<SocialPostsResponse, Error>({
@@ -19,5 +19,9 @@ export const useFetchSocialPosts = () => {
       }
       return undefined;
     },
+    staleTime: TEN_MINUTES,
+    cacheTime: 30 * 60 * 1000, // keep cache for 30 mins
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
   });
 };

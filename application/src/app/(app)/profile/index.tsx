@@ -131,9 +131,6 @@ export default function Profile() {
       }
     }
 
-    if (confirmAction === 'copy' && email) {
-      Clipboard.setString(email);
-    }
   };
 
   return (
@@ -217,8 +214,7 @@ export default function Profile() {
                   {email && (
                     <Pressable
                       onPress={() => {
-                        setConfirmAction('copy');
-                        modalRef.current?.present();
+                        Clipboard.setString(email);
                       }}
                       className="mt-3 flex-row items-center justify-between rounded-lg bg-yellow-400 px-3 py-2"
                     >
@@ -233,20 +229,21 @@ export default function Profile() {
             </View>
           </ScrollView>
         </View>
+        <AppConfirmModal
+          ref={modalRef}
+          title={confirmAction === 'logout' ? 'Logout' : 'Copy Referral Code'}
+          description={
+            confirmAction === 'logout'
+              ? 'Are you sure you want to logout from HiringBull?'
+              : 'Do you want to copy your referral code to share with friends?'
+          }
+          confirmText={confirmAction === 'logout' ? 'Logout' : 'Copy'}
+          cancelText="Cancel"
+          isDestructive={confirmAction === 'logout'}
+          onConfirm={handleConfirm}
+        />
       </SafeAreaView>
-      <AppConfirmModal
-        ref={modalRef}
-        title={confirmAction === 'logout' ? 'Logout' : 'Copy Referral Code'}
-        description={
-          confirmAction === 'logout'
-            ? 'Are you sure you want to logout from HiringBull?'
-            : 'Do you want to copy your referral code to share with friends?'
-        }
-        confirmText={confirmAction === 'logout' ? 'Logout' : 'Copy'}
-        cancelText="Cancel"
-        isDestructive={confirmAction === 'logout'}
-        onConfirm={handleConfirm}
-      />
+      
     </>
   );
 }

@@ -1,9 +1,10 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
-import React, { useCallback, useMemo, useState, useEffect } from 'react';
-import { showGlobalLoading, hideGlobalLoading } from '@/lib';
-import { Pressable, Image, FlatList } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { FlatList, Image, Pressable } from 'react-native';
 
+import { SocialPost } from '@/api';
+import { BottomToast } from '@/components/BottomToast';
 import {
   FocusAwareStatusBar,
   Input,
@@ -11,9 +12,10 @@ import {
   Text,
   View,
 } from '@/components/ui';
-import { formatRelativeTime, formatSegment } from '@/lib/utils';
 import { useFetchSocialPosts } from '@/features/social-posts';
-import { SocialPost } from '@/api';
+import { hideGlobalLoading, showGlobalLoading } from '@/lib';
+import { formatRelativeTime, formatSegment } from '@/lib/utils';
+import { ParsedContent } from '@/utils/ParsedContent';
 
 function SocialPostCard({ post }: { post: SocialPost }) {
   const handleOpenSource = useCallback(() => {
@@ -50,9 +52,9 @@ function SocialPostCard({ post }: { post: SocialPost }) {
           </View>
         </View>
 
-        <Text className="mb-4 text-base leading-7 text-neutral-600 dark:text-neutral-300">
-          {post.description}
-        </Text>
+        <View className="mb-4">
+          <ParsedContent text={post.description} />
+        </View>
 
         {/* Segment and Company Tags */}
         {(post.segment || post.company) && (
@@ -133,11 +135,32 @@ export default function SocialPosts() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    isFetching,
     isLoading,
     refetch,
   } = useFetchSocialPosts();
   const [searchQuery, setSearchQuery] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: 'success' | 'error';
+  } | null>(null);
+  const hasShownToastRef = React.useRef(false);
+
+  useEffect(() => {
+    console.log(isFetching);
+    if (isFetching && data && !hasShownToastRef.current) {
+      hasShownToastRef.current = true;
+    }
+
+    if (!isFetching && hasShownToastRef.current) {
+      setToast({
+        message: 'Social posts updated',
+        type: 'success',
+      });
+      hasShownToastRef.current = false;
+    }
+  }, [isFetching]);
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -183,7 +206,9 @@ export default function SocialPosts() {
     if (isFetchingNextPage) {
       return (
         <View className="py-4">
-          <Text className="text-center text-sm text-neutral-400">Loading more...</Text>
+          <Text className="text-center text-sm text-neutral-400">
+            Loading more...
+          </Text>
         </View>
       );
     }
@@ -243,7 +268,7 @@ export default function SocialPosts() {
             onRefresh={onRefresh}
             showsVerticalScrollIndicator={false}
             onEndReached={() => {
-              if (hasNextPage) {
+              if (hasNextPage && !isFetchingNextPage) {
                 fetchNextPage();
               }
             }}
@@ -267,6 +292,14 @@ export default function SocialPosts() {
           />
         )}
       </View>
+      {toast && (
+        <BottomToast
+          message={toast.message}
+          type={toast.type}
+          visible={!!toast}
+          onHide={() => setToast(null)}
+        />
+      )}
     </SafeAreaView>
   );
 }

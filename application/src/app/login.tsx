@@ -27,7 +27,9 @@ const useWarmUpBrowser = () => {
 WebBrowser.maybeCompleteAuthSession();
 
 /* ----------------------------- Screen ----------------------------- */
-
+const isValidEmail = (email: string) => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+};
 export default function Login() {
   useWarmUpBrowser();
 
@@ -86,12 +88,24 @@ export default function Login() {
   /* ----------------------------- Email Step ----------------------------- */
 
   const handleContinue = async () => {
-    if (!email || !isSignInLoaded || !isSignUpLoaded) return;
+    // --------- CLIENT SIDE VALIDATION ---------
+    if (!email.trim()) {
+      setError('Please enter your email');
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    if (!isSignInLoaded || !isSignUpLoaded) return;
 
     showGlobalLoading();
     setError('');
 
     try {
+      // Try sign-in first
       const attempt = await signIn.create({ identifier: email });
 
       const factor = attempt.supportedFirstFactors?.find(
@@ -108,15 +122,21 @@ export default function Login() {
       setAuthMode('signIn');
       setStep('otp');
     } catch (e: any) {
+      // If user not found → Sign up flow
       if (e?.errors?.[0]?.code === 'form_identifier_not_found') {
-        await signUp.create({ emailAddress: email });
-        await signUp.prepareEmailAddressVerification({
-          strategy: 'email_code',
-        });
-        setAuthMode('signUp');
-        setStep('otp');
+        try {
+          await signUp.create({ emailAddress: email });
+          await signUp.prepareEmailAddressVerification({
+            strategy: 'email_code',
+          });
+
+          setAuthMode('signUp');
+          setStep('otp');
+        } catch {
+          setError('Unable to send verification code');
+        }
       } else {
-        setError('Unable to send code');
+        setError('Something went wrong. Please try again');
       }
     } finally {
       hideGlobalLoading();
@@ -126,7 +146,16 @@ export default function Login() {
   /* ----------------------------- OTP ----------------------------- */
 
   const handleVerify = async () => {
-    if (otp.length !== 6) return;
+    // --------- CLIENT SIDE VALIDATION ---------
+    if (!otp.trim()) {
+      setError('Please enter the 6-digit code');
+      return;
+    }
+
+    if (otp.length !== 6) {
+      setError('OTP must be 6 digits');
+      return;
+    }
 
     showGlobalLoading();
     setError('');
@@ -141,6 +170,7 @@ export default function Login() {
           code: otp,
         });
         console.log(' SignIn result status:', res.status, 'sessionId:', res.createdSessionId);
+
         if (res.status === 'complete' && setActiveSignIn) {
           console.log('Setting active session...');
           await setActiveSignIn({ session: res.createdSessionId });
@@ -157,6 +187,7 @@ export default function Login() {
         console.log(' SignUp result status:', res.status, 'sessionId:', res.createdSessionId);
         console.log(' SignUp missingFields:', res.missingFields);
         console.log(' SignUp unverifiedFields:', res.unverifiedFields);
+
         if (res.status === 'complete' && setActiveSignUp) {
           console.log(' Setting active session...');
           await setActiveSignUp({ session: res.createdSessionId });
@@ -173,6 +204,7 @@ export default function Login() {
       hideGlobalLoading();
     }
   };
+
 
   /* ----------------------------- UI ----------------------------- */
 
@@ -193,7 +225,7 @@ export default function Login() {
             resizeMode="contain"
           />
         </View>
-        
+
         <View className="items-center bg-yellow-50">
           <Image
             // source={require('../../assets/images/experience/hero-logo.png')}
@@ -243,7 +275,10 @@ export default function Login() {
               <Input
                 placeholder="example@gmail.com"
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  if (error) setError('');
+                }}
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
@@ -252,10 +287,9 @@ export default function Login() {
                   <Ionicons
                     name="information-circle"
                     size={20}
-                    color={'#ef4444'}
-                    className='mr-2'
+                    color="#ef4444"
+                    style={{ marginRight: 6 }}
                   />
-
                   <Text className="text-left text-sm text-red-500">
                     {error}
                   </Text>
@@ -264,7 +298,7 @@ export default function Login() {
 
               <Pressable
                 onPress={handleContinue}
-                disabled={!email}
+                disabled={isLoading}
                 className="mt-6 rounded-xl bg-neutral-900 py-4"
               >
                 <Text className="text-center text-lg font-bold text-white">
@@ -302,10 +336,29 @@ export default function Login() {
               {/* 6-box OTP Input */}
               <OTPInput
                 value={otp}
-                onChange={setOtp}
-                length={6}
-                autoFocus
+                onChangeText={(text) => {
+                  setOtp(text);
+                  if (error) setError('');
+                }}
+                keyboardType="number-pad"
+                maxLength={6}
+                className="text-center text-2xl tracking-widest"
               />
+              {error ? (
+                <View className="mt-4 flex-row items-center">
+                  <Ionicons
+                    name="information-circle"
+                    size={20}
+                    color="#ef4444"
+                    style={{ marginRight: 6 }}
+                  />
+                  <Text className="text-left text-sm text-red-500">
+                    {error}
+                  </Text>
+                </View>
+              ) : null}
+
+
 
               {error ? (
                 <View className="mt-4 flex-row items-center justify-center">

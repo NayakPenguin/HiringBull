@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useCallback, useMemo, useState, useEffect } from 'react';
-import { FlatList, View as RNView } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, FlatList, View as RNView } from 'react-native';
 import { Pressable, ScrollView } from 'react-native';
 
 import { type Job as ApiJob, JobCard } from '@/components/job-card';
@@ -15,7 +15,7 @@ import {
   View,
 } from '@/components/ui';
 import { useFetchFollowedJobs } from '@/features/jobs';
-import { showGlobalLoading, hideGlobalLoading } from '@/lib';
+import { BottomToast } from '@/components/BottomToast';
 const FILTER_TAGS = [
   'Design',
   'Full time',
@@ -41,13 +41,44 @@ export default function Jobs() {
     hasNextPage,
     isFetchingNextPage,
     isLoading,
+    isFetching,
     refetch,
+    isError
   } = useFetchFollowedJobs();
+
 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const { ref, present, dismiss } = useModal();
+  const [toast, setToast] = useState<{
+    message: string;
+    type: 'success' | 'error';
+  } | null>(null);
+  const hasShownToastRef = React.useRef(false);
+
+
+  useEffect(() => {
+    console.log(isFetching)
+    if (isFetching && data && !hasShownToastRef.current) {
+      hasShownToastRef.current = true;
+    }
+    if (isError) {
+      setToast({
+        message: 'Failed to update jobs. Please try again.',
+        type: 'error',
+      });
+      hasShownToastRef.current = false;
+    }
+
+    if (!isFetching && hasShownToastRef.current) {
+      setToast({
+        message: 'Jobs updated successfully',
+        type: 'success',
+      });
+      hasShownToastRef.current = false;
+    }
+  }, [isFetching]);
 
   const handleFilterPress = useCallback(() => {
     present();
@@ -212,7 +243,9 @@ export default function Jobs() {
             ListFooterComponent={renderFooter}
           />
         )}
+
       </View>
+
 
       <Modal
         ref={ref}
@@ -233,11 +266,10 @@ export default function Jobs() {
                   <Pressable
                     key={tag}
                     onPress={() => handleToggleTag(tag)}
-                    className={`rounded-lg border-2 px-4 py-2 ${
-                      isSelected
+                    className={`rounded-lg border-2 px-4 py-2 ${isSelected
                         ? 'border-primary-500 bg-primary-50'
                         : 'border-neutral-200 bg-white'
-                    }`}
+                      }`}
                   >
                     <View className="flex-row items-center gap-2">
                       <Checkbox
@@ -246,9 +278,8 @@ export default function Jobs() {
                         accessibilityLabel={`Filter by ${tag}`}
                       />
                       <Text
-                        className={`text-sm font-medium ${
-                          isSelected ? 'text-primary-700' : 'text-neutral-700'
-                        }`}
+                        className={`text-sm font-medium ${isSelected ? 'text-primary-700' : 'text-neutral-700'
+                          }`}
                       >
                         {tag}
                       </Text>
@@ -277,6 +308,14 @@ export default function Jobs() {
           </ScrollView>
         </View>
       </Modal>
+      {toast && (
+        <BottomToast
+          message={toast.message}
+          type={toast.type}
+          visible={!!toast}
+          onHide={() => setToast(null)}
+        />
+      )}
     </SafeAreaView>
   );
 }
