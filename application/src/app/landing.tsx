@@ -43,7 +43,7 @@ function FeatureCard({
   icon: keyof typeof Ionicons.glyphMap;
   title: string;
   description: string;
-  gradient: string[];
+  gradient: readonly string[];
 }) {
   return (
     <View

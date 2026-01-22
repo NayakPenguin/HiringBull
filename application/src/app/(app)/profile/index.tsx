@@ -1,4 +1,5 @@
 import { useAuth, useUser } from '@clerk/clerk-expo';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -67,10 +68,7 @@ export default function Profile() {
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(
     null
   );
-  const modalRef = React.useRef<{
-    present: () => void;
-    dismiss: () => void;
-  }>(null);
+  const modalRef = React.useRef<BottomSheetModal>(null);
   const SETTINGS: SettingsItem[] = [
     {
       label: 'Edit Experience',

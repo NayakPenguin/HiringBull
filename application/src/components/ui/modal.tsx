@@ -34,11 +34,16 @@ import type {
 } from '@gorhom/bottom-sheet';
 import { BottomSheetModal, useBottomSheet } from '@gorhom/bottom-sheet';
 import * as React from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, View, TouchableOpacity } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { Path, Svg } from 'react-native-svg';
 
 import { Text } from './text';
+
+export type OptionType = {
+  label: string;
+  value: string;
+};
 
 type ModalProps = BottomSheetModalProps & {
   title?: string;
@@ -196,3 +201,44 @@ const CloseButton = ({ close }: { close: () => void }) => {
     </Pressable>
   );
 };
+
+/**
+ * Options component for selecting from a list of options
+ */
+type OptionsProps = {
+  options: OptionType[];
+  onSelect: (option: OptionType) => void;
+  value?: string;
+};
+
+export const Options = React.forwardRef<BottomSheetModal, OptionsProps>(
+  ({ options, onSelect, value }, ref) => {
+    return (
+      <Modal ref={ref} snapPoints={['40%']}>
+        <View className="p-4">
+          {options.map((option) => (
+            <TouchableOpacity
+              key={option.value}
+              onPress={() => onSelect(option)}
+              className={`mb-2 rounded-xl p-4 ${
+                value === option.value
+                  ? 'bg-neutral-900 dark:bg-white'
+                  : 'bg-neutral-100 dark:bg-neutral-800'
+              }`}
+            >
+              <Text
+                className={`text-center text-base font-semibold ${
+                  value === option.value
+                    ? 'text-white dark:text-black'
+                    : 'text-neutral-900 dark:text-white'
+                }`}
+              >
+                {option.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </Modal>
+    );
+  }
+);

@@ -1,4 +1,5 @@
 import { useUser } from '@clerk/clerk-expo';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { FlatList, Image, Pressable, TextInput } from 'react-native';
@@ -135,7 +136,7 @@ export default function Outreach() {
       setValue('company', selectedCompany.id);
     }
   }, [selectedCompany]);
-  const modalRef = useRef<{ present: () => void; dismiss: () => void }>(null);
+  const modalRef = useRef<BottomSheetModal>(null);
   const handleSend = () => {
     if (!canSendNow) return;
 

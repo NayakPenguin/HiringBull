@@ -226,6 +226,7 @@ export default function Jobs() {
                       <Checkbox
                         checked={isSelected}
                         onChange={() => handleToggleTag(tag)}
+                        accessibilityLabel={`Filter by ${tag}`}
                       />
                       <Text
                         className={`text-sm font-medium ${

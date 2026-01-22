@@ -24,6 +24,13 @@ export interface Job {
   company_type?: string;
   updated_at: string;
   companyRel: JobCompany;
+  // Optional fields used by UI components
+  tags?: string[];
+  careerpage_link?: string;
+  company_id?: string;
+  created_by?: string | null;
+  isSaved?: boolean;
+  company_logo?: string;
 }
 
 export interface Pagination {

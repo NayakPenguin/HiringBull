@@ -19,12 +19,12 @@ export type Job = {
   company: string;
   segment: string;
   title: string;
-  careerpage_link: string;
-  company_id: string;
+  careerpage_link?: string;
+  company_id?: string;
   created_at: string;
-  created_by: string | null;
+  created_by?: string | null;
   isSaved?: boolean;
-  company_type: CompanyType | string;
+  company_type?: CompanyType | string;
   location?: string;
   salary_range?: string;
   job_type?: string;

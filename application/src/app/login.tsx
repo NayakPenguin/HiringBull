@@ -16,7 +16,9 @@ const useWarmUpBrowser = () => {
   useEffect(() => {
     if (Platform.OS !== 'android') return;
     WebBrowser.warmUpAsync();
-    return () => WebBrowser.coolDownAsync();
+    return () => {
+      void WebBrowser.coolDownAsync();
+    };
   }, []);
 };
 
@@ -123,20 +125,20 @@ export default function Login() {
     setError('');
 
     try {
-      if (authMode === 'signIn') {
+      if (authMode === 'signIn' && signIn) {
         const res = await signIn.attemptFirstFactor({
           strategy: 'email_code',
           code: otp,
         });
-        if (res.status === 'complete') {
+        if (res.status === 'complete' && setActiveSignIn) {
           await setActiveSignIn({ session: res.createdSessionId });
           router.replace('/');
         }
       }
 
-      if (authMode === 'signUp') {
+      if (authMode === 'signUp' && signUp) {
         const res = await signUp.attemptEmailAddressVerification({ code: otp });
-        if (res.status === 'complete') {
+        if (res.status === 'complete' && setActiveSignUp) {
           await setActiveSignUp({ session: res.createdSessionId });
           router.replace('/');
         }
@@ -242,7 +244,7 @@ export default function Login() {
                 className="mt-6 rounded-xl bg-neutral-900 py-4"
               >
                 {isLoading ? (
-                  <ActivityIndicator style={{ color: 'white' }} />
+                  <ActivityIndicator color="white" />
                 ) : (
                   <Text className="text-center text-lg font-bold text-white">
                     Continue to Proceed
@@ -266,7 +268,7 @@ export default function Login() {
                 className="mt-6 rounded-xl bg-neutral-900 py-4"
               >
                 {isLoading ? (
-                  <ActivityIndicator style={{ color: 'white' }} />
+                  <ActivityIndicator color="white" />
                 ) : (
                   <Text className="text-center text-lg font-bold text-white">
                     Continue to Proceed
