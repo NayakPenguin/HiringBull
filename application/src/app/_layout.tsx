@@ -85,6 +85,7 @@ function RootNavigator() {
 
   const [isLoadingUser, setIsLoadingUser] = useState(false);
   const { modalVisible, setModalVisible } = useNotificationPermissionPrompt();
+  console.log('modalVisible', modalVisible);
   // Sync auth service with Clerk
   useEffect(() => {
     if (isSignedIn) {
@@ -151,7 +152,7 @@ function RootNavigator() {
 
   return (
     <>
-      {shouldInitNotifications && <NotificationInitializer />}
+      {/* {shouldInitNotifications && <NotificationInitializer />} */}
       <Stack>
         <Stack.Protected guard={isFirstTime}>
           <Stack.Screen name="landing" options={{ headerShown: false }} />
@@ -184,10 +185,12 @@ function RootNavigator() {
         {/* SSO callback route - accessible during OAuth flow */}
         <Stack.Screen name="sso-callback" options={{ headerShown: false }} />
       </Stack>
-      <NotificationPromptModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-      />
+      {shouldInitNotifications && (
+        <NotificationPromptModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+        />
+      )}
     </>
   );
 }

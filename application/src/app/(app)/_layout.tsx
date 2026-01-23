@@ -1,6 +1,6 @@
 import { useAuth } from '@clerk/clerk-expo';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-// import AppLoading from 'expo-app-loading';
+import AppLoading from 'expo-app-loading';
 import { Tabs } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import React, { useEffect, useState } from 'react';
@@ -25,14 +25,14 @@ export default function TabLayout() {
       Montez: require('../../../assets/fonts/Montez-Regular.ttf'),
     });
   };
-  // if (!loaded)
-  //   return (
-  //     <AppLoading
-  //       startAsync={loadFonts}
-  //       onFinish={() => setLoaded(true)}
-  //       onError={console.warn}
-  //     />
-  //   );
+  if (!loaded)
+    return (
+      <AppLoading
+        startAsync={loadFonts}
+        onFinish={() => setLoaded(true)}
+        onError={console.warn}
+      />
+    );
 
   return (
     <Tabs

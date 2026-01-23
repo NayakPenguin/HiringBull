@@ -1,7 +1,7 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { FlatList, Image, Pressable } from 'react-native';
+import { ActivityIndicator, FlatList, Image, Pressable } from 'react-native';
 
 import { SocialPost } from '@/api';
 import { BottomToast } from '@/components/BottomToast';
@@ -52,6 +52,20 @@ function SocialPostCard({ post }: { post: SocialPost }) {
           </View>
         </View>
 
+        {post.image_link && (
+          <Image
+            source={{ uri: post.image_link }}
+            resizeMode="cover"
+            style={{
+              width: '100%',
+              height: undefined, // auto height
+              aspectRatio: 16 / 9, // stable layout
+              borderRadius: 20,
+              marginBottom: 16,
+            }}
+          />
+        )}
+
         <View className="mb-4">
           <ParsedContent text={post.description} />
         </View>
@@ -74,20 +88,6 @@ function SocialPostCard({ post }: { post: SocialPost }) {
               </View>
             )}
           </View>
-        )}
-
-        {post.image_link && (
-          <Image
-            source={{ uri: post.image_link }}
-            resizeMode="cover"
-            style={{
-              width: '100%',
-              height: undefined, // auto height
-              aspectRatio: 16 / 9, // stable layout
-              borderRadius: 20,
-              marginBottom: 16,
-            }}
-          />
         )}
 
         <View className="mt-2 flex-row flex-wrap items-center gap-2">
