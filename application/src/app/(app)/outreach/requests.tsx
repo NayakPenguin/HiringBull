@@ -3,6 +3,8 @@ import React from 'react';
 import { useState } from 'react';
 import { FlatList, Image, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
+
 
 import { FocusAwareStatusBar } from '@/components/ui';
 type Company = {
@@ -97,9 +99,18 @@ const Request = () => {
 
       {/* Header */}
       <View className="border-neutral-200 px-4 pb-4 pt-6">
-        <Text className="text-3xl" style={{ fontFamily: 'Montez' }}>
-          Outreach Requests
-        </Text>
+        <View className="flex-row items-center">
+          <Pressable onPress={() => router.back()}>
+            <Ionicons
+              name="arrow-back"
+              size={24}
+              className="mr-4 rounded-md bg-neutral-200 p-1"
+            />
+          </Pressable>
+          <Text className="text-3xl" style={{ fontFamily: 'Montez' }}>
+            Outreach Requests
+          </Text>
+        </View>
 
         {/* Tabs */}
         <View className="mt-6 flex-row border-b border-neutral-200">

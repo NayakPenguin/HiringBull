@@ -16,6 +16,7 @@ import {
 } from '@/components/ui';
 import { useFetchFollowedJobs } from '@/features/jobs';
 import { BottomToast } from '@/components/BottomToast';
+import { hideGlobalLoading, showGlobalLoading } from '@/lib';
 const FILTER_TAGS = [
   'Design',
   'Full time',

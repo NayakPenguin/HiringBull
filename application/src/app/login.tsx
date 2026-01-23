@@ -298,7 +298,7 @@ export default function Login() {
 
               <Pressable
                 onPress={handleContinue}
-                disabled={isLoading}
+                // disabled={!email}
                 className="mt-6 rounded-xl bg-neutral-900 py-4"
               >
                 <Text className="text-center text-lg font-bold text-white">
@@ -336,10 +336,7 @@ export default function Login() {
               {/* 6-box OTP Input */}
               <OTPInput
                 value={otp}
-                onChangeText={(text) => {
-                  setOtp(text);
-                  if (error) setError('');
-                }}
+                onChange={setOtp}
                 keyboardType="number-pad"
                 maxLength={6}
                 className="text-center text-2xl tracking-widest"

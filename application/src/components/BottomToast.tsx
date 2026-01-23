@@ -42,14 +42,11 @@ export function BottomToast({
     >
       <View
         className={`rounded-full px-5 py-3 ${
-          type === 'success'
-            ? 'bg-neutral-700'
-            : 'bg-red-600'
+          type === 'success' ? 'bg-neutral-700' : 'bg-red-600'
         }`}
+        style={{ opacity: 0.75 }}
       >
-        <Text className="text-sm text-white">
-          {message}
-        </Text>
+        <Text className="text-sm text-white">{message}</Text>
       </View>
     </Animated.View>
   );
