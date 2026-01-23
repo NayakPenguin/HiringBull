@@ -85,14 +85,31 @@ export default function Login() {
 
   /* ----------------------------- Email Step ----------------------------- */
 
+  // Email validation regex
+  const isValidEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email.trim());
+  };
+
   const handleContinue = async () => {
     if (!email || !isSignInLoaded || !isSignUpLoaded) return;
+
+    // Validate email format
+    if (!email.trim()) {
+      setError('Please enter your email');
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
 
     showGlobalLoading();
     setError('');
 
     try {
-      const attempt = await signIn.create({ identifier: email });
+      const attempt = await signIn.create({ identifier: email.trim() });
 
       const factor = attempt.supportedFirstFactors?.find(
         (f) => f.strategy === 'email_code'
@@ -109,7 +126,7 @@ export default function Login() {
       setStep('otp');
     } catch (e: any) {
       if (e?.errors?.[0]?.code === 'form_identifier_not_found') {
-        await signUp.create({ emailAddress: email });
+        await signUp.create({ emailAddress: email.trim() });
         await signUp.prepareEmailAddressVerification({
           strategy: 'email_code',
         });
@@ -240,6 +257,9 @@ export default function Login() {
 
           {step === 'email' ? (
             <>
+              <Text className="mb-2 text-base font-semibold text-neutral-700">
+                Enter Email
+              </Text>
               <Input
                 placeholder="example@gmail.com"
                 value={email}
