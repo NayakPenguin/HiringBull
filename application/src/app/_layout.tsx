@@ -114,31 +114,31 @@ function RootNavigator() {
 
   const checkUserInfo = async () => {
     try {
-      console.log('🔍 checkUserInfo: Starting to fetch user info...');
+      console.log(' checkUserInfo: Starting to fetch user info...');
       setIsLoadingUser(true);
       const data = await getUserInfo();
-      console.log('🔍 checkUserInfo: User data received:', JSON.stringify(data, null, 2));
+      console.log('checkUserInfo: User data received:', JSON.stringify(data, null, 2));
       if (Boolean(data.onboarding_completed)) {
         completeOnboarding();
         updateUserInfo(data);
       }
     } catch (e: any) {
-      console.error('🔍 checkUserInfo: Failed to get user info:', e?.message || e);
+      console.error('checkUserInfo: Failed to get user info:', e?.message || e);
     } finally {
       setIsLoadingUser(false);
     }
   };
 
   useEffect(() => {
-    console.log('🔍 isSignedIn changed:', isSignedIn);
+    console.log(' isSignedIn changed:', isSignedIn);
     if (isSignedIn) {
-      console.log('🔍 User is signed in, calling checkUserInfo...');
+      console.log(' User is signed in, calling checkUserInfo...');
       checkUserInfo();
     }
   }, [isSignedIn]);
 
   // Debug navigation guards
-  console.log('🧭 Navigation State:', {
+  console.log('Navigation State:', {
     isFirstTime,
     isAuthenticated,
     isLoadingUser,

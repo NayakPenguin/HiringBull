@@ -61,22 +61,22 @@ export default function Login() {
         path: 'sso-callback',
       });
 
-      console.log('🔐 OAuth Redirect URL:', redirectUrl);
+      console.log('OAuth Redirect URL:', redirectUrl);
 
       const { createdSessionId, setActive } = await startSSOFlow({
         strategy: 'oauth_google',
         redirectUrl,
       });
 
-      console.log('🔐 OAuth completed - createdSessionId:', createdSessionId);
+      console.log('OAuth completed - createdSessionId:', createdSessionId);
 
       if (createdSessionId) {
         await setActive!({ session: createdSessionId });
-        console.log('🔐 Session activated, navigating to home');
+        console.log(' Session activated, navigating to home');
         router.replace('/');
       }
     } catch (err: any) {
-      console.error('🔐 OAuth Error:', err?.message || err);
+      console.error(' OAuth Error:', err?.message || err);
       setError('Google sign-in failed');
     } finally {
       hideGlobalLoading();
@@ -131,43 +131,43 @@ export default function Login() {
     showGlobalLoading();
     setError('');
 
-    console.log('🔑 OTP Verification starting... authMode:', authMode);
+    console.log(' OTP Verification starting... authMode:', authMode);
 
     try {
       if (authMode === 'signIn' && signIn) {
-        console.log('🔑 Attempting signIn.attemptFirstFactor...');
+        console.log(' Attempting signIn.attemptFirstFactor...');
         const res = await signIn.attemptFirstFactor({
           strategy: 'email_code',
           code: otp,
         });
-        console.log('🔑 SignIn result status:', res.status, 'sessionId:', res.createdSessionId);
+        console.log(' SignIn result status:', res.status, 'sessionId:', res.createdSessionId);
         if (res.status === 'complete' && setActiveSignIn) {
-          console.log('🔑 Setting active session...');
+          console.log('Setting active session...');
           await setActiveSignIn({ session: res.createdSessionId });
-          console.log('🔑 Session set, navigating to home...');
+          console.log(' Session set, navigating to home...');
           router.replace('/');
         } else {
-          console.log('🔑 SignIn not complete, status:', res.status);
+          console.log(' SignIn not complete, status:', res.status);
         }
       }
 
       if (authMode === 'signUp' && signUp) {
-        console.log('🔑 Attempting signUp.attemptEmailAddressVerification...');
+        console.log(' Attempting signUp.attemptEmailAddressVerification...');
         const res = await signUp.attemptEmailAddressVerification({ code: otp });
-        console.log('🔑 SignUp result status:', res.status, 'sessionId:', res.createdSessionId);
-        console.log('🔑 SignUp missingFields:', res.missingFields);
-        console.log('🔑 SignUp unverifiedFields:', res.unverifiedFields);
+        console.log(' SignUp result status:', res.status, 'sessionId:', res.createdSessionId);
+        console.log(' SignUp missingFields:', res.missingFields);
+        console.log(' SignUp unverifiedFields:', res.unverifiedFields);
         if (res.status === 'complete' && setActiveSignUp) {
-          console.log('🔑 Setting active session...');
+          console.log(' Setting active session...');
           await setActiveSignUp({ session: res.createdSessionId });
-          console.log('🔑 Session set, navigating to home...');
+          console.log(' Session set, navigating to home...');
           router.replace('/');
         } else {
-          console.log('🔑 SignUp not complete, status:', res.status);
+          console.log(' SignUp not complete, status:', res.status);
         }
       }
     } catch (e: any) {
-      console.error('🔑 OTP Error:', e?.message || e, e?.errors);
+      console.error(' OTP Error:', e?.message || e, e?.errors);
       setError('Invalid or expired code');
     } finally {
       hideGlobalLoading();
