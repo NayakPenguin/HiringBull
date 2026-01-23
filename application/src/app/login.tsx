@@ -27,9 +27,7 @@ const useWarmUpBrowser = () => {
 WebBrowser.maybeCompleteAuthSession();
 
 /* ----------------------------- Screen ----------------------------- */
-const isValidEmail = (email: string) => {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-};
+
 export default function Login() {
   useWarmUpBrowser();
 
@@ -87,6 +85,12 @@ export default function Login() {
 
   /* ----------------------------- Email Step ----------------------------- */
 
+  // Email validation regex
+  const isValidEmail = (emailStr: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(emailStr.trim());
+  };
+
   const handleContinue = async () => {
     // --------- CLIENT SIDE VALIDATION ---------
     if (!email.trim()) {
@@ -106,7 +110,7 @@ export default function Login() {
 
     try {
       // Try sign-in first
-      const attempt = await signIn.create({ identifier: email });
+      const attempt = await signIn.create({ identifier: email.trim() });
 
       const factor = attempt.supportedFirstFactors?.find(
         (f) => f.strategy === 'email_code'
@@ -125,7 +129,7 @@ export default function Login() {
       // If user not found → Sign up flow
       if (e?.errors?.[0]?.code === 'form_identifier_not_found') {
         try {
-          await signUp.create({ emailAddress: email });
+          await signUp.create({ emailAddress: email.trim() });
           await signUp.prepareEmailAddressVerification({
             strategy: 'email_code',
           });
@@ -205,7 +209,6 @@ export default function Login() {
     }
   };
 
-
   /* ----------------------------- UI ----------------------------- */
 
   return (
@@ -219,7 +222,6 @@ export default function Login() {
         {/* ---------------- HERO ---------------- */}
         <View className="items-center pt-20 bg-yellow-50">
           <Image
-            // source={require('../../assets/images/experience/hero-logo.png')}
             source={require('../../assets/images/experience/HBLongLogo.png')}
             className="h-[80px] w-[160px]"
             resizeMode="contain"
@@ -228,7 +230,6 @@ export default function Login() {
 
         <View className="items-center bg-yellow-50">
           <Image
-            // source={require('../../assets/images/experience/hero-logo.png')}
             source={require('../../assets/images/experience/appSample.png')}
             className="mt-6 h-[320px] w-full"
             resizeMode="contain"
@@ -248,30 +249,13 @@ export default function Login() {
             Find your dream job effortlessly
           </Text>
 
-          {/* GOOGLE */}
-          {/* <Pressable
-            onPress={handleGoogleLogin}
-            className="mt-8 flex-row items-center justify-center rounded-xl border border-neutral-200 py-4"
-          >
-            <Ionicons name="logo-google" size={20} />
-            <Text className="ml-3 text-base font-semibold">
-              Signup with Google
-            </Text>
-          </Pressable> */}
-
-          {/* DIVIDER */}
-          {/* <View className="my-6 flex-row items-center gap-3">
-            <View className="h-px flex-1 bg-neutral-200" />
-            <Text className="text-sm text-neutral-400">
-              or continue with email
-            </Text>
-            <View className="h-px flex-1 bg-neutral-200" />
-          </View> */}
-
           {/* EMAIL / OTP */}
 
           {step === 'email' ? (
             <>
+              <Text className="mb-2 text-base font-semibold text-neutral-700">
+                Enter Email
+              </Text>
               <Input
                 placeholder="example@gmail.com"
                 value={email}
@@ -298,7 +282,6 @@ export default function Login() {
 
               <Pressable
                 onPress={handleContinue}
-                // disabled={!email}
                 className="mt-6 rounded-xl bg-neutral-900 py-4"
               >
                 <Text className="text-center text-lg font-bold text-white">
@@ -337,33 +320,17 @@ export default function Login() {
               <OTPInput
                 value={otp}
                 onChange={setOtp}
-                keyboardType="number-pad"
-                maxLength={6}
-                className="text-center text-2xl tracking-widest"
+                length={6}
+                autoFocus
               />
-              {error ? (
-                <View className="mt-4 flex-row items-center">
-                  <Ionicons
-                    name="information-circle"
-                    size={20}
-                    color="#ef4444"
-                    style={{ marginRight: 6 }}
-                  />
-                  <Text className="text-left text-sm text-red-500">
-                    {error}
-                  </Text>
-                </View>
-              ) : null}
-
-
 
               {error ? (
                 <View className="mt-4 flex-row items-center justify-center">
                   <Ionicons
                     name="information-circle"
                     size={20}
-                    color={'#ef4444'}
-                    className='mr-2'
+                    color="#ef4444"
+                    style={{ marginRight: 6 }}
                   />
                   <Text className="text-center text-sm text-red-500">
                     {error}
