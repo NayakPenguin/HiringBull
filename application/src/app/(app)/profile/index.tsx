@@ -13,7 +13,7 @@ import {
   View,
 } from '@/components/ui';
 import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
-import { resetOnboarding } from '@/lib';
+import { resetOnboarding, useOnboarding } from '@/lib';
 
 type SettingsItem = {
   label: string;
@@ -60,6 +60,10 @@ export default function Profile() {
   const { signOut } = useAuth();
   const { user } = useUser();
   const { navigate } = useRouter();
+  
+  // Get user info from backend API (saved in Zustand store)
+  const userInfo = useOnboarding.use.userInfo();
+  
   const handleLogout = () => {
     setConfirmAction('logout');
     modalRef.current?.present();
@@ -103,13 +107,14 @@ export default function Profile() {
     },
   ];
 
-  // Get user display info
+  // Get user display info - prefer backend name over Clerk name
   const displayName =
+    userInfo?.name ||
     user?.fullName ||
     user?.firstName ||
     user?.emailAddresses?.[0]?.emailAddress?.split('@')[0] ||
     'User';
-  const email = user?.primaryEmailAddress?.emailAddress || '';
+  const email = userInfo?.email || user?.primaryEmailAddress?.emailAddress || '';
   const initials = displayName
     .split(' ')
     .map((n) => n[0])

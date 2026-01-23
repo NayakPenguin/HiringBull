@@ -1,7 +1,8 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
-import React, { useCallback, useMemo, useState } from 'react';
-import { Pressable, Image, FlatList, ActivityIndicator } from 'react-native';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
+import { showGlobalLoading, hideGlobalLoading } from '@/lib';
+import { Pressable, Image, FlatList } from 'react-native';
 
 import {
   FocusAwareStatusBar,
@@ -165,6 +166,15 @@ export default function SocialPosts() {
     });
   }, [allPosts, searchQuery]);
 
+  // Show global loading on initial load
+  useEffect(() => {
+    if (isLoading) {
+      showGlobalLoading();
+    } else {
+      hideGlobalLoading();
+    }
+  }, [isLoading]);
+
   const renderItem = useCallback(({ item }: { item: SocialPost }) => {
     return <SocialPostCard post={item} />;
   }, []);
@@ -173,7 +183,7 @@ export default function SocialPosts() {
     if (isFetchingNextPage) {
       return (
         <View className="py-4">
-          <ActivityIndicator size="small" color="#A3A3A3" />
+          <Text className="text-center text-sm text-neutral-400">Loading more...</Text>
         </View>
       );
     }
@@ -217,10 +227,8 @@ export default function SocialPosts() {
           </View>
         </View>
 
-        {isLoading || !data ? (
-          <View className="flex-1 items-center justify-center pt-20">
-            <ActivityIndicator size="large" color="#A3A3A3" />
-          </View>
+        {!data ? (
+          <View className="flex-1" />
         ) : (
           <FlatList
             data={filteredPosts}

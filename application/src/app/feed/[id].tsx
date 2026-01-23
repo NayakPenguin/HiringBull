@@ -3,11 +3,11 @@ import * as React from 'react';
 
 import { usePost } from '@/api';
 import {
-  ActivityIndicator,
   FocusAwareStatusBar,
   Text,
   View,
 } from '@/components/ui';
+import { showGlobalLoading, hideGlobalLoading } from '@/lib';
 
 export default function Post() {
   const local = useLocalSearchParams<{ id: string }>();
@@ -17,12 +17,20 @@ export default function Post() {
     variables: { id: local.id },
   });
 
+  // Show global loading when fetching
+  React.useEffect(() => {
+    if (isPending) {
+      showGlobalLoading();
+    } else {
+      hideGlobalLoading();
+    }
+  }, [isPending]);
+
   if (isPending) {
     return (
-      <View className="flex-1 justify-center  p-3">
+      <View className="flex-1">
         <Stack.Screen options={{ title: 'Post', headerBackTitle: 'Feed' }} />
         <FocusAwareStatusBar />
-        <ActivityIndicator />
       </View>
     );
   }

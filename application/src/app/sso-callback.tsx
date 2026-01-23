@@ -1,9 +1,9 @@
 import { useEffect, useCallback } from 'react';
-import { View, ActivityIndicator, Text } from 'react-native';
+import { View, Text } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
-import { useOnboarding } from '@/lib';
+import { useOnboarding, showGlobalLoading, hideGlobalLoading } from '@/lib';
 
 // This MUST be called to complete the OAuth session
 WebBrowser.maybeCompleteAuthSession();
@@ -16,6 +16,14 @@ export default function SSOCallback() {
   // Get user state to determine where to route
   const hasCompletedOnboarding = useOnboarding.use.hasCompletedOnboarding();
   const isSubscribed = useOnboarding.use.isSubscribed();
+
+  // Show global loading when component mounts
+  useEffect(() => {
+    showGlobalLoading();
+    return () => {
+      hideGlobalLoading();
+    };
+  }, []);
 
   // Helper to determine target route based on state
   const getTargetRoute = () => {
@@ -64,9 +72,6 @@ export default function SSOCallback() {
   }, [isSignedIn, router, hasCompletedOnboarding, isSubscribed]);
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
-      <ActivityIndicator size="large" color="#000" />
-      <Text style={{ marginTop: 16, color: '#666' }}>Loading...</Text>
-    </View>
+    <View style={{ flex: 1 }} />
   );
 }

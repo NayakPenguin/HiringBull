@@ -11,7 +11,7 @@ import { type ExperienceLevel, type ProfileData } from '@/app/onboarding/types';
 import { FocusAwareStatusBar, SafeAreaView, Text, View } from '@/components/ui';
 import { checkUserVerification, UserRegistration } from '@/features/users';
 import useRegisterOrEditUser from '@/features/users/hooks/useRegisterOrEditUser';
-import { useOnboarding } from '@/lib';
+import { useOnboarding, showGlobalLoading, hideGlobalLoading } from '@/lib';
 import NoActiveMembership from '../no-membership';
 
 
@@ -149,13 +149,16 @@ export default function Onboarding() {
 
       registerUser(payload, {
         onSuccess: () => {
+          hideGlobalLoading();
           completeOnboarding();
           router.replace('/');
         },
         onError: (e) => {
+          hideGlobalLoading();
           console.error(e);
         },
       });
+      showGlobalLoading();
     }
   };
 

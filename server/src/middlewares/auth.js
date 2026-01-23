@@ -63,15 +63,17 @@ export const requireAuth = async (req, res, next) => {
       log("Clerk user fetch failed:", err);
     }
 
-    // 🆕 Create user if not exists
+    // 🆕 Create user if not exists (using upsert to handle race conditions)
     if (!user) {
-      user = await prisma.user.create({
-        data: {
+      user = await prisma.user.upsert({
+        where: { clerkId },
+        create: {
           clerkId,
           email,
           name,
           active: true,
         },
+        update: {}, // If user already exists (race condition), just fetch it
       });
 
       req.user = user;

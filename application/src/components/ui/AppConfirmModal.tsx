@@ -29,8 +29,8 @@ export const AppConfirmModal = forwardRef<
   ref
 ) {
   return (
-    <Modal ref={ref} snapPoints={['25%']}>
-      <View className="flex-1 px-6 pt-6">
+    <Modal ref={ref} snapPoints={['30%']}>
+      <View className="flex-1 px-6 pt-6 pb-8">
         {/* Icon */}
         <View className="flex-row items-center">
           <View

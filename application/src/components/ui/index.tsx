@@ -9,6 +9,7 @@ export * from './image';
 export * from './input';
 export * from './list';
 export * from './modal';
+export * from './otp-input';
 export * from './progress-bar';
 export * from './text';
 export * from './utils';

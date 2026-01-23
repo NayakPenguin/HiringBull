@@ -29,10 +29,16 @@ export function useNotificationObserver() {
       lastNotificationResponse.actionIdentifier ===
         Notifications.DEFAULT_ACTION_IDENTIFIER
     ) {
-      const url = lastNotificationResponse.notification.request.content.data?.url;
+      const data = lastNotificationResponse.notification.request.content.data;
+      const url = data?.url;
+      
       if (typeof url === 'string') {
         console.log('Navigating to:', url);
         router.push(url as any);
+      } else {
+        // Default: navigate to explore page (home/index)
+        console.log('Navigating to explore page (default)');
+        router.push('/(app)');
       }
     }
   }, [lastNotificationResponse]);

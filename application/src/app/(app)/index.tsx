@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, View as RNView } from 'react-native';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
+import { FlatList, View as RNView } from 'react-native';
 import { Pressable, ScrollView } from 'react-native';
 
 import { type Job as ApiJob, JobCard } from '@/components/job-card';
@@ -15,6 +15,7 @@ import {
   View,
 } from '@/components/ui';
 import { useFetchFollowedJobs } from '@/features/jobs';
+import { showGlobalLoading, hideGlobalLoading } from '@/lib';
 const FILTER_TAGS = [
   'Design',
   'Full time',
@@ -68,6 +69,15 @@ export default function Jobs() {
     }
   }, [refetch]);
 
+  // Show global loading on initial load
+  useEffect(() => {
+    if (isLoading) {
+      showGlobalLoading();
+    } else {
+      hideGlobalLoading();
+    }
+  }, [isLoading]);
+
   // Flatten all pages
   const allJobs = useMemo(
     () => data?.pages.flatMap((page) => page.data || []) || [],
@@ -96,6 +106,15 @@ export default function Jobs() {
   }, [allJobs, searchQuery, selectedTags]);
 
   // Save job callback
+  // Show global loading on initial load
+  useEffect(() => {
+    if (isLoading) {
+      showGlobalLoading();
+    } else {
+      hideGlobalLoading();
+    }
+  }, [isLoading]);
+
   const handleSaveJob = useCallback((jobId: string) => {
     console.log('Save job:', jobId);
   }, []);
@@ -111,7 +130,7 @@ export default function Jobs() {
     if (isFetchingNextPage) {
       return (
         <RNView className="py-4">
-          <ActivityIndicator size="small" color="#A3A3A3" />
+          <Text className="text-center text-sm text-neutral-400">Loading more...</Text>
         </RNView>
       );
     }
@@ -162,10 +181,8 @@ export default function Jobs() {
           </View>
         </View>
 
-        {isLoading || !data ? (
-          <View className="flex-1 items-center justify-center pt-20">
-            <ActivityIndicator size="large" color="#A3A3A3" />
-          </View>
+        {!data ? (
+          <View className="flex-1" />
         ) : (
           <FlatList
             data={filteredJobs}

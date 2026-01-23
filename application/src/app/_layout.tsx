@@ -14,6 +14,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 
 import { APIProvider } from '@/api';
+import { GlobalLoadingOverlay } from '@/components/global-loading-overlay';
 import { getUserInfo, useRegisterDevice } from '@/features/users';
 import { updateUserInfo } from '@/lib';
 import {
@@ -113,24 +114,37 @@ function RootNavigator() {
 
   const checkUserInfo = async () => {
     try {
+      console.log(' checkUserInfo: Starting to fetch user info...');
       setIsLoadingUser(true);
       const data = await getUserInfo();
+      console.log('checkUserInfo: User data received:', JSON.stringify(data, null, 2));
       if (Boolean(data.onboarding_completed)) {
         completeOnboarding();
         updateUserInfo(data);
       }
-    } catch (e) {
-      console.error('Failed to get user info');
+    } catch (e: any) {
+      console.error('checkUserInfo: Failed to get user info:', e?.message || e);
     } finally {
       setIsLoadingUser(false);
     }
   };
 
   useEffect(() => {
+    console.log(' isSignedIn changed:', isSignedIn);
     if (isSignedIn) {
+      console.log(' User is signed in, calling checkUserInfo...');
       checkUserInfo();
     }
   }, [isSignedIn]);
+
+  // Debug navigation guards
+  console.log('Navigation State:', {
+    isFirstTime,
+    isAuthenticated,
+    isLoadingUser,
+    hasCompletedOnboarding,
+    isLoaded,
+  });
 
   return (
     <>
@@ -188,6 +202,7 @@ function Providers({ children }: { children: React.ReactNode }) {
               <BottomSheetModalProvider>
                 {children}
                 <FlashMessage position="top" />
+                <GlobalLoadingOverlay />
               </BottomSheetModalProvider>
             </APIProvider>
           </ClerkProvider>

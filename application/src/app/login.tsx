@@ -4,11 +4,13 @@ import * as AuthSession from 'expo-auth-session';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Platform, Pressable } from 'react-native';
+import { Image, Platform, Pressable } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 
 import { FocusAwareStatusBar, Input, Text, View } from '@/components/ui';
+import { OTPInput } from '@/components/ui/otp-input';
+import { showGlobalLoading, hideGlobalLoading } from '@/lib';
 
 /* ----------------------------- Utils ----------------------------- */
 
@@ -46,13 +48,12 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [authMode, setAuthMode] = useState<'signIn' | 'signUp' | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
   /* ----------------------------- Google ----------------------------- */
 
   const handleGoogleLogin = useCallback(async () => {
-    setIsLoading(true);
+    showGlobalLoading();
     setError('');
 
     try {
@@ -60,19 +61,25 @@ export default function Login() {
         path: 'sso-callback',
       });
 
+      console.log('OAuth Redirect URL:', redirectUrl);
+
       const { createdSessionId, setActive } = await startSSOFlow({
         strategy: 'oauth_google',
         redirectUrl,
       });
 
+      console.log('OAuth completed - createdSessionId:', createdSessionId);
+
       if (createdSessionId) {
         await setActive!({ session: createdSessionId });
+        console.log(' Session activated, navigating to home');
         router.replace('/');
       }
     } catch (err: any) {
+      console.error(' OAuth Error:', err?.message || err);
       setError('Google sign-in failed');
     } finally {
-      setIsLoading(false);
+      hideGlobalLoading();
     }
   }, [router, startSSOFlow]);
 
@@ -81,7 +88,7 @@ export default function Login() {
   const handleContinue = async () => {
     if (!email || !isSignInLoaded || !isSignUpLoaded) return;
 
-    setIsLoading(true);
+    showGlobalLoading();
     setError('');
 
     try {
@@ -112,7 +119,7 @@ export default function Login() {
         setError('Unable to send code');
       }
     } finally {
-      setIsLoading(false);
+      hideGlobalLoading();
     }
   };
 
@@ -121,32 +128,49 @@ export default function Login() {
   const handleVerify = async () => {
     if (otp.length !== 6) return;
 
-    setIsLoading(true);
+    showGlobalLoading();
     setError('');
+
+    console.log(' OTP Verification starting... authMode:', authMode);
 
     try {
       if (authMode === 'signIn' && signIn) {
+        console.log(' Attempting signIn.attemptFirstFactor...');
         const res = await signIn.attemptFirstFactor({
           strategy: 'email_code',
           code: otp,
         });
+        console.log(' SignIn result status:', res.status, 'sessionId:', res.createdSessionId);
         if (res.status === 'complete' && setActiveSignIn) {
+          console.log('Setting active session...');
           await setActiveSignIn({ session: res.createdSessionId });
+          console.log(' Session set, navigating to home...');
           router.replace('/');
+        } else {
+          console.log(' SignIn not complete, status:', res.status);
         }
       }
 
       if (authMode === 'signUp' && signUp) {
+        console.log(' Attempting signUp.attemptEmailAddressVerification...');
         const res = await signUp.attemptEmailAddressVerification({ code: otp });
+        console.log(' SignUp result status:', res.status, 'sessionId:', res.createdSessionId);
+        console.log(' SignUp missingFields:', res.missingFields);
+        console.log(' SignUp unverifiedFields:', res.unverifiedFields);
         if (res.status === 'complete' && setActiveSignUp) {
+          console.log(' Setting active session...');
           await setActiveSignUp({ session: res.createdSessionId });
+          console.log(' Session set, navigating to home...');
           router.replace('/');
+        } else {
+          console.log(' SignUp not complete, status:', res.status);
         }
       }
-    } catch {
+    } catch (e: any) {
+      console.error(' OTP Error:', e?.message || e, e?.errors);
       setError('Invalid or expired code');
     } finally {
-      setIsLoading(false);
+      hideGlobalLoading();
     }
   };
 
@@ -240,40 +264,71 @@ export default function Login() {
 
               <Pressable
                 onPress={handleContinue}
-                disabled={!email || isLoading}
+                disabled={!email}
                 className="mt-6 rounded-xl bg-neutral-900 py-4"
               >
-                {isLoading ? (
-                  <ActivityIndicator color="white" />
-                ) : (
-                  <Text className="text-center text-lg font-bold text-white">
-                    Continue to Proceed
-                  </Text>
-                )}
+                <Text className="text-center text-lg font-bold text-white">
+                  Continue to Proceed
+                </Text>
               </Pressable>
             </>
           ) : (
             <>
-              <Input
-                placeholder="000000"
+              {/* Back button */}
+              <Pressable
+                onPress={() => {
+                  setStep('email');
+                  setOtp('');
+                  setError('');
+                }}
+                className="mb-4 flex-row items-center self-start"
+              >
+                <Ionicons name="arrow-back" size={20} color="#525252" />
+                <Text className="ml-2 text-base font-medium text-neutral-600">
+                  Change Email
+                </Text>
+              </Pressable>
+
+              {/* OTP sent message */}
+              <View className="mb-6 rounded-xl bg-green-50 p-4">
+                <Text className="text-center text-sm text-green-700">
+                  OTP has been sent to your email
+                </Text>
+                <Text className="mt-1 text-center text-base font-semibold text-green-800">
+                  {email}
+                </Text>
+              </View>
+
+              {/* 6-box OTP Input */}
+              <OTPInput
                 value={otp}
-                onChangeText={setOtp}
-                keyboardType="number-pad"
-                maxLength={6}
-                className="text-center text-2xl tracking-widest"
+                onChange={setOtp}
+                length={6}
+                autoFocus
               />
+
+              {error ? (
+                <View className="mt-4 flex-row items-center justify-center">
+                  <Ionicons
+                    name="information-circle"
+                    size={20}
+                    color={'#ef4444'}
+                    className='mr-2'
+                  />
+                  <Text className="text-center text-sm text-red-500">
+                    {error}
+                  </Text>
+                </View>
+              ) : null}
 
               <Pressable
                 onPress={handleVerify}
-                className="mt-6 rounded-xl bg-neutral-900 py-4"
+                disabled={otp.length !== 6}
+                className={`mt-6 rounded-xl py-4 ${otp.length === 6 ? 'bg-neutral-900' : 'bg-neutral-400'}`}
               >
-                {isLoading ? (
-                  <ActivityIndicator color="white" />
-                ) : (
-                  <Text className="text-center text-lg font-bold text-white">
-                    Continue to Proceed
-                  </Text>
-                )}
+                <Text className="text-center text-lg font-bold text-white">
+                  Verify & Continue
+                </Text>
               </Pressable>
             </>
           )}

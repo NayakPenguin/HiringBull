@@ -6,7 +6,7 @@ import {
 } from '@/components/ui';
 import { Pressable } from 'react-native';
 import { useState, useCallback } from 'react';
-import { updateUserInfo, useOnboarding } from "@/lib";
+import { updateUserInfo, useOnboarding, showGlobalLoading, hideGlobalLoading } from "@/lib";
 import { useRouter } from "expo-router";
 import useRegisterOrEditUser from "@/features/users/hooks/useRegisterOrEditUser";
 import { isFollowedCompanyObject } from "@/features/users";
@@ -60,16 +60,21 @@ const EditFollowedCompanies = () => {
   }
 
   const updateFollowedCompanies = () => {
+    showGlobalLoading();
     editUser({ followedCompanies: selectedCompanies }, {
       onSuccess: (data) => {
         updateUserInfo(data);
         // Invalidate jobs query so user gets fresh recommendations
         queryClient.invalidateQueries({ queryKey: [QueryKeys.followedJobs] });
+        hideGlobalLoading();
         router.back();
+      },
+      onError: () => {
+        hideGlobalLoading();
       }
     })
   }
-  const btnDisabled = (fetchingOnboardingCompanies > 0) || isUpdating;
+  const btnDisabled = (fetchingOnboardingCompanies > 0);
   return (
     <SafeAreaView
       className="flex-1 dark:bg-neutral-950"

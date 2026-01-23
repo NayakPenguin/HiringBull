@@ -5,7 +5,7 @@ import {
   View,
   SafeAreaView
 } from '@/components/ui';
-import { useOnboarding } from '@/lib';
+import { useOnboarding, showGlobalLoading, hideGlobalLoading } from '@/lib';
 import { useRouter } from 'expo-router';
 import {Pressable} from 'react-native';
 import {useState, useCallback} from 'react';
@@ -35,13 +35,18 @@ const EditExperience = () => {
 
   const updateExperienceLevel = ()=>{
     if(experienceLevel){
+      showGlobalLoading();
       editUser({experience_level: experienceLevel},{
         onSuccess:(data)=>{
           setExperienceLevel(data.experience_level);
           updateUserInfo(data);
           // Invalidate jobs query so user gets fresh recommendations
           queryClient.invalidateQueries({ queryKey: [QueryKeys.followedJobs] });
+          hideGlobalLoading();
           router.back();
+        },
+        onError: () => {
+          hideGlobalLoading();
         }
       })
     }
@@ -64,7 +69,7 @@ const EditExperience = () => {
         </View>
         <Pressable
         onPress={updateExperienceLevel}
-        disabled={btnDisabled || isUpdating}
+        disabled={btnDisabled}
         className={`h-14 items-center justify-center rounded-xl ${
               !btnDisabled ? 'bg-black dark:bg-white' : 'bg-neutral-300'
         }`}
@@ -74,7 +79,7 @@ const EditExperience = () => {
             !btnDisabled ? 'text-white dark:text-black' : 'text-neutral-500'
           }`}
         >
-          {isUpdating ? 'Updating...' : 'Update'}
+          Update
         </Text>
       </Pressable>
       </View>

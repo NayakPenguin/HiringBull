@@ -78,6 +78,7 @@ const client = z.object({
   BUNDLE_ID: z.string(),
   PACKAGE: z.string(),
   VERSION: z.string(),
+  EXPO_PUBLIC_API_URL: z.string().min(1),
 
   // ADD YOUR CLIENT ENV VARS HERE
 });
@@ -98,6 +99,7 @@ const _clientEnv = {
   BUNDLE_ID: withEnvSuffix(BUNDLE_ID),
   PACKAGE: withEnvSuffix(PACKAGE),
   VERSION: packageJSON.version,
+  EXPO_PUBLIC_API_URL: process.env.EXPO_PUBLIC_API_URL,
 
   // ADD YOUR ENV VARS HERE TOO
 };
