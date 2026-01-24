@@ -32,17 +32,21 @@ const catchAsync = (fn) => (req, res, next) => {
 export const getAllCompanies = catchAsync(async (req, res) => {
     const { category } = req.query;
 
-    const where = {};
-    if (category) {
-        where.category = category;
+    // Fetch directly from external API
+    try {
+        const response = await fetch('https://api.hiringbull.org/api/companies');
+        if (!response.ok) {
+            throw new Error(`External API error: ${response.status}`);
+        }
+        
+        const externalCompanies = await response.json();
+        
+        res.status(httpStatus.OK).json(externalCompanies);
+    } catch (error) {
+        console.error('Error fetching from external API:', error);
+        // Return empty array if external API fails
+        res.status(httpStatus.OK).json([]);
     }
-
-    const companies = await prisma.company.findMany({
-        where,
-        orderBy: { name: 'asc' },
-    });
-
-    res.status(httpStatus.OK).json(companies);
 });
 
 /**

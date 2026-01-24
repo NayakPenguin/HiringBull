@@ -188,6 +188,21 @@ const Landing = () => {
     setIsDiscountApplied(!isDiscountApplied);
   };
 
+  const smoothScrollTo = (elementId) => {
+    const element = document.getElementById(elementId);
+    if (element) {
+      let navbarHeight = 85; // Default height for other sections
+      if (elementId === 'features') {
+        navbarHeight = 60; // Account for black notification bar and partial white nav
+      }
+      const elementPosition = element.offsetTop - navbarHeight;
+      window.scrollTo({
+        top: elementPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   return (
     <Container>
       <Navbar>
@@ -200,10 +215,10 @@ const Landing = () => {
             HiringBull
           </div>
           <div className="right">
-            <a href="#features">Features</a>
-            <a href="#compare">Compare</a>
-            <a href="#pricing">Pricing</a>
-            <a href="#faq">FAQ</a>
+            <a href="#features" onClick={(e) => { e.preventDefault(); smoothScrollTo('features'); }} style={{ cursor: 'pointer' }}>Features</a>
+            <a href="#compare" onClick={(e) => { e.preventDefault(); smoothScrollTo('compare'); }} style={{ cursor: 'pointer' }}>Compare</a>
+            <a href="#pricing" onClick={(e) => { e.preventDefault(); smoothScrollTo('pricing'); }} style={{ cursor: 'pointer' }}>Pricing</a>
+            <a href="#faq" onClick={(e) => { e.preventDefault(); smoothScrollTo('faq'); }} style={{ cursor: 'pointer' }}>FAQ</a>
             <a href="/join-membership" className='type2'>Apply for Membership <OfflineBoltIcon /></a>
           </div>
         </div>
@@ -223,7 +238,7 @@ const Landing = () => {
           Apply for Membership <OfflineBoltIcon />
         </a>
 
-        <div className="dancing-scroll-action">
+        <div className="dancing-scroll-action" onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}>
           <ExpandMoreIcon />
         </div>
       </Page1>
@@ -748,10 +763,10 @@ const Landing = () => {
 
           <div className="col">
             <div className="heading">Product</div>
-            <a href="#features">Features</a>
-            <a href="#compare">Compare</a>
-            <a href="#pricing">Pricing</a>
-            <a href="#faq">FAQ</a>
+            <a href="#features" onClick={(e) => { e.preventDefault(); smoothScrollTo('features'); }} style={{ cursor: 'pointer' }}>Features</a>
+            <a href="#compare" onClick={(e) => { e.preventDefault(); smoothScrollTo('compare'); }} style={{ cursor: 'pointer' }}>Compare</a>
+            <a href="#pricing" onClick={(e) => { e.preventDefault(); smoothScrollTo('pricing'); }} style={{ cursor: 'pointer' }}>Pricing</a>
+            <a href="#faq" onClick={(e) => { e.preventDefault(); smoothScrollTo('faq'); }} style={{ cursor: 'pointer' }}>FAQ</a>
           </div>
 
           <div className="col">
@@ -780,7 +795,8 @@ const Landing = () => {
 export default Landing
 
 const Container = styled.div`
-  width: 100vw; 
+  width: 100vw;
+  padding-top: 40px;
 
   @media (max-width: 500px) {
     .no-mobile{
@@ -811,6 +827,12 @@ const Navbar = styled.div`
 
     font-size: 0.85rem;
     font-weight: 300;
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
 
     span {
       color: white;
@@ -1054,8 +1076,24 @@ const Page1 = styled.div`
     left: 50%;
     transform: translateX(-50%);
     cursor: pointer;
+    transition: all 0.3s ease;
+    animation: float 3s ease-in-out infinite;
 
-    animation: scrollBounce 1.8s ease-in-out infinite;
+    &:hover {
+      transform: translateX(-50%) scale(1.1);
+      animation-play-state: paused;
+    }
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translate(-50%, 0);
+      opacity: 0.8;
+    }
+    50% {
+      transform: translate(-50%, -15px);
+      opacity: 1;
+    }
   }
 
   @keyframes scrollBounce {
