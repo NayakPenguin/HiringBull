@@ -207,6 +207,8 @@ model OutreachRequest {
   resumeLink   String?
   message      String?
 
+  reply        String?
+
   status       String   @default("PENDING")
 
   createdAt    DateTime @default(now())
