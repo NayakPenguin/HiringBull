@@ -30,6 +30,32 @@ router.get("/", (req, res) => {
   });
 });
 
+// const getMyTestOutreachRequests = async (req, res) => {
+//   try {
+//     const userId = "f24a52f9-be4c-4291-a8eb-fd12e5dc5573";
+
+//     const outreaches = await prisma.outreachRequest.findMany({
+//       where: { userId },
+//       orderBy: { createdAt: 'desc' },
+//       select: {
+//         id: true,
+//         companyName: true,
+//         email: true,
+//         status: true,
+//         createdAt: true,
+//         reply: true,
+//       },
+//     });
+
+//     return res.status(200).json(outreaches);
+//   } catch (error) {
+//     console.error('Get my outreaches error:', error);
+//     return res.status(500).json({ message: 'Internal server error' });
+//   }
+// };
+
+// router.get("/outreach-testing", getMyTestOutreachRequests);
+
 // router.get("/testing", (req, res) => {
 //   res.json({
 //     status: "ok",
