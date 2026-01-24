@@ -9,13 +9,15 @@ import webhookRoutes from './webhookRoutes.js';
 import testingRoutes from './testing.js';
 import webRegistrationRoutes from './webRegistrationRoutes.js';
 import outreachRoutes from './outreachRoutes.js';
-import authTestRoutes from './authTest.js'; // ✅ ADD
+import authTestRoutes from './authTest.js'; 
+import freeJobsRoutes from './freeJobsRoutes.js'; 
 
 const router = express.Router();
 
 // 🔓 Public routes
 router.use('/public', testingRoutes);
 router.use('/webhooks', webhookRoutes);
+router.use('/free-jobs', freeJobsRoutes);
 
 // 🔐 Auth test route (Clerk only)
 router.use('/auth', authTestRoutes); // ✅ NEW

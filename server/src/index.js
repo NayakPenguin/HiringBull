@@ -18,7 +18,7 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 app.get("/", (req, res) => {
-  res.send({ status: "ok", message: "Welcome to HiringBull API! - last updated 20-01-2026" });
+  res.send({ status: "ok", message: "Welcome to HiringBull API! - last updated 24-01-2026" });
 });
 
 app.use(helmet());

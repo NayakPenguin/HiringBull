@@ -82,6 +82,36 @@ export const getAllJobs = catchAsync(async (req, res) => {
     });
 });
 
+export const getAllFreeJobs = catchAsync(async (req, res) => {
+    const { skip, take, page, limit } = getPagination(req.query);
+
+    // Total jobs count
+    const totalCount = await prisma.job.count();
+
+    // Fetch all jobs (no filters)
+    const jobs = await prisma.job.findMany({
+        skip,
+        take,
+        orderBy: { created_at: 'desc' },
+        include: {
+            companyRel: {
+                select: {
+                    id: true,
+                    name: true,
+                    logo: true,
+                },
+            },
+        },
+    });
+
+    const pagination = getPaginationMeta(totalCount, page, limit);
+
+    res.status(httpStatus.OK).json({
+        data: jobs,
+        pagination,
+    });
+});
+
 /**
  * @swagger
  * /api/jobs/{id}:
