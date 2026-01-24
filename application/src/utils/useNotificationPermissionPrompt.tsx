@@ -7,7 +7,7 @@ export function useNotificationPermissionPrompt() {
   const [modalVisible, setModalVisible] = useState(false);
 
   const checkPermissions = async () => {
-    if (Device.isDevice) return;
+    if (!Device.isDevice) return;
 
     const { status } = await Notifications.getPermissionsAsync();
 

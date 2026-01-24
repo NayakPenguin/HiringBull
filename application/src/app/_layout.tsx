@@ -30,6 +30,8 @@ import { useThemeConfig } from '@/lib/use-theme-config';
 import { authService } from '@/service/auth-service';
 import { useNotificationPermissionPrompt } from '@/utils/useNotificationPermissionPrompt';
 import { NotificationPromptModal } from '@/utils/NotificationPromptModal';
+import AppLoading from 'expo-app-loading';
+import * as Font from 'expo-font';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -100,7 +102,7 @@ function RootNavigator() {
 
   // Notifications should only be initialized for authenticated users
   const shouldInitNotifications = isAuthenticated;
-  console.log(shouldInitNotifications, isAuthenticated)
+  console.log(shouldInitNotifications, isAuthenticated);
 
   //   temporary flags for testing
   //   const isFirstTime = false;
@@ -121,7 +123,10 @@ function RootNavigator() {
       console.log(' checkUserInfo: Starting to fetch user info...');
       setIsLoadingUser(true);
       const data = await getUserInfo();
-      console.log('checkUserInfo: User data received:', JSON.stringify(data, null, 2));
+      console.log(
+        'checkUserInfo: User data received:',
+        JSON.stringify(data, null, 2)
+      );
       if (Boolean(data.onboarding_completed)) {
         completeOnboarding();
         updateUserInfo(data);
@@ -149,7 +154,21 @@ function RootNavigator() {
     hasCompletedOnboarding,
     isLoaded,
   });
-
+  const [loaded, setLoaded] = useState(false);
+  const loadFonts = async () => {
+    console.log('Loading fonts...');
+    await Font.loadAsync({
+      Montez: require('../../assets/fonts/Montez-Regular.ttf'),
+    });
+  };
+  if (!loaded)
+    return (
+      <AppLoading
+        startAsync={loadFonts}
+        onFinish={() => setLoaded(true)}
+        onError={console.warn}
+      />
+    );
   return (
     <>
       {/* {shouldInitNotifications && <NotificationInitializer />} */}
