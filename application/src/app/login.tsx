@@ -173,12 +173,7 @@ export default function Login() {
           strategy: 'email_code',
           code: otp,
         });
-        console.log(
-          ' SignIn result status:',
-          res.status,
-          'sessionId:',
-          res.createdSessionId
-        );
+        console.log(' SignIn result status:', res.status, 'sessionId:', res.createdSessionId);
 
         if (res.status === 'complete' && setActiveSignIn) {
           console.log('Setting active session...');
@@ -193,12 +188,7 @@ export default function Login() {
       if (authMode === 'signUp' && signUp) {
         console.log(' Attempting signUp.attemptEmailAddressVerification...');
         const res = await signUp.attemptEmailAddressVerification({ code: otp });
-        console.log(
-          ' SignUp result status:',
-          res.status,
-          'sessionId:',
-          res.createdSessionId
-        );
+        console.log(' SignUp result status:', res.status, 'sessionId:', res.createdSessionId);
         console.log(' SignUp missingFields:', res.missingFields);
         console.log(' SignUp unverifiedFields:', res.unverifiedFields);
 
