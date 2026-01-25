@@ -20,6 +20,8 @@ import {
 import { useOnboarding } from '@/lib';
 import { useOutreachForm } from '@/lib/hooks/use-outreach-form';
 import { showToast } from '@/lib/toast';
+import { useMyProfile } from '@/api/outreach/useUserInfo';
+import { useQueryClient } from '@tanstack/react-query';
 
 type Company = {
   id: string;
@@ -112,15 +114,17 @@ function CompanyCard({
 
 export default function Outreach() {
   const { user } = useUser();
-  const { form, onSubmit } = useOutreachForm();
+  const queryClient = useQueryClient();
+
+  const { form } = useOutreachForm();
   const { control, watch, setValue, reset } = form;
-  const userInfo = useOnboarding.use.userInfo();
+  const { data } = useMyProfile();
 
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
 
-  const remaining = userInfo?.tokens_left;
+  const remaining = data?.tokens_left;
 
   const email = watch('email');
   const message = watch('message');
@@ -129,7 +133,6 @@ export default function Outreach() {
 
   const messageRef = useRef<TextInput>(null);
   const { mutate: sendOutreach, isPending } = useSendOutreach();
-
 
   useEffect(() => {
     if (user?.primaryEmailAddress?.emailAddress) {
@@ -154,12 +157,13 @@ export default function Outreach() {
         email: values.email,
         companyName: selectedCompany.name,
         reason: values.reason,
-        jobId: values.jobId,
-        resumeLink: values.resumeLink,
         message: values.message,
       },
       {
         onSuccess: (res) => {
+          queryClient.invalidateQueries({
+            queryKey: ['users', 'me'],
+          });
           reset({ email }); // reset form except email
           modalRef.current?.dismiss();
           showToast({
