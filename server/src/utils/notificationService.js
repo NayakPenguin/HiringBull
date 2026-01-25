@@ -47,6 +47,7 @@ export const sendNotificationsToDevices = async (devices, title, body, data = {}
           errorCount++;
         }
       });
+        await new Promise((res) => setTimeout(res, 1000));
     } catch (error) {
       console.error('Error sending push notifications:', error);
       errorCount += chunk.length;

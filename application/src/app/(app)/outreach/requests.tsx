@@ -1,12 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React, { useEffect } from 'react';
 import { useState } from 'react';
 import { FlatList, Image, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
 
-import { FocusAwareStatusBar } from '@/components/ui';
 import { useMyOutreachRequests } from '@/api/outreach/useMyOutreachRequests';
+import { FocusAwareStatusBar } from '@/components/ui';
 import { hideGlobalLoading, showGlobalLoading } from '@/lib';
 type Company = {
   id: string;
@@ -23,33 +23,69 @@ const formatDate = (iso?: string) =>
     : '';
 
 type OutreachRequest = {
+  reply: string;
   id: string;
   company: Company;
   sentAt: string;
   status: 'delivered' | 'replied';
+  message?: string;
+  reason?: string;
 };
 function SentCard({ item }: { item: OutreachRequest }) {
-  return (
-    <View className="flex-row px-4 py-3">
-      <Image
-        source={{ uri: item.company.icon }}
-        className="h-14 w-14 rounded-md bg-neutral-200"
-      />
+  const [expanded, setExpanded] = useState(false);
 
-      <View className="ml-4 flex-1">
-        <Text className="font-semibold text-lg">{item.company.name}</Text>
-        <Text className="text-sm text-neutral-700">Sent on {item.sentAt}</Text>
-        <View className="flex-row items-center gap-1 mt-2">
-          <Ionicons
-            name={
-              item.status === 'replied' ? 'checkmark-circle' : 'time-outline'
-            }
-            size={14}
-            color={item.status === 'replied' ? '#16a34a' : '#999'}
-          />
-          <Text className="text-sm text-neutral-500">
-            {item.status === 'replied' ? 'Replied' : 'Delivered'}
+  return (
+    <View className="px-4 py-3">
+      <View className="flex-row">
+        <Image
+          source={{ uri: item.company.icon }}
+          className="h-14 w-14 rounded-md bg-neutral-200"
+        />
+
+        <View className="ml-4 flex-1">
+          {/* Top row: Company + Status */}
+          <View className="flex-row items-start justify-between">
+            <Text className="font-semibold text-lg">{item.company.name}</Text>
+
+            <View className="flex-row items-center gap-1">
+              <Ionicons
+                name={
+                  item.status === 'replied'
+                    ? 'checkmark-circle'
+                    : 'time-outline'
+                }
+                size={14}
+                color={item.status === 'replied' ? '#16a34a' : '#999'}
+              />
+              <Text className="text-sm text-neutral-500">
+                {item.status === 'replied' ? 'Replied' : 'Delivered'}
+              </Text>
+            </View>
+          </View>
+
+          {/* Date */}
+          <Text className="mt-1 text-sm text-neutral-700">
+            Sent on {item.sentAt}
           </Text>
+          {expanded && (
+            <>
+              <Text className="mt-1 text-sm text-neutral-700">
+                Message: {item.message}
+              </Text>
+              <Text className="mt-1 text-sm text-neutral-700">
+                Reason: {item.reason}
+              </Text>
+            </>
+          )}
+
+          {/* Show more / less */}
+          {(item.message || item.reason) && (
+            <Pressable onPress={() => setExpanded((p) => !p)} className="mt-2">
+              <Text className="text-sm font-medium text-yellow-600">
+                {expanded ? 'Show less' : 'Show more'}
+              </Text>
+            </Pressable>
+          )}
         </View>
       </View>
     </View>
@@ -60,7 +96,6 @@ function ReplyBubble({ message }: { message: string }) {
   return (
     <View className="mx-4 my-3 rounded-xl bg-neutral-100 p-4">
       <Text className="text-lg text-neutral-800">{message}</Text>
-      <Text className="mt-2 text-lg text-neutral-500">–Sarah, Recruiter</Text>
     </View>
   );
 }
@@ -82,9 +117,12 @@ const Request = () => {
       },
       sentAt: formatDate(item.sentAt || item.createdAt),
       status: item.status === 'REPLIED' ? 'replied' : 'delivered',
+      reply: item.reply,
+      message: item.message,
+      reason: item.reason,
     })) ?? [];
   const repliedRequests = requests.filter((r) => r.status === 'replied');
-  console.log('Outreach Requests:', requests);
+  // console.log('Outreach Requests:', repliedRequests);
   useEffect(() => {
     if (isLoading) {
       showGlobalLoading();
@@ -191,7 +229,7 @@ const Request = () => {
             renderItem={({ item }) => (
               <View>
                 <SentCard item={item} />
-                <ReplyBubble message="Recruiter has replied to your outreach" />
+                <ReplyBubble message={item?.reply} />
               </View>
             )}
             ItemSeparatorComponent={() => (

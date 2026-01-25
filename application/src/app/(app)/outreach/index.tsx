@@ -1,11 +1,12 @@
 import { useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
 import { type BottomSheetModal } from '@gorhom/bottom-sheet';
+import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { FlatList, Image, Pressable, type TextInput } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 
+import { useSendOutreach } from '@/api/outreach/useSendOutreach';
 import {
   Button,
   ControlledInput,
@@ -16,9 +17,9 @@ import {
   Text,
   View,
 } from '@/components/ui';
+import { useOnboarding } from '@/lib';
 import { useOutreachForm } from '@/lib/hooks/use-outreach-form';
-import { useSendLimitStore } from '@/lib/stores/send-limit-store';
-import { useSendOutreach } from '@/api/outreach/useSendOutreach';
+import { showToast } from '@/lib/toast';
 
 type Company = {
   id: string;
@@ -113,27 +114,22 @@ export default function Outreach() {
   const { user } = useUser();
   const { form, onSubmit } = useOutreachForm();
   const { control, watch, setValue, reset } = form;
+  const userInfo = useOnboarding.use.userInfo();
 
-  const { canSend, getRemaining, increment, resetIfNewMonth } =
-    useSendLimitStore();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
 
-  const remaining = getRemaining();
+  const remaining = userInfo?.tokens_left;
 
   const email = watch('email');
   const message = watch('message');
   const isFormValid = Boolean(email?.trim() && message?.trim());
-  const canSendNow = canSend() && isFormValid;
+  const canSendNow = remaining && isFormValid;
 
   const messageRef = useRef<TextInput>(null);
   const { mutate: sendOutreach, isPending } = useSendOutreach();
 
-
-  useEffect(() => {
-    resetIfNewMonth();
-  }, [resetIfNewMonth]);
 
   useEffect(() => {
     if (user?.primaryEmailAddress?.emailAddress) {
@@ -164,19 +160,31 @@ export default function Outreach() {
       },
       {
         onSuccess: (res) => {
-          increment(); // consume credit
           reset({ email }); // reset form except email
           modalRef.current?.dismiss();
-          console.log('Outreach sent successfully', res.message);
+          showToast({
+            type: 'success',
+            message:
+              'Outreach sent successfully. Your message has been delivered to the company network.',
+          });
+
+          router.push('/outreach/requests');
+          console.log('Outreach sent successfully', res);
         },
         onError: (error) => {
-          console.log('Outreach failed:', error);
-          console.log(error.response?.data);
+          console.log('Outreach failed:', error.response?.data);
+          const apiMessage =
+            error.response?.data?.error ||
+            'Failed to send outreach. Please try again.';
+
+          showToast({
+            type: 'error',
+            message: apiMessage,
+          });
         },
       }
     );
   };
-
 
   const filteredCompanies = COMPANIES.filter((c) =>
     c.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -200,7 +208,7 @@ export default function Outreach() {
         <View className="mt-4">
           <Input
             isSearch
-            placeholder="Search companies"
+            placeholder="Search Companies"
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
@@ -287,10 +295,15 @@ export default function Outreach() {
       </View>
 
       {/* MODAL */}
-      <Modal ref={modalRef} snapPoints={['70%']}>
-        <KeyboardAwareScrollView
-          keyboardShouldPersistTaps="handled"
+      <Modal
+        ref={modalRef}
+        snapPoints={['70%']}
+        keyboardBehavior="interactive"
+        keyboardBlurBehavior="restore"
+      >
+        <BottomSheetScrollView
           contentContainerStyle={{ padding: 20 }}
+          keyboardShouldPersistTaps="handled"
         >
           <Text className="mb-1 text-xl font-bold">
             Message {selectedCompany?.name}
@@ -344,7 +357,7 @@ export default function Outreach() {
             onPress={handleSend}
             className="mt-4"
           />
-        </KeyboardAwareScrollView>
+        </BottomSheetScrollView>
       </Modal>
     </SafeAreaView>
   );

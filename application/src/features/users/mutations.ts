@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { registerDevice } from './api';
-// import { userKeys } from './keys'; // Uncomment when using invalidateQueries
+import { userKeys } from './keys'; // Uncomment when using invalidateQueries
 
 export const useRegisterDevice = () => {
-  // const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: registerDevice,
@@ -12,7 +12,7 @@ export const useRegisterDevice = () => {
       // toastError: true
     },
     onSuccess: () => {
-      // queryClient.invalidateQueries({ queryKey: userKeys.devices() });
+      queryClient.invalidateQueries({ queryKey: userKeys.devices() });
     },
   });
 };

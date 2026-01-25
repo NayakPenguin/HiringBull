@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons,Feather } from '@expo/vector-icons';
 import React, { useState, useCallback, useMemo } from 'react';
 import { Linking, Pressable } from 'react-native';
 
@@ -59,7 +59,7 @@ export function JobCard({ job, onSave }: JobCardProps) {
   }, []);
 
   const formattedSalary = formatSalary(job.salary_range);
-  const companyLocation = `${job.company} inc${job.location ? ` · ${job.location}` : ''}`;
+  const companyLocation = `${job.company} ${job.location ? ` · ${job.location}` : ''}`;
   //https://jobs.innovatesoft.com/react-developer
   const handleCardPress = useCallback(() => {
     if (job.careerpage_link) {
@@ -68,10 +68,11 @@ export function JobCard({ job, onSave }: JobCardProps) {
   }, [job.careerpage_link]);
 
   return (
-    <Pressable onPress={handleCardPress}>
+    <>
       <View
-        className={`android:shadow-md ios:shadow-sm mb-4 rounded-xl border bg-white p-4 ${isSaved ? 'border-neutral-400' : 'border-neutral-200'
-          }`}
+        className={`android:shadow-md ios:shadow-sm mb-4 rounded-xl border bg-white p-4 ${
+          isSaved ? 'border-neutral-400' : 'border-neutral-200'
+        }`}
       >
         <View className="flex-row items-start gap-3">
           {/* Company Logo */}
@@ -94,9 +95,12 @@ export function JobCard({ job, onSave }: JobCardProps) {
           )}
 
           <View className="flex-1">
-            <Text className="mb-1 text-base font-bold text-neutral-900">
-              {job.title}
-            </Text>
+            <Pressable onPress={handleCardPress} className='flex-row gap-1'>
+              <Text className="mb-1 text-base font-bold text-neutral-900">
+                {job.title}
+              </Text>
+              <Feather name={'arrow-up-right'}  color={'#000000'} />
+            </Pressable>
             <Text className="mb-2 text-sm text-neutral-600">
               {companyLocation}
             </Text>
@@ -104,7 +108,9 @@ export function JobCard({ job, onSave }: JobCardProps) {
             <View className="flex-row flex-wrap gap-2">
               {visibleTags.map((tag) => (
                 <View key={tag} className="rounded-md bg-gray-100 px-2 py-1">
-                  <Text className="text-xs font-medium text-gray-800">{tag}</Text>
+                  <Text className="text-xs font-medium text-gray-800">
+                    {tag}
+                  </Text>
                 </View>
               ))}
               {!expanded && hiddenCount > 0 && (
@@ -157,6 +163,6 @@ export function JobCard({ job, onSave }: JobCardProps) {
           </View>
         </View>
       </View>
-    </Pressable>
+    </>
   );
 }

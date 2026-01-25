@@ -5,7 +5,7 @@ import { authService } from '@/service/auth-service';
 
 // API URL from environment variables
 // Defaults to production URL if not set
-const BASE_URL = Env.EXPO_PUBLIC_API_URL || 'https://api.hiringbull.org/';
+const BASE_URL = 'https://api.hiringbull.org/';
 
 // Debug: Log the API URL on startup
 console.log('🔗 API BASE_URL:', BASE_URL);

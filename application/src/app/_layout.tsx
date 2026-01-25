@@ -5,7 +5,10 @@ import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
 import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { ThemeProvider } from '@react-navigation/native';
+import AppLoading from 'expo-app-loading';
+import * as Font from 'expo-font';
 import { Stack } from 'expo-router';
+import { Slot } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect, useState } from 'react';
 import { Platform, StyleSheet } from 'react-native';
@@ -15,6 +18,7 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 
 import { APIProvider } from '@/api';
 import { GlobalLoadingOverlay } from '@/components/global-loading-overlay';
+import { Toast } from '@/components/ui/Toast';
 import { getUserInfo, useRegisterDevice } from '@/features/users';
 import { updateUserInfo } from '@/lib';
 import {
@@ -28,10 +32,8 @@ import {
 } from '@/lib';
 import { useThemeConfig } from '@/lib/use-theme-config';
 import { authService } from '@/service/auth-service';
-import { useNotificationPermissionPrompt } from '@/utils/useNotificationPermissionPrompt';
 import { NotificationPromptModal } from '@/utils/NotificationPromptModal';
-import AppLoading from 'expo-app-loading';
-import * as Font from 'expo-font';
+import { useNotificationPermissionPrompt } from '@/utils/useNotificationPermissionPrompt';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -62,7 +64,7 @@ export default function RootLayout() {
  * This component renders nothing - it only runs the notification hooks.
  */
 function NotificationInitializer() {
-  const { expoPushToken } = useNotifications();
+  const { expoPushToken, notification } = useNotifications();
   const { mutate: registerDevice } = useRegisterDevice();
   const { isSignedIn } = useAuth();
   useNotificationObserver();
@@ -70,7 +72,7 @@ function NotificationInitializer() {
   // Send push token to backend when available AND user is authenticated
   useEffect(() => {
     if (expoPushToken && isSignedIn) {
-      console.log('Push Token:', expoPushToken);
+      console.log('Push Token:', expoPushToken, notification);
       const deviceType = Platform.OS === 'ios' ? 'ios' : 'android';
       registerDevice({ token: expoPushToken, type: deviceType });
     }
@@ -102,7 +104,7 @@ function RootNavigator() {
 
   // Notifications should only be initialized for authenticated users
   const shouldInitNotifications = isAuthenticated;
-  console.log(shouldInitNotifications, isAuthenticated);
+  // console.log(shouldInitNotifications, isAuthenticated);
 
   //   temporary flags for testing
   //   const isFirstTime = false;
@@ -123,10 +125,10 @@ function RootNavigator() {
       console.log(' checkUserInfo: Starting to fetch user info...');
       setIsLoadingUser(true);
       const data = await getUserInfo();
-      console.log(
-        'checkUserInfo: User data received:',
-        JSON.stringify(data, null, 2)
-      );
+      // console.log(
+      //   'checkUserInfo: User data received:',
+      //   JSON.stringify(data, null, 2)
+      // );
       if (Boolean(data.onboarding_completed)) {
         completeOnboarding();
         updateUserInfo(data);
@@ -147,13 +149,13 @@ function RootNavigator() {
   }, [isSignedIn]);
 
   // Debug navigation guards
-  console.log('Navigation State:', {
-    isFirstTime,
-    isAuthenticated,
-    isLoadingUser,
-    hasCompletedOnboarding,
-    isLoaded,
-  });
+  // console.log('Navigation State:', {
+  //   isFirstTime,
+  //   isAuthenticated,
+  //   isLoadingUser,
+  //   hasCompletedOnboarding,
+  //   isLoaded,
+  // });
   const [loaded, setLoaded] = useState(false);
   const loadFonts = async () => {
     console.log('Loading fonts...');
@@ -161,17 +163,18 @@ function RootNavigator() {
       Montez: require('../../assets/fonts/Montez-Regular.ttf'),
     });
   };
-  if (!loaded)
-    return (
-      <AppLoading
-        startAsync={loadFonts}
-        onFinish={() => setLoaded(true)}
-        onError={console.warn}
-      />
-    );
+  // if (!loaded)
+  //   return (
+  //     <AppLoading
+  //       startAsync={loadFonts}
+  //       onFinish={() => setLoaded(true)}
+  //       onError={console.warn}
+  //     />
+  //   );
   return (
     <>
-      {/* {shouldInitNotifications && <NotificationInitializer />} */}
+      {shouldInitNotifications && <NotificationInitializer />}
+
       <Stack>
         <Stack.Protected guard={isFirstTime}>
           <Stack.Screen name="landing" options={{ headerShown: false }} />
@@ -230,7 +233,7 @@ function Providers({ children }: { children: React.ReactNode }) {
             <APIProvider>
               <BottomSheetModalProvider>
                 {children}
-                <FlashMessage position="top" />
+                <Toast />
                 <GlobalLoadingOverlay />
               </BottomSheetModalProvider>
             </APIProvider>

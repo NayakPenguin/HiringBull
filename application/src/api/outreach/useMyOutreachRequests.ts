@@ -4,6 +4,7 @@ import { client } from '../common';
 
 /** Backend response shape */
 export type OutreachApiItem = {
+  reply: any;
   id: string;
   email: string;
   companyName: string;
