@@ -7,6 +7,7 @@ import logoBig from '../utils/logo-big.png';
 import social1 from '../utils/social1.png';
 import social2 from '../utils/social2.png';
 import membershipGoldCoin from '../utils/membership-gold-coin.gif';
+import { Radio, RadioGroup, FormControlLabel, FormControl, Switch, FormControlLabel as MuiFormControlLabel, ToggleButton, ToggleButtonGroup } from '@mui/material';
 
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
@@ -14,30 +15,10 @@ import CancelIcon from '@material-ui/icons/Cancel';
 import InfoIcon from '@material-ui/icons/Info';
 
 const JoinMembershipForm = () => {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [isExperienced, setIsExperienced] = useState(true);
-  const [submitted, setSubmitted] = useState(false);
-
-  const isValidEmail = (value) =>
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-
-  const STEPS = [
-    { id: 1, label: "Overview" },
-    { id: 2, label: "Application" },
-    { id: 3, label: "Payment" },
-    // { id: 4, label: "Approval" },
-  ];
-
-  useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      // behavior: "smooth", // optional
-    });
-  }, [currentStep]);
-
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
+    phone: "",
     socialProfile: "",
     collegeName: "",
     fieldOfStudy: "",
@@ -46,7 +27,24 @@ const JoinMembershipForm = () => {
     yearsOfExperience: "",
     triedAlternatives: "",
     reason: "",
+    whyMembership: "",
+    experience: "professional", // Added experience field
+    referralEmail: "",
+    acknowledged: false,
+    isDiscountApplied: false
   });
+
+  const [errors, setErrors] = useState({});
+  const [currentStep, setCurrentStep] = useState(1);
+  const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      // behavior: "smooth", // optional
+    });
+  }, [currentStep]);
 
   const isValidUrl = (value) => {
     try {
@@ -57,12 +55,55 @@ const JoinMembershipForm = () => {
     }
   };
 
+  const validateField = (name, value) => {
+    const newErrors = { ...errors };
+    
+    switch (name) {
+      case 'email':
+        if (!isValidEmail(value)) {
+          newErrors.email = 'Please enter a valid email address';
+        } else {
+          delete newErrors.email;
+        }
+        break;
+      case 'socialProfile':
+        if (!isValidUrl(value)) {
+          newErrors.socialProfile = 'Please enter a valid URL';
+        } else {
+          delete newErrors.socialProfile;
+        }
+        break;
+      case 'reason':
+        if (value.length < 80) {
+          newErrors.reason = 'Please provide at least 80 characters';
+        } else {
+          delete newErrors.reason;
+        }
+        break;
+      default:
+        if (value.trim().length === 0) {
+          newErrors[name] = 'This field is required';
+        } else {
+          delete newErrors[name];
+        }
+    }
+    
+    setErrors(newErrors);
+  };
+
   const handleChange = (key) => (e) => {
-    setFormData({ ...formData, [key]: e.target.value });
+    const value = e.target.value;
+    setFormData({ ...formData, [key]: value });
+    
+    // Real-time validation
+    if (submitted) {
+      validateField(key, value);
+    }
   };
 
   const handleNextPage2 = () => {
     setSubmitted(true);
+    setIsSubmitting(true);
 
     const requiredFields = [
       formData.fullName,
@@ -70,20 +111,69 @@ const JoinMembershipForm = () => {
       formData.socialProfile,
       formData.triedAlternatives,
       formData.reason,
-      isExperienced
+      formData.whyMembership,
+      formData.experience === 'professional'
         ? formData.currentCompany && formData.yearsOfExperience
         : formData.collegeName && formData.passoutYear,
     ];
 
-    const allValid = requiredFields.every(Boolean);
+    // Validate all fields
+    const newErrors = {};
+    
+    if (!isValidEmail(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+    
+    if (!isValidUrl(formData.socialProfile)) {
+      newErrors.socialProfile = 'Please enter a valid URL';
+    }
+    
+    if (formData.reason.length < 80) {
+      newErrors.reason = 'Please provide at least 80 characters';
+    }
+    
+    if (!formData.fullName.trim()) {
+      newErrors.fullName = 'Full name is required';
+    }
+    
+    if (!formData.whyMembership.trim()) {
+      newErrors.whyMembership = 'This field is required';
+    }
+    
+    if (!formData.triedAlternatives.trim()) {
+      newErrors.triedAlternatives = 'This field is required';
+    }
+    
+    if (formData.experience === 'professional') {
+      if (!formData.currentCompany.trim()) {
+        newErrors.currentCompany = 'Current company is required';
+      }
+      if (!formData.yearsOfExperience.trim()) {
+        newErrors.yearsOfExperience = 'Years of experience is required';
+      }
+    } else {
+      if (!formData.collegeName.trim()) {
+        newErrors.collegeName = 'College name is required';
+      }
+      if (!formData.passoutYear.trim()) {
+        newErrors.passoutYear = 'Passout year is required';
+      }
+    }
+    
+    setErrors(newErrors);
+
+    const allValid = requiredFields.every(Boolean) && Object.keys(newErrors).length === 0;
 
     console.log('====================================');
     console.log(formData);
     console.log('====================================');
 
-    if (allValid) {
-      setCurrentStep(3);
-    }
+    setTimeout(() => {
+      setIsSubmitting(false);
+      if (allValid) {
+        setCurrentStep(3);
+      }
+    }, 1000);
   };
 
   const renderStatus = (value, required = true, validator = null) => {
@@ -119,10 +209,23 @@ const JoinMembershipForm = () => {
     return null;
   };
 
-  const [isDiscountApplied, setIsDiscountApplied] = useState(false);
+  const STEPS = [
+    { id: 1, label: "Overview" },
+    { id: 2, label: "Application" },
+    { id: 3, label: "Payment" },
+    // { id: 4, label: "Approval" },
+  ];
+
+  const isValidEmail = (value) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
   const handleReferralClick = () => {
-    setIsDiscountApplied(!isDiscountApplied);
+    if (formData.referralEmail && isValidEmail(formData.referralEmail)) {
+      setFormData(prev => ({
+        ...prev,
+        isDiscountApplied: !prev.isDiscountApplied
+      }));
+    }
   };
 
 
@@ -210,7 +313,7 @@ const JoinMembershipForm = () => {
 
         {
           currentStep == 1 ? (
-            <OneContent>
+            <OneContent className="overview-step">
               <h1>
                 Apply Early. Compete Less. Get Real Visibility.
                 <img src={logo} alt="" />
@@ -253,6 +356,9 @@ const JoinMembershipForm = () => {
                       type="text"
                       value={formData.fullName}
                       onChange={handleChange("fullName")}
+                      aria-label="Full name"
+                      aria-required="true"
+                      placeholder="Enter your full name"
                     />
                   </div>
                 </div>
@@ -270,6 +376,9 @@ const JoinMembershipForm = () => {
                       type="email"
                       value={formData.email}
                       onChange={handleChange("email")}
+                      aria-label="Email address"
+                      aria-required="true"
+                      placeholder="your.email@example.com"
                     />
                   </div>
                 </div>
@@ -284,9 +393,11 @@ const JoinMembershipForm = () => {
                       <div className="status">{renderStatus(formData.phone, false)}</div>
                     </div>
                     <input
-                      type="number"
+                      type="tel"
                       value={formData.phone}
                       onChange={handleChange("phone")}
+                      aria-label="Phone number (optional)"
+                      placeholder="+91 98765 43210"
                     />
                   </div>
                 </div>
@@ -307,26 +418,29 @@ const JoinMembershipForm = () => {
                       placeholder="https://"
                       value={formData.socialProfile}
                       onChange={handleChange("socialProfile")}
+                      aria-label="Social profile URL"
+                      aria-required="true"
                     />
                   </div>
                 </div>
 
-                {/* Experience Toggle */}
-                <div className="checkbox-input">
-                  <div className="left">
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={isExperienced}
-                        onChange={() => setIsExperienced(!isExperienced)}
-                      />{" "}
-                      I am an experienced professional
-                    </label>
+                {/* Experience Selection */}
+                <div className="experience-selection">
+                  <div className="question">Are you a?</div>
+                  <div className="dropdown-container">
+                    <select 
+                      value={formData.experience}
+                      onChange={(e) => setFormData(prev => ({ ...prev, experience: e.target.value }))}
+                      className="experience-dropdown"
+                    >
+                      <option value="student">🎓 Student</option>
+                      <option value="professional">💼 Working Professional</option>
+                    </select>
                   </div>
                 </div>
 
                 {/* Experienced Professional Fields */}
-                {isExperienced && (
+                {formData.experience === 'professional' && (
                   <div className="input">
                     <div className="left">
                       <div className="label-row">
@@ -339,6 +453,9 @@ const JoinMembershipForm = () => {
                         type="text"
                         value={formData.currentCompany}
                         onChange={handleChange("currentCompany")}
+                        aria-label="Current company"
+                        aria-required="true"
+                        placeholder="Company name"
                       />
                     </div>
                   </div>
@@ -348,15 +465,22 @@ const JoinMembershipForm = () => {
                 <div className="input">
                   <div className="left">
                     <div className="label-row">
-                      <div className="label">Why do you want the Memebership</div>
-                      <div className="status"></div>
+                      <div className="label">Why do you want the Membership</div>
+                      <div className="status">{renderStatus(formData.whyMembership)}</div>
                     </div>
-                    <input type="text" />
+                    <input 
+                      type="text" 
+                      value={formData.whyMembership}
+                      onChange={handleChange("whyMembership")}
+                      placeholder="Briefly explain your goals"
+                      aria-label="Why you want the membership"
+                      aria-required="true"
+                    />
                   </div>
                 </div>
 
                 {/* Student / Fresher Fields */}
-                {!isExperienced && (
+                {formData.experience === 'student' && (
                   <>
                     <div className="input">
                       <div className="left">
@@ -370,6 +494,9 @@ const JoinMembershipForm = () => {
                           type="text"
                           value={formData.collegeName}
                           onChange={handleChange("collegeName")}
+                          aria-label="College name"
+                          aria-required="true"
+                          placeholder="Your college name"
                         />
                       </div>
                     </div>
@@ -388,6 +515,8 @@ const JoinMembershipForm = () => {
                           type="text"
                           value={formData.fieldOfStudy}
                           onChange={handleChange("fieldOfStudy")}
+                          aria-label="Field of study (optional)"
+                          placeholder="Computer Science, Engineering, etc."
                         />
                       </div>
                     </div>
@@ -404,6 +533,11 @@ const JoinMembershipForm = () => {
                           type="number"
                           value={formData.passoutYear}
                           onChange={handleChange("passoutYear")}
+                          aria-label="Expected year of passout"
+                          aria-required="true"
+                          placeholder="2024"
+                          min="2020"
+                          max="2030"
                         />
                       </div>
                     </div>
@@ -416,17 +550,53 @@ const JoinMembershipForm = () => {
                     <div className="label-row">
                       <div className="label">
                         Have you tried free alternatives like LinkedIn, job portals, or WhatsApp
-                        groups? <span>(Yes / No)</span>
+                        groups?
                       </div>
                       <div className="status">
                         {renderStatus(formData.triedAlternatives)}
                       </div>
                     </div>
-                    <input
-                      type="text"
-                      value={formData.triedAlternatives}
-                      onChange={handleChange("triedAlternatives")}
-                    />
+                    <FormControl component="fieldset" className="mui-radio-group">
+                      <RadioGroup
+                        row
+                        name="triedAlternatives"
+                        value={formData.triedAlternatives}
+                        onChange={(e) => handleChange("triedAlternatives")({ target: { value: e.target.value } })}
+                      >
+                        <FormControlLabel 
+                          value="Yes" 
+                          control={<Radio sx={{ 
+                            color: '#ffc600',
+                            '&.Mui-checked': { color: '#ffc600' },
+                            '& .MuiSvgIcon-root': { fontSize: 18 }
+                          }} />} 
+                          label="Yes" 
+                          sx={{ 
+                            '& .MuiFormControlLabel-label': { 
+                              fontSize: '0.85rem',
+                              fontWeight: 400,
+                              color: '#333'
+                            }
+                          }}
+                        />
+                        <FormControlLabel 
+                          value="No" 
+                          control={<Radio sx={{ 
+                            color: '#ffc600',
+                            '&.Mui-checked': { color: '#ffc600' },
+                            '& .MuiSvgIcon-root': { fontSize: 18 }
+                          }} />} 
+                          label="No" 
+                          sx={{ 
+                            '& .MuiFormControlLabel-label': { 
+                              fontSize: '0.85rem',
+                              fontWeight: 400,
+                              color: '#333'
+                            }
+                          }}
+                        />
+                      </RadioGroup>
+                    </FormControl>
                   </div>
                 </div>
 
@@ -450,6 +620,9 @@ const JoinMembershipForm = () => {
                       placeholder="e.g. I apply late and miss openings, want early alerts, limited competition, or better visibility with employees."
                       value={formData.reason}
                       onChange={handleChange("reason")}
+                      aria-label="Why do you need HiringBull"
+                      aria-required="true"
+                      minLength="80"
                     />
                   </div>
                 </div>
@@ -464,13 +637,18 @@ const JoinMembershipForm = () => {
                 <div className="checkbox-input">
                   <div className="left">
                     <label>
-                      <input type="checkbox" /> I have read the above
+                      <input 
+                        type="checkbox" 
+                        checked={formData.acknowledged}
+                        onChange={(e) => setFormData(prev => ({ ...prev, acknowledged: e.target.checked }))}
+                        aria-label="I have read and acknowledge the terms"
+                      /> I have read the above
                     </label>
                   </div>
                 </div>
 
-                <div className="next-btn" onClick={handleNextPage2}>
-                  Continue to Payment →
+                <div className="next-btn" onClick={handleNextPage2} disabled={!formData.acknowledged || isSubmitting} role="button" tabIndex="0" onKeyDown={(e) => e.key === 'Enter' && handleNextPage2()}>
+                  {isSubmitting ? "Processing..." : "Continue to Payment →"}
                 </div>
               </OneContent>
             ) : (
@@ -488,8 +666,13 @@ const JoinMembershipForm = () => {
                   <div className="referral">
                     <div className="title">Have a friend on HiringBull? Enter their membership registered email to get 25% off your plan</div>
                     <div className="input">
-                      <input type="text" placeholder='Friend’s registered email' />
-                      <button>Apply</button>
+                      <input 
+                        type="text" 
+                        placeholder="Friend's registered email"
+                        value={formData.referralEmail}
+                        onChange={(e) => setFormData(prev => ({ ...prev, referralEmail: e.target.value }))}
+                      />
+                      <button onClick={handleReferralClick}>Apply</button>
                     </div>
                   </div>
 
@@ -501,7 +684,7 @@ const JoinMembershipForm = () => {
                       <div className="line"></div>
                       <div className="price">
                         <div className="current-amount">
-                          {isDiscountApplied ? (
+                          {formData.isDiscountApplied ? (
                             <>
                               <span style={{ textDecoration: 'line-through', color: '#999', fontSize: '0.8em', marginRight: '5px' }}>₹249</span>
                               <span>₹187</span>
@@ -517,7 +700,7 @@ const JoinMembershipForm = () => {
                         </div> */}
 
                         {/* Savings Badge */}
-                        {isDiscountApplied && (
+                        {formData.isDiscountApplied && (
                           <div style={{ color: '#16a34a', fontSize: '0.9rem', marginTop: '5px', fontWeight: 'bold' }}>
                             You saved a total of ₹62
                           </div>
@@ -528,7 +711,7 @@ const JoinMembershipForm = () => {
                         <div className="point"><CheckCircleIcon /> Curated hiring signals from social posts</div>
                         <div className="point"><CheckCircleIcon /> Up to 3 outreach requests per month</div>
                       </div>
-                      <a href="/join-membership" className='apply-btn'>Pay {isDiscountApplied ? "₹187" : "₹249"} <OfflineBoltIcon /></a>
+                      <a href="/join-membership" className='apply-btn'>Pay {formData.isDiscountApplied ? "₹187" : "₹249"} <OfflineBoltIcon /></a>
                     </div>
 
                     {/* --- GROWTH PLAN (Most Popular) --- */}
@@ -539,7 +722,7 @@ const JoinMembershipForm = () => {
                       <div className="line"></div>
                       <div className="price">
                         <div className="current-amount">
-                          {isDiscountApplied ? (
+                          {formData.isDiscountApplied ? (
                             <>
                               <span style={{ textDecoration: 'line-through', color: '#999', fontSize: '0.8em', marginRight: '5px' }}>₹199</span>
                               {/* 449 / 3 months approx 150 */}
@@ -552,7 +735,7 @@ const JoinMembershipForm = () => {
                         </div>
                         {/* <div className="total-amount">
                           ( 3 Month Access -
-                          {isDiscountApplied ? (
+                          {formData.isDiscountApplied ? (
                             <>
                               <span style={{ textDecoration: 'line-through', color: '#888', margin: '0 5px' }}>₹599</span>
                               <span>₹449</span>
@@ -563,7 +746,7 @@ const JoinMembershipForm = () => {
                           Total )
                         </div> */}
                         {/* Savings Badge */}
-                        {isDiscountApplied && (
+                        {formData.isDiscountApplied && (
                           <div style={{ color: '#16a34a', fontSize: '0.9rem', marginTop: '5px', fontWeight: 'bold' }}>
                             You saved a total of ₹150
                           </div>
@@ -583,7 +766,7 @@ const JoinMembershipForm = () => {
                         </div>
 
                       </div>
-                      <a href="/join-membership" className='apply-btn'>Pay ₹249 <OfflineBoltIcon /></a>
+                      <a href="/join-membership" className='apply-btn'>Pay {formData.isDiscountApplied ? "₹187" : "₹249"} <OfflineBoltIcon /></a>
                     </div>
 
                     {/* --- PRO PLAN --- */}
@@ -593,7 +776,7 @@ const JoinMembershipForm = () => {
                       <div className="line"></div>
                       <div className="price">
                         <div className="current-amount">
-                          {isDiscountApplied ? (
+                          {formData.isDiscountApplied ? (
                             <>
                               <span style={{ textDecoration: 'line-through', color: '#999', fontSize: '0.8em', marginRight: '5px' }}>₹167</span>
                               {/* 749 / 6 months approx 125 */}
@@ -606,7 +789,7 @@ const JoinMembershipForm = () => {
                         </div>
                         {/* <div className="total-amount">
                           ( 6 Month Access -
-                          {isDiscountApplied ? (
+                          {formData.isDiscountApplied ? (
                             <>
                               <span style={{ textDecoration: 'line-through', color: '#888', margin: '0 5px' }}>₹999</span>
                               <span>₹749</span>
@@ -617,7 +800,7 @@ const JoinMembershipForm = () => {
                           Total )
                         </div> */}
                         {/* Savings Badge */}
-                        {isDiscountApplied && (
+                        {formData.isDiscountApplied && (
                           <div style={{ color: '#16a34a', fontSize: '0.9rem', marginTop: '5px', fontWeight: 'bold' }}>
                             You saved a total of ₹250
                           </div>
@@ -654,7 +837,7 @@ const Container = styled.div`
 `;
 
 const Navbar = styled.div`
-  position: fixed;
+  position: relative;
   z-index: 10;
   width: 100vw; 
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);   
@@ -733,7 +916,7 @@ const Navbar = styled.div`
   .info{
     display: flex;
     align-items: center;
-    padding: 10px;
+    padding: 10px 10px 0px 10px;
     background-color: white;
     /* background-color: #ffc60040; */
     /* border: 1px solid #ffc60070; */
@@ -845,17 +1028,18 @@ const Content = styled.div`
   width: 100%;
   max-width: 800px;
   margin: auto;
+  min-height: calc(100vh - 200px);
   
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: center;
+  justify-content: flex-start;
   
-  padding: 80px 0;
-  padding-top: 140px;
+  padding: 80px 0 20px 0;
   
   @media (max-width: 500px) {
-    padding-top: 180px;
+    min-height: calc(100vh - 220px);
+    padding: 30px 0 20px 0;
     align-items: center;
   }
 `
@@ -866,10 +1050,12 @@ const Pagination = styled.div`
   align-items: center;
   justify-content: center;
 
-  margin-left: -15px;
+  margin: -40px auto 0 auto;
+  width: fit-content;
+  padding-top: 0px;
   
   /* border-bottom: 1px solid #ccc; */
-  padding-bottom: 27px; 
+  padding-bottom: 50px; 
 
   scale: 0.9;
 
@@ -929,20 +1115,34 @@ const Pagination = styled.div`
   }
 
   @media (max-width: 500px) {
-    margin-left: 0;
+    margin: 0 auto;
+    scale: 0.8;
+    padding-bottom: 25px;
   }  
 `
 
 const OneContent = styled.div`
-  min-height: 600px;
   width: 100%;
+  flex: 1;
+  overflow-y: auto;
   
-  margin-top: 30px;
-
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  /* justify-content: center; */
+
+  /* Fixed height for overview step */
+  &.overview-step {
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    
+    h1, h2 {
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto 20px auto;
+    }
+  }
 
   h1{
     font-size: 2rem;
@@ -999,7 +1199,7 @@ const OneContent = styled.div`
     display: flex;
     align-items: flex-start;
     width: 100%;
-    margin-top: 20px;
+    margin-bottom: 25px;
 
     .left{
       flex: 1;
@@ -1011,7 +1211,7 @@ const OneContent = styled.div`
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        margin-bottom: 10px;
+        margin-bottom: 15px;
 
         .label{
           font-size: 0.85rem;
@@ -1050,10 +1250,27 @@ const OneContent = styled.div`
         background-color: #fafafa;
         border: 1px solid #d5d5d5;
         width: 100%;
-        padding: 7.5px 10px;
+        padding: 5px 10px;
         font-size: 0.85rem;
         font-weight: 300;
         letter-spacing: 0.1rem;
+        transition: all 0.2s ease;
+        border-radius: 4px;
+        
+        &:focus {
+          outline: none;
+          border-color: #ffc600;
+          box-shadow: 0 0 0 2px rgba(255, 198, 0, 0.2);
+        }
+        
+        &:hover {
+          border-color: #b0b0b0;
+        }
+        
+        &:disabled {
+          background-color: #f0f0f0;
+          cursor: not-allowed;
+        }
       }
 
       textarea{
@@ -1065,6 +1282,19 @@ const OneContent = styled.div`
         font-weight: 300;
         letter-spacing: 0.05rem;
         height: 160px;
+        transition: all 0.2s ease;
+        border-radius: 4px;
+        resize: vertical;
+        
+        &:focus {
+          outline: none;
+          border-color: #ffc600;
+          box-shadow: 0 0 0 2px rgba(255, 198, 0, 0.2);
+        }
+        
+        &:hover {
+          border-color: #b0b0b0;
+        }
       }
     }
 
@@ -1078,21 +1308,101 @@ const OneContent = styled.div`
     margin-top: 20px;
   }
 
+  .mui-radio-group {
+    margin-top: 15px;
+    margin-bottom: 10px;
+    
+    .MuiFormGroup-root {
+      gap: 20px;
+    }
+    
+    .MuiFormControlLabel-root {
+      margin-right: 0;
+      margin-bottom: 5px;
+      
+      &:hover {
+        .MuiFormControlLabel-label {
+          color: #ffc600;
+        }
+      }
+    }
+  }
+
+  .experience-selection{
+    width: 100%;
+    margin: 0px 0 20px 0;
+    
+    .question{
+      font-size: 1rem;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 15px;
+      text-align: left;
+    }
+    
+    .dropdown-container{
+      width: 100%;
+      max-width: 300px;
+      
+      .experience-dropdown{
+        width: 100%;
+        padding: 12px 40px 12px 16px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #333;
+        background-color: white;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        outline: none;
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 20px;
+        
+        &:hover{
+          border-color: #ffc600;
+        }
+        
+        &:focus{
+          border-color: #ffc600;
+          box-shadow: 0 0 0 0px rgba(255, 198, 0, 0);
+        }
+        
+        option{
+          padding: 12px 16px;
+          font-size: 0.9rem;
+          color: #333;
+          background-color: white;
+        }
+      }
+    }
+  }
+
   .checkbox-input{
     display: flex;
     align-items: center;
 
-    margin-top: 40px;
+    margin: 25px 0 15px 0;
+    padding-left: 2px;
 
     font-size: 0.85rem;
-    margin-bottom: 5px;
     text-transform: uppercase;
     letter-spacing: 0.1rem;
     font-weight: 600;
 
     input{
-      margin-right: 5px;
+      margin-right: 8px;
       scale: 1.25;
+      vertical-align: middle;
+    }
+    
+    label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
     }
   }
 
@@ -1311,6 +1621,13 @@ const OneContent = styled.div`
         font-weight: 300;
         border-radius: 10px;
         margin-right: 20px;
+        transition: all 0.2s ease;
+        
+        &:focus {
+          outline: none;
+          border-color: #ffc600;
+          box-shadow: 0 0 0 2px rgba(255, 198, 0, 0.2);
+        }
       }
 
       button{
@@ -1322,18 +1639,47 @@ const OneContent = styled.div`
           font-size: 0.75rem;
           font-weight: 300;
           border-radius: 100px;
+          transition: all 0.2s ease;
+          
+          &:hover {
+            background-color: #333;
+            transform: translateY(-1px);
+          }
+          
+          &:active {
+            transform: translateY(0);
+          }
       }
     }
   }
 
   .next-btn{
-    padding: 10px 30px;
+    padding: 12px 30px;
     border-radius: 100px;
     background-color: black;
     color: white;
     font-size: 0.85rem;
     margin-top: 50px;
     cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    font-weight: 600;
+    
+    &:hover:not(:disabled) {
+      background-color: #333;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+    
+    &:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
   }
 
   @media (max-width: 500px) {
@@ -1393,6 +1739,18 @@ const OneContent = styled.div`
           font-size: 0.85rem;
           font-weight: 300;
           letter-spacing: 0.1rem;
+          transition: all 0.2s ease;
+          border-radius: 4px;
+          
+          &:focus {
+            outline: none;
+            border-color: #ffc600;
+            box-shadow: 0 0 0 2px rgba(255, 198, 0, 0.2);
+          }
+          
+          &:hover {
+            border-color: #b0b0b0;
+          }
         }
 
         textarea{
@@ -1404,25 +1762,78 @@ const OneContent = styled.div`
           font-weight: 300;
           letter-spacing: 0.05rem;
           height: 160px;
+          transition: all 0.2s ease;
+          border-radius: 4px;
+          resize: vertical;
+          
+          &:focus {
+            outline: none;
+            border-color: #ffc600;
+            box-shadow: 0 0 0 2px rgba(255, 198, 0, 0.2);
+          }
+          
+          &:hover {
+            border-color: #b0b0b0;
+          }
         }
       }
     }
 
     .referral{
-      /* display: flex; */
-      /* flex-direction: column; */
-      /* align-items: center; */
       margin-bottom: 30px;
       width: 100%;
+      
+      .title{
+        font-size: 1rem;
+        font-weight: 300;
+        margin-bottom: 16px;
+        text-align: left;
+      }
 
       .input{
         width: 100%;
+        max-width: 500px;
         display: flex;
-        align-items: flex-start;
         flex-direction: column;
-
+        gap: 10px;
+        
         input{
-          margin-bottom: 10px;
+          background-color: #f5f5f5;
+          border: 1px solid #b2b0b0;
+          width: 100%;
+          padding: 7.5px 10px;
+          font-size: 0.85rem;
+          font-weight: 300;
+          border-radius: 10px;
+          margin-right: 0;
+          transition: all 0.2s ease;
+          
+          &:focus {
+            outline: none;
+            border-color: #ffc600;
+            box-shadow: 0 0 0 2px rgba(255, 198, 0, 0.2);
+          }
+        }
+
+        button{
+            cursor: pointer;
+            background-color: black;
+            border: none;
+            color: white;
+            padding: 9.5px 20px;
+            font-size: 0.75rem;
+            font-weight: 300;
+            border-radius: 100px;
+            transition: all 0.2s ease;
+            
+            &:hover {
+              background-color: #333;
+              transform: translateY(-1px);
+            }
+            
+            &:active {
+              transform: translateY(0);
+            }
         }
       }
     }
