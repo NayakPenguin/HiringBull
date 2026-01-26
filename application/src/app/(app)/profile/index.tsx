@@ -90,6 +90,9 @@ export default function Profile() {
       label: 'Report Issue',
       icon: 'warning-outline',
       iconColor: '#f59e0b',
+      onPress: () => {
+        Linking.openURL('mailto:team@hiringbull.org');
+      },
     },
     {
       label: 'Contact Team',
