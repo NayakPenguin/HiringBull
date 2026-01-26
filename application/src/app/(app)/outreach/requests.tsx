@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useEffect } from 'react';
-import { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { FlatList, Image, Pressable, Text, View } from 'react-native';
+import PagerView from 'react-native-pager-view';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useMyOutreachRequests } from '@/api/outreach/useMyOutreachRequests';
@@ -41,13 +41,13 @@ function SentCard({ item }: { item: OutreachRequest }) {
       <View className="flex-row">
         <Image
           source={{ uri: item.company.icon }}
-          className="h-14 w-14 rounded-md bg-neutral-200"
+          className="size-14 rounded-md bg-neutral-200"
         />
 
         <View className="ml-4 flex-1">
           {/* Top row: Company + Status */}
           <View className="flex-row items-start justify-between">
-            <Text className="font-semibold text-lg">{item.company.name}</Text>
+            <Text className="text-lg font-semibold">{item.company.name}</Text>
 
             <View className="flex-row items-center gap-1">
               <Ionicons
@@ -106,6 +106,7 @@ const TABS = ['Sent', 'Replies'] as const;
 type Tab = (typeof TABS)[number];
 const Request = () => {
   const [activeTab, setActiveTab] = useState<Tab>('Sent');
+  const pagerRef = useRef<PagerView>(null);
 
   const { data, isLoading, isError, refetch, isFetching } =
     useMyOutreachRequests();
@@ -138,6 +139,13 @@ const Request = () => {
       hideGlobalLoading();
     };
   }, [isLoading]);
+  useEffect(() => {
+    pagerRef.current?.setPage(activeTab === 'Sent' ? 0 : 1);
+  }, [activeTab]);
+  const handlePageSelected = (e: any) => {
+    const index = e.nativeEvent.position;
+    setActiveTab(index === 0 ? 'Sent' : 'Replies');
+  };
 
   if (isError) {
     return (
@@ -205,16 +213,23 @@ const Request = () => {
       </View>
 
       {/* Content */}
-      <View className="flex-1">
-        {activeTab === 'Sent' && (
+      <PagerView
+        ref={pagerRef}
+        style={{ flex: 1 }}
+        initialPage={0}
+        onPageSelected={handlePageSelected}
+      >
+        {/* Sent Tab */}
+        <View key="sent">
           <FlatList
             data={requests}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => <SentCard item={item} />}
             refreshing={isFetching}
+            showsVerticalScrollIndicator={false}
             onRefresh={refetch}
             ItemSeparatorComponent={() => (
-              <View className="mx-4 h-[1px] bg-neutral-200" />
+              <View className="mx-4 h-px bg-neutral-200" />
             )}
             ListEmptyComponent={
               <Text className="mt-10 text-center text-neutral-400">
@@ -222,14 +237,16 @@ const Request = () => {
               </Text>
             }
           />
-        )}
+        </View>
 
-        {activeTab === 'Replies' && (
+        {/* Replies Tab */}
+        <View key="replies">
           <FlatList
             data={repliedRequests}
             keyExtractor={(item) => item.id}
             refreshing={isFetching}
             onRefresh={refetch}
+            showsVerticalScrollIndicator={false}
             renderItem={({ item }) => (
               <View>
                 <SentCard item={item} />
@@ -237,7 +254,7 @@ const Request = () => {
               </View>
             )}
             ItemSeparatorComponent={() => (
-              <View className="mx-4 h-[1px] bg-neutral-200" />
+              <View className="mx-4 h-px bg-neutral-200" />
             )}
             ListEmptyComponent={
               <Text className="mt-10 text-center text-neutral-400">
@@ -245,8 +262,8 @@ const Request = () => {
               </Text>
             }
           />
-        )}
-      </View>
+        </View>
+      </PagerView>
     </SafeAreaView>
   );
 };

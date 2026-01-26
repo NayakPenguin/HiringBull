@@ -164,6 +164,10 @@ export default function Outreach() {
           queryClient.invalidateQueries({
             queryKey: ['users', 'me'],
           });
+          queryClient.invalidateQueries({
+            queryKey: ['outreach', 'me'],
+          });
+
           reset({ email }); // reset form except email
           modalRef.current?.dismiss();
           showToast({
@@ -265,12 +269,12 @@ export default function Outreach() {
               <View className="self-start mt-2">
                 <Pressable
                   onPress={() => router.push('/outreach/requests')}
-                  className="flex-row items-center gap-2 bg-neutral-200 rounded-xl px-4 py-2"
+                  className="flex-row items-center gap-2 bg-neutral-900 rounded-xl px-4 py-2"
                 >
-                  <Text className="font-medium text-neutral-900">
+                  <Text className="font-medium text-white">
                     Outreach & Replies
                   </Text>
-                  <Ionicons name="arrow-forward" size={16} color="#111" />
+                  <Ionicons name="arrow-forward" size={16} color="white" />
                 </Pressable>
               </View>
             </View>

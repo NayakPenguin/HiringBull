@@ -225,7 +225,7 @@ export default function SocialPosts() {
   }, [isFetchingNextPage, hasNextPage, allPosts.length]);
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-50" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-white">
       <FocusAwareStatusBar />
       <View className="flex-1 pt-6">
         <View className="border-b border-neutral-200 bg-white px-5 pb-4 shadow-sm">

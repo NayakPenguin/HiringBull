@@ -42,6 +42,7 @@ type UserMeResponse = {
 
   devices: UserDevice[];
   followedCompanies: FollowedCompany[];
+  planExpiry: string | null;
 };
 
 export const useMyProfile = createQuery<UserMeResponse, void, AxiosError>({

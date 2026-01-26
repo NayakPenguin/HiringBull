@@ -1,6 +1,6 @@
 import { useAuth, useUser } from '@clerk/clerk-expo';
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
+import { type BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Clipboard, Linking, Pressable, ScrollView } from 'react-native';
@@ -90,6 +90,9 @@ export default function Profile() {
       label: 'Report Issue',
       icon: 'warning-outline',
       iconColor: '#f59e0b',
+      onPress: () => {
+        Linking.openURL('mailto:team@hiringbull.org');
+      },
     },
     {
       label: 'Contact Team',
@@ -116,12 +119,6 @@ export default function Profile() {
     'User';
   const email =
     userInfo?.email || user?.primaryEmailAddress?.emailAddress || '';
-  const initials = displayName
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
   const handleConfirm = async () => {
     if (confirmAction === 'logout') {
       try {
@@ -132,10 +129,21 @@ export default function Profile() {
       }
     }
   };
+  const isMembershipValid = (expiryDate: string) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const expiry = new Date(expiryDate);
+    expiry.setHours(0, 0, 0, 0);
+
+    return expiry > today;
+  };
+  const MEMBERSHIP_EXPIRY = userInfo?.planExpiry || userInfo?.expiry; // YYYY-MM-DD
+  const isValid = isMembershipValid(MEMBERSHIP_EXPIRY);
 
   return (
     <>
-      <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+      <SafeAreaView className="flex-1 bg-white">
         <FocusAwareStatusBar />
         <View className="flex-1 pt-6">
           <View className="border-b border-neutral-200 bg-white px-5 pb-4 shadow-sm">
@@ -188,6 +196,55 @@ export default function Profile() {
                 </View>
               </View>
             </View>
+            <View
+              className={`mb-6 flex-row items-center justify-between rounded-xl border p-4 ${
+                isValid
+                  ? 'border-neutral-200 bg-neutral-50'
+                  : 'border-danger-200 bg-danger-50'
+              }`}
+            >
+              <View className="flex-row items-center gap-3">
+                <View
+                  className={`size-10 items-center justify-center rounded-full ${
+                    isValid ? 'bg-primary-100' : 'bg-danger-100'
+                  }`}
+                >
+                  <Ionicons
+                    name={isValid ? 'calendar-outline' : 'alert-circle-outline'}
+                    size={20}
+                    color={isValid ? '#13803b' : '#dc2626'}
+                  />
+                </View>
+
+                <View>
+                  <Text
+                    className={`text-sm font-semibold ${
+                      isValid ? 'text-neutral-900' : 'text-danger-700'
+                    }`}
+                  >
+                    {isValid ? 'Membership valid till' : 'Membership expired'}
+                  </Text>
+
+                  <Text
+                    className={`text-sm font-medium ${
+                      isValid ? 'text-neutral-600' : 'text-danger-600'
+                    }`}
+                  >
+                    {new Date(MEMBERSHIP_EXPIRY).toLocaleDateString('en-IN', {
+                      day: '2-digit',
+                      month: 'long',
+                      year: 'numeric',
+                    })}
+                  </Text>
+                </View>
+              </View>
+
+              {isValid ? (
+                <Ionicons name="checkmark-circle" size={20} color="#16a34a" />
+              ) : (
+                <Ionicons name="close-circle" size={20} color="#dc2626" />
+              )}
+            </View>
 
             <View className="mb-6">
               <Text className="mb-3 text-xs font-bold uppercase tracking-wider text-neutral-400">
@@ -204,7 +261,7 @@ export default function Profile() {
                   <Ionicons name="gift-outline" size={20} color="#13803b" />
                 </View>
                 <View className="flex-1">
-                  <Text className="mb-1 text-md font-bold text-black">
+                  <Text className="text-md mb-1 font-bold text-black">
                     Refer & Earn
                   </Text>
                   <Text className="text-sm font-medium leading-5 text-black">
@@ -217,11 +274,11 @@ export default function Profile() {
                         'https://hiringbull.org/referral/' + email
                       )
                     }
-                    className="font-semibold text-sm mt-2 text-neutral-900 underline"
+                    className="mt-2 text-sm font-semibold text-neutral-900 underline"
                   >
                     Show my earnings
                     <Ionicons
-                      className='no-underline'
+                      className="no-underline"
                       name="open-outline"
                       size={14}
                       color="#111"

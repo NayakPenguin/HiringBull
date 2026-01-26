@@ -1,21 +1,22 @@
 import { Ionicons } from '@expo/vector-icons';
+import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { useRouter } from 'expo-router';
 import React, {
   useCallback,
   useEffect,
   useMemo,
-  useState,
   useRef,
+  useState,
 } from 'react';
 import {
-  ActivityIndicator,
-  FlatList,
-  View as RNView,
   Animated,
   Easing,
+  FlatList,
+  Pressable,
+  View as RNView,
 } from 'react-native';
-import { Pressable, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
 
+import { BottomToast } from '@/components/BottomToast';
 import { type Job as ApiJob, JobCard } from '@/components/job-card';
 import {
   Checkbox,
@@ -28,26 +29,56 @@ import {
   View,
 } from '@/components/ui';
 import { useFetchFollowedJobs } from '@/features/jobs';
-import { BottomToast } from '@/components/BottomToast';
 import { hideGlobalLoading, showGlobalLoading } from '@/lib';
 const FILTER_TAGS = [
-  'Design',
-  'Full time',
-  'Senior',
-  'C++',
-  'React.js',
-  'React Native',
+  // Programming Languages
+  'Java',
+  'Python',
   'JavaScript',
   'TypeScript',
-  'Python',
-  'Java',
-  'Remote',
-  'Part time',
-  'Junior',
-  'Lead',
-  'UI/UX',
-];
+  'C++',
+  'C',
+  'Go',
 
+  // Frontend
+  'React',
+  'Angular',
+  'Vue.js',
+  'HTML',
+  'CSS',
+
+  // Backend Frameworks
+  'Node.js',
+  'Express.js',
+  'Spring Boot',
+  'Django',
+  'Flask',
+
+  // Databases
+  'SQL',
+  'PostgreSQL',
+  'MySQL',
+  'MongoDB',
+  'Redis',
+
+  // APIs & Architecture
+  'REST APIs',
+  'GraphQL',
+  'Microservices',
+
+  // Cloud & DevOps
+  'AWS',
+  'GCP',
+  'Azure',
+  'Docker',
+  'Kubernetes',
+
+  // Engineering Fundamentals
+  'Git',
+  'Linux',
+  'CI/CD',
+  'System Design',
+];
 export default function Jobs() {
   const router = useRouter();
   const {
@@ -185,6 +216,37 @@ export default function Jobs() {
       hideGlobalLoading();
     }
   }, [isLoading]);
+  const JobsListHeader = ({
+    total,
+    selectedTags,
+    onClear,
+  }: {
+    total: number;
+    selectedTags: string[];
+    onClear: () => void;
+  }) => {
+    return (
+      <View className="mb-3 rounded-xl bg-white px-4 py-3 shadow-sm">
+        <View className="flex-row items-center justify-between">
+          <Text className="text-sm font-medium text-neutral-700">
+            {total} jobs found
+            <Text className="text-neutral-400"> in last 30 days</Text>
+          </Text>
+
+          {selectedTags.length > 0 && (
+            <Pressable
+              onPress={onClear}
+              className="rounded-full bg-red-50 px-3 py-1"
+            >
+              <Text className="text-xs font-semibold text-red-600">
+                Clear filters
+              </Text>
+            </Pressable>
+          )}
+        </View>
+      </View>
+    );
+  };
 
   const handleSaveJob = useCallback((jobId: string) => {
     console.log('Save job:', jobId);
@@ -220,7 +282,7 @@ export default function Jobs() {
   }, [isFetchingNextPage, hasNextPage, allJobs.length]);
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-50" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-white">
       <FocusAwareStatusBar />
       <View className="flex-1">
         {/* ============ HEADER SECTION ============ */}
@@ -241,7 +303,7 @@ export default function Jobs() {
               </Text>
               <Animated.View
                 style={{ opacity: pulseAnim }}
-                className="h-2 w-2 rounded-full bg-green-500"
+                className="size-2 rounded-full bg-green-500"
               />
             </View>
           </View>
@@ -264,14 +326,14 @@ export default function Jobs() {
             </View>
             <Pressable
               onPress={handleFilterPress}
-              className="h-12 w-12 items-center justify-center rounded-full bg-neutral-900"
+              className="size-12 items-center justify-center rounded-full bg-neutral-900"
             >
               <Ionicons name="options-outline" size={20} color="#ffffff" />
             </Pressable>
           </View>
 
           {/* Edit Navigation Buttons */}
-          <View className="mt-4 flex-row gap-3">
+          {/* <View className="mt-4 flex-row gap-3">
             <Pressable
               onPress={() => router.push('/edit-companies')}
               className="flex-row items-center gap-2 rounded-full border border-neutral-200 bg-white px-4 py-2.5"
@@ -288,21 +350,7 @@ export default function Jobs() {
                 Edit Experience
               </Text>
             </Pressable>
-          </View>
-        </View>
-
-        {/* ============ JOB RESULTS INFO ============ */}
-        <View className="flex-row items-center justify-between px-5 py-3">
-          <Text className="text-sm font-medium text-neutral-500">
-            {filteredJobs.length} jobs found from last 30 days
-          </Text>
-          {selectedTags.length > 0 && (
-            <Pressable onPress={() => setSelectedTags([])}>
-              <Text className="text-sm font-medium text-red-500">
-                Clear filters
-              </Text>
-            </Pressable>
-          )}
+          </View> */}
         </View>
 
         {/* ============ JOB LIST ============ */}
@@ -313,12 +361,19 @@ export default function Jobs() {
             data={filteredJobs}
             renderItem={renderItem}
             keyExtractor={(item, index) => `${item.id}-${index}`}
+            className="bg-slate-50"
             contentContainerStyle={{
               paddingHorizontal: 20,
               paddingBottom: 20,
               paddingTop: 10,
             }}
-            className="bg-slate-50"
+            ListHeaderComponent={
+              <JobsListHeader
+                total={filteredJobs.length}
+                selectedTags={selectedTags}
+                onClear={() => setSelectedTags([])}
+              />
+            }
             refreshing={isRefreshing && !isFetchingNextPage}
             onRefresh={onRefresh}
             showsVerticalScrollIndicator={false}
@@ -335,7 +390,7 @@ export default function Jobs() {
                 </Text>
               </View>
             }
-            ListFooterComponent={renderFooter}
+            ListFooterComponent={filteredJobs?.length > 0 && renderFooter}
           />
         )}
       </View>
@@ -345,13 +400,20 @@ export default function Jobs() {
         snapPoints={['60%']}
         title="Filter Jobs"
         onDismiss={dismiss}
+        propagateSwipe={true}
       >
-        <View className="flex-1 px-4 py-2">
+        <View className="px-4 py-2" style={{ flex: 1 }}>
           <Text className="mb-4 text-base font-medium text-neutral-700">
             Select tags to filter jobs
           </Text>
 
-          <ScrollView showsVerticalScrollIndicator={false}>
+          <BottomSheetScrollView
+            contentContainerStyle={{
+              paddingBottom: 24,
+            }}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="always"
+          >
             <View className="flex-row flex-wrap gap-3">
               {FILTER_TAGS.map((tag) => {
                 const isSelected = selectedTags.includes(tag);
@@ -369,7 +431,7 @@ export default function Jobs() {
                       <Checkbox
                         checked={isSelected}
                         onChange={() => handleToggleTag(tag)}
-                        accessibilityLabel={`Filter by ${tag}`}
+                        accessibilityLabel={''}
                       />
                       <Text
                         className={`text-sm font-medium ${
@@ -383,9 +445,12 @@ export default function Jobs() {
                 );
               })}
             </View>
+          </BottomSheetScrollView>
 
-            {selectedTags.length > 0 && (
-              <View className="mt-6 flex-row items-center justify-between">
+          {/* STICKY FOOTER */}
+          {selectedTags.length > 0 && (
+            <View className="border-t border-neutral-200 pt-4">
+              <View className="flex-row items-center justify-between">
                 <Text className="text-sm text-neutral-600">
                   {selectedTags.length} tag
                   {selectedTags.length !== 1 ? 's' : ''} selected
@@ -399,10 +464,11 @@ export default function Jobs() {
                   </Text>
                 </Pressable>
               </View>
-            )}
-          </ScrollView>
+            </View>
+          )}
         </View>
       </Modal>
+
       {toast && (
         <BottomToast
           message={toast.message}

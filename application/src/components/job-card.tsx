@@ -1,5 +1,5 @@
-import { Ionicons,Feather } from '@expo/vector-icons';
-import React, { useState, useCallback, useMemo } from 'react';
+import { Feather, Ionicons } from '@expo/vector-icons';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Linking, Pressable } from 'react-native';
 
 import { Image, Text, View } from '@/components/ui';
@@ -95,11 +95,13 @@ export function JobCard({ job, onSave }: JobCardProps) {
           )}
 
           <View className="flex-1">
-            <Pressable onPress={handleCardPress} className='flex-row gap-1'>
-              <Text className="mb-1 text-base font-bold text-neutral-900">
-                {job.title}
-              </Text>
-              <Feather name={'arrow-up-right'}  color={'#000000'} />
+            <Pressable onPress={handleCardPress} className="flex-row gap-1">
+              <View className="flex-1 flex-row items-start">
+                <Text className="text-neutral-90 shrink text-base font-bold">
+                  {job.title}
+                </Text>
+                <Feather name="arrow-up-right" className="ml-1" />
+              </View>
             </Pressable>
             <Text className="mb-2 text-sm text-neutral-600">
               {companyLocation}
@@ -131,7 +133,7 @@ export function JobCard({ job, onSave }: JobCardProps) {
             {/* Footer */}
             <View className="mt-3 flex-row items-center justify-between border-t border-neutral-100 pt-2">
               <View>
-                <Text className="text-xs text-neutral-400 mb-1">
+                <Text className="mb-1 text-xs text-neutral-400">
                   Add these keywords to your resume to improve ATS matching.
                 </Text>
                 <Text className="text-xs text-neutral-400">
