@@ -193,24 +193,6 @@ export default function Profile() {
                 </View>
               </View>
             </View>
-            {/* <View className="mb-6 flex-row items-center justify-between rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-              <View className="flex-row items-center gap-3">
-                <View className="size-10 items-center justify-center rounded-full bg-primary-100">
-                  <Ionicons name="calendar-outline" size={20} color="#13803b" />
-                </View>
-
-                <View>
-                  <Text className="text-sm font-semibold text-neutral-900">
-                    Membership valid till
-                  </Text>
-                  <Text className="text-sm font-medium text-neutral-600">
-                    23 July 2025
-                  </Text>
-                </View>
-              </View>
-
-              <Ionicons name="checkmark-circle" size={20} color="#16a34a" />
-            </View> */}
             <View
               className={`mb-6 flex-row items-center justify-between rounded-xl border p-4 ${
                 isValid
