@@ -29,6 +29,7 @@ import {
   useNotifications,
   useOnboarding,
 } from '@/lib';
+import { useSingleDeviceSessionGuard } from '@/lib/hooks/useSingleDeviceSessionGuard';
 import { useThemeConfig } from '@/lib/use-theme-config';
 import { authService } from '@/service/auth-service';
 import { NotificationPromptModal } from '@/utils/NotificationPromptModal';
@@ -89,6 +90,7 @@ function RootNavigator() {
   const [isLoadingUser, setIsLoadingUser] = useState(false);
   const { modalVisible, setModalVisible } = useNotificationPermissionPrompt();
   console.log('modalVisible', modalVisible);
+  useSingleDeviceSessionGuard();
   // Sync auth service with Clerk
   useEffect(() => {
     if (isSignedIn) {
