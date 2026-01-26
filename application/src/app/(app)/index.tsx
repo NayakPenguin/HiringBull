@@ -288,7 +288,7 @@ export default function Jobs() {
         {/* ============ HEADER SECTION ============ */}
         <View className="bg-white px-5 pb-5 pt-6 shadow-sm">
           {/* Title Row */}
-          <View className="flex-row items-center gap-3">
+          <View className="flex-row items-center justify-between">
             <Text
               className="text-3xl text-neutral-900"
               style={{ fontFamily: 'Montez' }}
@@ -297,15 +297,15 @@ export default function Jobs() {
             </Text>
 
             {/* Live Jobs Status Indicator */}
-            <View className="flex-row items-center gap-2 rounded-full bg-green-100 px-3 py-1.5">
-              <Text className="text-xs font-medium text-neutral-600">
-                Live Jobs
-              </Text>
+            {/* <View className="flex-row items-center gap-2 rounded-full bg-green-100 px-3 py-1.5">
               <Animated.View
                 style={{ opacity: pulseAnim }}
                 className="size-2 rounded-full bg-green-500"
               />
-            </View>
+              <Text className="text-xs font-medium text-neutral-600">
+                Live Jobs
+              </Text>
+            </View> */}
           </View>
 
           {/* Description */}
