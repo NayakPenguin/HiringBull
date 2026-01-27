@@ -143,7 +143,7 @@ export default function Profile() {
 
   return (
     <>
-      <SafeAreaView className="flex-1 bg-white">
+      <SafeAreaView className="flex-1 bg-white" edges={['top']}>
         <FocusAwareStatusBar />
         <View className="flex-1 pt-6">
           <View className="border-b border-neutral-200 bg-white px-5 pb-4 shadow-sm">
