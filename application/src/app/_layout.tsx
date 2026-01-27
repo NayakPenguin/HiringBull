@@ -26,7 +26,6 @@ import {
   loadSelectedTheme,
   useIsFirstTime,
   useNotificationObserver,
-  useNotifications,
   useOnboarding,
 } from '@/lib';
 import { useThemeConfig } from '@/lib/use-theme-config';
@@ -63,19 +62,7 @@ export default function RootLayout() {
  * This component renders nothing - it only runs the notification hooks.
  */
 function NotificationInitializer() {
-  const { expoPushToken, notification } = useNotifications();
-  const { mutate: registerDevice } = useRegisterDevice();
-  const { isSignedIn } = useAuth();
   useNotificationObserver();
-
-  // Send push token to backend when available AND user is authenticated
-  useEffect(() => {
-    if (expoPushToken && isSignedIn) {
-      console.log('Push Token:', expoPushToken, notification);
-      const deviceType = Platform.OS === 'ios' ? 'ios' : 'android';
-      registerDevice({ token: expoPushToken, type: deviceType });
-    }
-  }, [expoPushToken, registerDevice, isSignedIn]);
 
   return null;
 }

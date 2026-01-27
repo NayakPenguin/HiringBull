@@ -1,4 +1,4 @@
-import { useSignIn, useSignUp, useSSO } from '@clerk/clerk-expo';
+import { useAuth, useSignIn, useSignUp, useSSO } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
 import * as AuthSession from 'expo-auth-session';
 import { useRouter } from 'expo-router';
@@ -10,7 +10,8 @@ import Animated, { FadeInUp } from 'react-native-reanimated';
 
 import { FocusAwareStatusBar, Input, Text, View } from '@/components/ui';
 import { OTPInput } from '@/components/ui/otp-input';
-import { showGlobalLoading, hideGlobalLoading } from '@/lib';
+import { useRegisterDevice } from '@/features/users';
+import { hideGlobalLoading, showGlobalLoading, useNotifications } from '@/lib';
 
 /* ----------------------------- Utils ----------------------------- */
 
@@ -148,7 +149,8 @@ export default function Login() {
   };
 
   /* ----------------------------- OTP ----------------------------- */
-
+  const { expoPushToken } = useNotifications();
+  const { mutate: registerDevice } = useRegisterDevice();
   const handleVerify = async () => {
     // --------- CLIENT SIDE VALIDATION ---------
     if (!otp.trim()) {
@@ -173,12 +175,19 @@ export default function Login() {
           strategy: 'email_code',
           code: otp,
         });
-        console.log(' SignIn result status:', res.status, 'sessionId:', res.createdSessionId);
+        console.log(
+          ' SignIn result status:',
+          res.status,
+          'sessionId:',
+          res.createdSessionId
+        );
 
         if (res.status === 'complete' && setActiveSignIn) {
           console.log('Setting active session...');
           await setActiveSignIn({ session: res.createdSessionId });
-          console.log(' Session set, navigating to home...');
+          console.log(' Session set, navigating to home...123');
+          const deviceType = Platform.OS === 'ios' ? 'ios' : 'android';
+          registerDevice({ token: expoPushToken, type: deviceType });
           router.replace('/');
         } else {
           console.log(' SignIn not complete, status:', res.status);
@@ -188,7 +197,12 @@ export default function Login() {
       if (authMode === 'signUp' && signUp) {
         console.log(' Attempting signUp.attemptEmailAddressVerification...');
         const res = await signUp.attemptEmailAddressVerification({ code: otp });
-        console.log(' SignUp result status:', res.status, 'sessionId:', res.createdSessionId);
+        console.log(
+          ' SignUp result status:',
+          res.status,
+          'sessionId:',
+          res.createdSessionId
+        );
         console.log(' SignUp missingFields:', res.missingFields);
         console.log(' SignUp unverifiedFields:', res.unverifiedFields);
 
@@ -196,6 +210,8 @@ export default function Login() {
           console.log(' Setting active session...');
           await setActiveSignUp({ session: res.createdSessionId });
           console.log(' Session set, navigating to home...');
+          const deviceType = Platform.OS === 'ios' ? 'ios' : 'android';
+          registerDevice({ token: expoPushToken, type: deviceType });
           router.replace('/');
         } else {
           console.log(' SignUp not complete, status:', res.status);
@@ -220,7 +236,7 @@ export default function Login() {
         <FocusAwareStatusBar />
 
         {/* ---------------- HERO ---------------- */}
-        <View className="items-center pt-20 bg-yellow-50">
+        <View className="items-center bg-yellow-50 pt-20">
           <Image
             source={require('../../assets/images/experience/HBLongLogo.png')}
             className="h-[80px] w-[160px]"
