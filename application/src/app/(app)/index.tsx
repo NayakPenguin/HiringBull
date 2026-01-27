@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import { useRootNavigationState, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import React, {
   useCallback,
   useEffect,
@@ -226,19 +226,15 @@ export default function Jobs() {
     onClear: () => void;
   }) => {
     return (
-      <View className="mb-3 rounded-xl bg-white px-4 py-3 shadow-sm">
+      <View className="mb-3">
         <View className="flex-row items-center justify-between">
-          <Text className="text-sm font-medium text-neutral-700">
-            {total} jobs found
-            <Text className="text-neutral-400"> in last 30 days</Text>
+          <Text className="mt-2 text-base leading-relaxed text-neutral-500">
+            {total} jobs found in last 30 days
           </Text>
 
           {selectedTags.length > 0 && (
-            <Pressable
-              onPress={onClear}
-              className="rounded-full bg-red-50 px-3 py-1"
-            >
-              <Text className="text-xs font-semibold text-red-600">
+            <Pressable onPress={onClear}>
+              <Text className="text-sm font-semibold text-red-600">
                 Clear filters
               </Text>
             </Pressable>
