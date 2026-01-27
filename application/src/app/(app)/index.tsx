@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import { useRouter } from 'expo-router';
+import { useRootNavigationState, useRouter } from 'expo-router';
 import React, {
   useCallback,
   useEffect,
@@ -280,15 +280,14 @@ export default function Jobs() {
     }
     return null;
   }, [isFetchingNextPage, hasNextPage, allJobs.length]);
-
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView edges={['top']} className="flex-1 bg-white">
       <FocusAwareStatusBar />
-      <View className="flex-1">
+      <View className="flex-1 bg-yellow-500">
         {/* ============ HEADER SECTION ============ */}
         <View className="bg-white px-5 pb-5 pt-6 shadow-sm">
           {/* Title Row */}
-          <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center">
             <Text
               className="text-3xl text-neutral-900"
               style={{ fontFamily: 'Montez' }}
@@ -297,15 +296,15 @@ export default function Jobs() {
             </Text>
 
             {/* Live Jobs Status Indicator */}
-            {/* <View className="flex-row items-center gap-2 rounded-full bg-green-100 px-3 py-1.5">
+            <View className="ml-2 flex-row items-center gap-2 rounded-full bg-green-100 px-3 py-1.5">
+              <Text className="text-xs font-medium text-neutral-600">
+                Live Jobs
+              </Text>
               <Animated.View
                 style={{ opacity: pulseAnim }}
                 className="size-2 rounded-full bg-green-500"
               />
-              <Text className="text-xs font-medium text-neutral-600">
-                Live Jobs
-              </Text>
-            </View> */}
+            </View>
           </View>
 
           {/* Description */}

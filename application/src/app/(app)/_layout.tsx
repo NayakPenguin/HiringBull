@@ -5,6 +5,10 @@ import { useColorScheme } from 'nativewind';
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
 
+import { useSingleDeviceSessionGuard } from '@/lib/hooks/useSingleDeviceSessionGuard';
+
+import DeviceConflict from './outreach/deviceConflict';
+
 export default function TabLayout() {
   const { getToken } = useAuth();
   const { colorScheme } = useColorScheme();
@@ -17,6 +21,14 @@ export default function TabLayout() {
     };
     logToken();
   }, [getToken]);
+
+  const { isConflict, isLoading: isSessionCheckLoading } =
+    useSingleDeviceSessionGuard();
+
+  if (!isSessionCheckLoading && isConflict) {
+    console.log("device conflict", isConflict)
+    return <DeviceConflict />;
+  }
 
   return (
     <Tabs

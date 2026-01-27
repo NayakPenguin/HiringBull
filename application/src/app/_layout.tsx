@@ -6,7 +6,7 @@ import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { ThemeProvider } from '@react-navigation/native';
 import * as Font from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { Slot } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect, useState } from 'react';
@@ -29,7 +29,6 @@ import {
   useNotifications,
   useOnboarding,
 } from '@/lib';
-import { useSingleDeviceSessionGuard } from '@/lib/hooks/useSingleDeviceSessionGuard';
 import { useThemeConfig } from '@/lib/use-theme-config';
 import { authService } from '@/service/auth-service';
 import { NotificationPromptModal } from '@/utils/NotificationPromptModal';
@@ -89,8 +88,6 @@ function RootNavigator() {
 
   const [isLoadingUser, setIsLoadingUser] = useState(false);
   const { modalVisible, setModalVisible } = useNotificationPermissionPrompt();
-  console.log('modalVisible', modalVisible);
-  useSingleDeviceSessionGuard();
   // Sync auth service with Clerk
   useEffect(() => {
     if (isSignedIn) {
