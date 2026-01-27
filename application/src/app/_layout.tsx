@@ -6,24 +6,22 @@ import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { ThemeProvider } from '@react-navigation/native';
 import * as Font from 'expo-font';
-import { Stack, useRouter } from 'expo-router';
-import { Slot } from 'expo-router';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect, useState } from 'react';
-import { Platform, StyleSheet } from 'react-native';
-import FlashMessage from 'react-native-flash-message';
+import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 
 import { APIProvider } from '@/api';
 import { GlobalLoadingOverlay } from '@/components/global-loading-overlay';
 import { Toast } from '@/components/ui/Toast';
-import { getUserInfo, useRegisterDevice } from '@/features/users';
-import { updateUserInfo } from '@/lib';
+import { getUserInfo } from '@/features/users';
 import {
   completeOnboarding,
   hydrateOnboarding,
   loadSelectedTheme,
+  updateUserInfo,
   useIsFirstTime,
   useNotificationObserver,
   useOnboarding,
@@ -74,7 +72,9 @@ function RootNavigator() {
   const _isSubscribed = useOnboarding.use.isSubscribed();
 
   const [isLoadingUser, setIsLoadingUser] = useState(false);
-  const { modalVisible, setModalVisible } = useNotificationPermissionPrompt();
+  const { modalVisible, setModalVisible, enablePrompt } =
+    useNotificationPermissionPrompt();
+
   // Sync auth service with Clerk
   useEffect(() => {
     if (isSignedIn) {
@@ -130,6 +130,11 @@ function RootNavigator() {
       checkUserInfo();
     }
   }, [isSignedIn]);
+  useEffect(() => {
+    if (isAuthenticated) {
+      enablePrompt(); // ✅ starts permission flow
+    }
+  }, [isAuthenticated]);
 
   const [fontsLoaded, setFontsLoaded] = useState(false);
 
