@@ -34,7 +34,6 @@
             },
             "env": {
                 "APP_ENV": "staging",
-                "EXPO_NO_DOTENV": "1",
                 "FLIPPER_DISABLE": "1"
             }
         },

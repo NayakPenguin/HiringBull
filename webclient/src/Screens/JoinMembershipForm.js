@@ -52,6 +52,7 @@ const JoinMembershipForm = () => {
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [referralStatus, setReferralStatus] = useState(null);
+  const [mainError, setMainError] = useState(null);
 
   useEffect(() => {
     window.scrollTo({
@@ -118,21 +119,14 @@ const JoinMembershipForm = () => {
   const handleNextPage2 = () => {
     setSubmitted(true);
     setIsSubmitting(true);
+    setMainError(null);
 
-    const requiredFields = [
-      formData.fullName,
-      formData.email,
-      formData.socialProfile,
-      formData.triedAlternatives,
-      formData.reason,
-      formData.whyMembership,
-      formData.experience === 'professional'
-        ? formData.currentCompany && formData.yearsOfExperience
-        : formData.collegeName && formData.passoutYear,
-    ];
-
-    // Validate all fields
     const newErrors = {};
+
+    // Common fields
+    if (!formData.fullName.trim()) {
+      newErrors.fullName = 'Full name is required';
+    }
 
     if (!isValidEmail(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
@@ -142,30 +136,29 @@ const JoinMembershipForm = () => {
       newErrors.socialProfile = 'Please enter a valid URL';
     }
 
-    if (formData.reason.length < 80) {
-      newErrors.reason = 'Please provide at least 80 characters';
-    }
-
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = 'Full name is required';
+    if (!formData.triedAlternatives.trim()) {
+      newErrors.triedAlternatives = 'This field is required';
     }
 
     if (!formData.whyMembership.trim()) {
       newErrors.whyMembership = 'This field is required';
     }
 
-    if (!formData.triedAlternatives.trim()) {
-      newErrors.triedAlternatives = 'This field is required';
+    if (formData.reason.length < 80) {
+      newErrors.reason = 'Please provide at least 80 characters';
     }
 
-    if (formData.experience === 'professional') {
-      if (!formData.currentCompany.trim()) {
-        newErrors.currentCompany = 'Current company is required';
-      }
-      if (!formData.yearsOfExperience.trim()) {
-        newErrors.yearsOfExperience = 'Years of experience is required';
-      }
-    } else {
+    // 🔁 EXPERIENCE-SPECIFIC VALIDATION
+    // if (formData.experience === 'professional') {
+    //   if (!formData.currentCompany.trim()) {
+    //     newErrors.currentCompany = 'Current company is required';
+    //   }
+    //   if (!formData.yearsOfExperience.trim()) {
+    //     newErrors.yearsOfExperience = 'Years of experience is required';
+    //   }
+    // }
+
+    if (formData.experience === 'student') {
       if (!formData.collegeName.trim()) {
         newErrors.collegeName = 'College name is required';
       }
@@ -180,21 +173,25 @@ const JoinMembershipForm = () => {
 
     setErrors(newErrors);
 
-    const allValid =
-      requiredFields.every(Boolean) &&
-      Object.keys(newErrors).length === 0 &&
-      formData.acknowledged;
+    const allValid = Object.keys(newErrors).length === 0;
 
-    console.log('====================================');
-    console.log(formData);
-    console.log('====================================');
+    console.log("📦 Form data:", formData);
+    console.log("❌ Errors:", newErrors);
 
     setTimeout(async () => {
-      setIsSubmitting(false);
+      try {
+        setIsSubmitting(false);
 
-      if (allValid) {
-        await submitApplication(); // 🔥 API CALL
+        if (!allValid) return;
+
+        await submitApplication();
         setCurrentStep(3);
+      } catch (err) {
+        console.error("❌ submitApplication failed:", err);
+        setMainError(
+          err?.message ||
+          "Something went wrong while submitting your application. Please try again."
+        );
       }
     }, 1000);
   };
@@ -408,11 +405,11 @@ const JoinMembershipForm = () => {
             <img className='logobig' src={logo} alt="" />
           </div>
         </div>
-        <div className="info">
+        {/* <div className="info">
           <InfoIcon />
           <div className="text">To protect quality, memberships are reviewed manually and approved within 24–48 hours.
             If your application isn’t approved, your payment is refunded automatically — no questions asked.</div>
-        </div>
+        </div> */}
       </Navbar>
       <Content>
         {
@@ -454,21 +451,17 @@ const JoinMembershipForm = () => {
                 <img src={membershipGoldCoin} alt="" />
               </div>
               <h1>
-                Yay! We’ve received your application 🎉
+                Yay! We’ve activated your Membership 🎉 <br />
+                <span>Download HiringBull App!</span>
                 {/* <img src={logo} alt="" /> */}
               </h1>
 
               <h2>
-                Our team will review your membership request within <b>24–48 hours</b>
-              </h2>
-
-              <h2>
-                <b>You’ll receive an email</b> once your application is approved.
-                If it isn’t approved, your payment will be automatically refunded within 7 working days — no questions asked.
+                Our team will review your membership request within 24–48 hours, if it isn’t approved, your payment will be automatically refunded within 7 working days — no questions asked.
               </h2>
 
 
-              {/* <img src={logoBig} alt="" /> */}
+              <a href="/"><img src="https://static.vecteezy.com/system/resources/previews/024/170/871/non_2x/badge-google-play-and-app-store-button-download-free-png.png" alt="" /></a>
               <div className="contact">
                 For any issues - <span>team@hirinbull.in</span>
               </div>
@@ -836,7 +829,7 @@ const JoinMembershipForm = () => {
                 {submitted && Object.keys(errors).length > 0 && (
                   <div className="form-error-banner">
                     <InfoIcon />
-                    <span>You have some errors. Please review the form.</span>
+                    <span>{mainError ? mainError : "You have some errors. Please review the form."}</span>
                   </div>
                 )}
 
@@ -936,7 +929,7 @@ const JoinMembershipForm = () => {
                         className="apply-btn"
                         onClick={() =>
                           startPayment({
-                            amount: formData.isDiscountApplied ? 187 : 249,
+                            amount: formData.isDiscountApplied ? 2 : 1,
                             planType: "STARTER",
                           })
                         }
@@ -1001,7 +994,7 @@ const JoinMembershipForm = () => {
                         className="apply-btn"
                         onClick={() =>
                           startPayment({
-                            amount: formData.isDiscountApplied ? 449 : 599,
+                            amount: formData.isDiscountApplied ? 2 : 1,
                             planType: "GROWTH",
                           })
                         }
@@ -1061,7 +1054,7 @@ const JoinMembershipForm = () => {
                         className="apply-btn"
                         onClick={() =>
                           startPayment({
-                            amount: formData.isDiscountApplied ? 749 : 999,
+                            amount: formData.isDiscountApplied ? 2 : 1,
                             planType: "PRO",
                           })
                         }
@@ -2150,7 +2143,7 @@ const OneContentAfterPayment = styled.div`
   align-items: center;
   justify-content: center;
 
-  padding-bottom: 100px;
+  padding: 20px;
 
   h1{
     font-size: 2rem;
@@ -2159,13 +2152,10 @@ const OneContentAfterPayment = styled.div`
     margin-bottom: 10px; 
 
     /* background-color: #f0f0f0; */
-    
-    display: flex;
-    align-items: center;
-    gap: 12px;
 
-    img{
-      height: 60px;
+    span{
+      font-weight: 600;
+      color: orange;
     }
   }
 
@@ -2219,6 +2209,64 @@ const OneContentAfterPayment = styled.div`
     font-size: 0.85rem;
     margin-top: 50px;
     cursor: pointer;
+  }
+
+  @media (max-width: 500px) {
+    h1{
+      font-size: 1.5rem;
+    }
+
+    h2{
+      font-size: 0.9rem;
+      font-weight: 300;
+      margin-bottom: 16px;
+
+      text-align: center;
+
+      b{
+        font-weight: 500;
+        background-color: #ffc60042;
+        padding: 0 10px;
+      }
+    }
+
+    .images{
+      display: flex; 
+      align-items: center;
+      
+      img{
+        height: 140px;
+        margin: 20px 0;
+      }
+    }
+
+    img{
+      height: 60px;
+      margin: 20px 0;
+    }
+
+    .contact{
+      font-size: 0.85rem;
+      padding: 5px 10px;
+      border-radius: 5px;
+      margin-top: 20px;
+      background-color: #fff0ca57;
+      border: 1px solid #f1dca8;
+
+      span{
+        font-weight: 500;
+      }
+    }
+
+    .next-btn{
+      padding: 10px 30px;
+      border-radius: 100px;
+      background-color: black;
+      color: white;
+      font-size: 0.85rem;
+      margin-top: 50px;
+      cursor: pointer;
+    }
   }
 `
 

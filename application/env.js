@@ -38,8 +38,8 @@ require('dotenv').config({
 const BUNDLE_ID = 'com.myapp'; // ios bundle id
 const PACKAGE = 'com.myapp'; // android package name
 const NAME = 'HiringBull'; // app name
-const EXPO_ACCOUNT_OWNER = 'shrikant_survase'; // expo account owner
-const EAS_PROJECT_ID = 'c9a60048-a39e-438d-810e-a2b7c5e593b5'; // eas project id
+const EXPO_ACCOUNT_OWNER = 'hiringbull'; // expo account owner
+const EAS_PROJECT_ID = 'ba7de147-37b5-4303-9fc1-c9551a52d78a'; // eas project id
 const SCHEME = 'myapp'; // app scheme
 
 /**
