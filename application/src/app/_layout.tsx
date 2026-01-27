@@ -172,11 +172,11 @@ function RootNavigator() {
       {shouldInitNotifications && <NotificationInitializer />}
 
       <Stack>
-        <Stack.Protected guard={isFirstTime}>
+        {/* <Stack.Protected guard={isFirstTime}>
           <Stack.Screen name="landing" options={{ headerShown: false }} />
-        </Stack.Protected>
+        </Stack.Protected> */}
 
-        <Stack.Protected guard={!isFirstTime && !isAuthenticated}>
+        <Stack.Protected guard={!isAuthenticated}>
           <Stack.Screen name="login" options={{ headerShown: false }} />
         </Stack.Protected>
 
