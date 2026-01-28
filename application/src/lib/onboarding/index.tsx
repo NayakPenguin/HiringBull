@@ -1,11 +1,26 @@
+import { useAuth } from '@clerk/clerk-expo';
 import { create } from 'zustand';
+
+import { resetUser, type UserInfo } from '@/features/users';
 
 import { storage } from '../storage';
 import { createSelectors } from '../utils';
-import { UserInfo } from '@/features/users';
 
 const ONBOARDING_COMPLETED_KEY = 'ONBOARDING_COMPLETED';
 const IS_SUBSCRIBED_KEY = 'IS_SUBSCRIBED';
+
+const clearUser = async () => {
+  const { getToken } = useAuth();
+  const token = await getToken();
+  try {
+    if (!token) return;
+
+    await resetUser(token);
+    console.log('logout device token:', token);
+  } catch (e) {
+    console.warn('Failed to remove device', e);
+  }
+};
 
 type OnboardingState = {
   hasCompletedOnboarding: boolean;
@@ -14,8 +29,8 @@ type OnboardingState = {
   subscribe: () => void;
   reset: () => void;
   hydrate: () => void;
-  userInfo: UserInfo|null;
-  setUserInfo: (userInfo: UserInfo)=> void;
+  userInfo: UserInfo | null;
+  setUserInfo: (userInfo: UserInfo) => void;
 };
 
 const _useOnboarding = create<OnboardingState>((set) => ({
@@ -37,7 +52,8 @@ const _useOnboarding = create<OnboardingState>((set) => ({
     storage.delete(ONBOARDING_COMPLETED_KEY);
     storage.delete(IS_SUBSCRIBED_KEY);
     set({ hasCompletedOnboarding: false, isSubscribed: false });
-    set({userInfo: null})
+    set({ userInfo: null });
+    clearUser();
   },
 
   hydrate: () => {
@@ -47,9 +63,9 @@ const _useOnboarding = create<OnboardingState>((set) => ({
     set({ hasCompletedOnboarding, isSubscribed });
   },
 
-  setUserInfo: (userInfo:UserInfo)=>{
+  setUserInfo: (userInfo: UserInfo) => {
     set({ userInfo });
-  }
+  },
 }));
 
 export const useOnboarding = createSelectors(_useOnboarding);
@@ -59,4 +75,5 @@ export const completeOnboarding = () =>
 export const subscribe = () => _useOnboarding.getState().subscribe();
 export const resetOnboarding = () => _useOnboarding.getState().reset();
 export const hydrateOnboarding = () => _useOnboarding.getState().hydrate();
-export const updateUserInfo = (userInfo:UserInfo) => _useOnboarding.getState().setUserInfo(userInfo);
+export const updateUserInfo = (userInfo: UserInfo) =>
+  _useOnboarding.getState().setUserInfo(userInfo);

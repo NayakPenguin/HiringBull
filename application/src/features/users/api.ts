@@ -34,3 +34,11 @@ export const checkUserVerification = async (email: string) => {
   );
   return data;
 };
+
+export const resetUser = async (token: string) => {
+  const res = await client.delete<DeviceResponse>(
+    `/api/users/devices/${token}`
+  );
+
+  return res.data;
+};
