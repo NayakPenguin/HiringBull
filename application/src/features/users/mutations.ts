@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+
 import { registerDevice } from './api';
 import { userKeys } from './keys'; // Uncomment when using invalidateQueries
 
@@ -13,6 +14,9 @@ export const useRegisterDevice = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: userKeys.devices() });
+    },
+    onError: (e) => {
+      console.log('device is not register', e);
     },
   });
 };
