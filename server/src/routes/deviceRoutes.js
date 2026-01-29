@@ -8,8 +8,10 @@ const router = express.Router();
 
 // All device routes require authentication
 router.post('/', requireAuth, validate(deviceValidation.addDevice), addDevice);
-router.post('/public', validate(deviceValidation.addDevicePublic), addDevicePublic);
-router.get('/', requireAuth, getDevices);
-router.delete('/:token', requireAuth, validate(deviceValidation.removeDevice), removeDevice);
+router.put('/', requireAuth, validate(deviceValidation.updateDevice), updateDevice);
+// router.post('/public', validate(deviceValidation.addDevicePublic), addDevicePublic);
+// router.get('/', requireAuth, getDevices);
+// router.delete('/:userId', requireAuth, validate(deviceValidation.removeDevice), removeDevice);
+router.delete('/me', requireAuth, removeDevice);
 
 export default router;

@@ -5,49 +5,73 @@ const catchAsync = (fn) => (req, res, next) => {
     Promise.resolve(fn(req, res, next)).catch((err) => next(err));
 };
 
-/**
- * @swagger
- * /api/users/devices:
- *   post:
- *     summary: Add device for push notifications
- *     tags: [Devices]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [token]
- *     responses:
- *       200:
- *         description: Success
- */
 export const addDevice = catchAsync(async (req, res) => {
-    const { token, type } = req.body;
+    const { deviceId, token, type } = req.body;
     const userId = req.user.id;
 
-    // 1. Remove all devices of this user
+    if (!deviceId) {
+        const error = new Error('deviceId is required');
+        error.statusCode = httpStatus.BAD_REQUEST;
+        throw error;
+    }
+
+    // Remove all existing devices for this user
     await prisma.device.deleteMany({
         where: { userId },
     });
 
-    // 2. Remove this token if it exists anywhere
-    await prisma.device.deleteMany({
-        where: { token },
-    });
-
-    // 3. Create fresh device
+    // Create new device
     const device = await prisma.device.create({
         data: {
-            token,
+            deviceId,
+            token: token ?? null,
             type,
             userId,
         },
     });
 
     res.status(httpStatus.CREATED).json(device);
+});
+
+export const updateDevice = catchAsync(async (req, res) => {
+    const { deviceId, token, type } = req.body;
+    const userId = req.user.id;
+
+    if (!deviceId) {
+        const error = new Error('deviceId is required');
+        error.statusCode = httpStatus.BAD_REQUEST;
+        throw error;
+    }
+
+    const device = await prisma.device.findUnique({
+        where: {
+            userId_deviceId: {
+                userId,
+                deviceId,
+            },
+        },
+    });
+
+    if (!device) {
+        const error = new Error('Device not registered');
+        error.statusCode = httpStatus.NOT_FOUND;
+        throw error;
+    }
+
+    const updatedDevice = await prisma.device.update({
+        where: {
+            userId_deviceId: {
+                userId,
+                deviceId,
+            },
+        },
+        data: {
+            token: token ?? device.token,
+            type: type ?? device.type,
+        },
+    });
+
+    res.status(httpStatus.OK).json(updatedDevice);
 });
 
 
@@ -71,18 +95,12 @@ export const addDevice = catchAsync(async (req, res) => {
  *         description: Forbidden
  */
 export const removeDevice = catchAsync(async (req, res) => {
-    const { token } = req.params;
     const userId = req.user.id;
 
-    const device = await prisma.device.findUnique({ where: { token } });
+    await prisma.device.deleteMany({
+        where: { userId },
+    });
 
-    if (!device || device.userId !== userId) {
-        const error = new Error('Device not found or unauthorized');
-        error.statusCode = httpStatus.NOT_FOUND;
-        throw error;
-    }
-
-    await prisma.device.delete({ where: { token } });
     res.status(httpStatus.NO_CONTENT).send();
 });
 

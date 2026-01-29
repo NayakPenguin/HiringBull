@@ -53,12 +53,6 @@ export const getCurrentUser = catchAsync(async (req, res) => {
 
   const lastUpdate = new Date(user.tokens_last_update);
 
-  /**
-   * =====================================
-   * 🔐 PRODUCTION TOKEN RENEWAL (30 DAYS)
-   * =====================================
-   */
-
   const diffInDays = Math.floor(
     (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24)
   );
@@ -73,37 +67,6 @@ export const getCurrentUser = catchAsync(async (req, res) => {
       include: { devices: true, followedCompanies: true }
     });
   }
-
-  /**
-   * =====================================
-   * 🧪 TEST TOKEN RENEWAL (2 MINUTES)
-   * =====================================
-   */
-
-  // const diffInMinutes = Math.floor(
-  //   (now.getTime() - lastUpdate.getTime()) / (1000 * 60)
-  // );
-
-  // console.log('====================================');
-  // console.log(
-  //   'GET USER DETAILS',
-  //   'diffInMinutes:',
-  //   diffInMinutes,
-  //   'lastUpdate:',
-  //   lastUpdate.toISOString()
-  // );
-  // console.log('====================================');
-
-  // if (diffInMinutes >= 2) {
-  //   user = await prisma.user.update({
-  //     where: { id: user.id },
-  //     data: {
-  //       tokens_left: 3,
-  //       tokens_last_update: now
-  //     },
-  //     include: { devices: true, followedCompanies: true }
-  //   });
-  // }
 
   res.status(httpStatus.OK).json(user);
 });

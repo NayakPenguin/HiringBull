@@ -155,12 +155,18 @@ model Comment {
 
 model Device {
   id        String   @id @default(uuid())
-  token     String   @unique // FCM token or device identifier
-  type      String?  // ios, android, web
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
 
+  deviceId  String   // stable device identifier (UUID from app / browser)
+  token     String?  // FCM / APNs token (can be null)
+  type      String?  // ios | android | web
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, deviceId]) // one device per user
   @@index([userId])
   @@index([token])
 }
