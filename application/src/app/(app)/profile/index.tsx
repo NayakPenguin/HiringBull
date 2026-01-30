@@ -1,6 +1,7 @@
-import { useAuth, useUser } from '@clerk/clerk-expo';
+import { useAuth } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
 import { type BottomSheetModal } from '@gorhom/bottom-sheet';
+import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Clipboard, Linking, Pressable, ScrollView } from 'react-native';
@@ -13,7 +14,8 @@ import {
   View,
 } from '@/components/ui';
 import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
-import { resetOnboarding, useNotifications, useOnboarding } from '@/lib';
+import { resetOnboarding } from '@/lib';
+import { resetUser } from '@/features/users';
 
 type SettingsItem = {
   label: string;
@@ -57,15 +59,15 @@ function SettingsItemRow({ item }: { item: SettingsItem }) {
 type ConfirmAction = 'logout' | 'copy';
 
 export default function Profile() {
-  const { signOut, getToken } = useAuth();
-  const { user } = useUser();
+  const { signOut } = useAuth();
   const { navigate } = useRouter();
-  const { expoPushToken } = useNotifications();
-  console.log("push notifcaton",expoPushToken)
 
   // Get user info from backend API (saved in Zustand store)
-  const userInfo = useOnboarding.use.userInfo();
-  // console.log(userInfo)
+  const queryClient = useQueryClient();
+
+  const userInfo = queryClient.getQueryData(['users', 'me']);
+  // const userInfo = useOnboarding.use.userInfo();
+  console.log(userInfo.devices);
 
   const handleLogout = () => {
     setConfirmAction('logout');
@@ -114,23 +116,14 @@ export default function Profile() {
   ];
 
   // Get user display info - prefer backend name over Clerk name
-  const displayName =
-    userInfo?.name ||
-    user?.fullName ||
-    user?.firstName ||
-    user?.emailAddresses?.[0]?.emailAddress?.split('@')[0] ||
-    'User';
-  const email =
-    userInfo?.email || user?.primaryEmailAddress?.emailAddress || '';
+  const displayName = userInfo?.name;
+  const email = userInfo?.email || '';
   const handleConfirm = async () => {
     if (confirmAction === 'logout') {
-      console.log('check device token', expoPushToken);
       try {
-        console.log('in try catch');
+        await resetUser();
         await signOut();
-
-        console.log('This is step 1', expoPushToken);
-        resetOnboarding(expoPushToken);
+        resetOnboarding();
       } catch (error) {
         console.error('Logout error:', error);
       }

@@ -10,17 +10,9 @@ import { useSingleDeviceSessionGuard } from '@/lib/hooks/useSingleDeviceSessionG
 import DeviceConflict from './outreach/deviceConflict';
 
 export default function TabLayout() {
-  const { getToken } = useAuth();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-  useEffect(() => {
-    const logToken = async () => {
-      const token = await getToken();
-      console.log('getToken:', token);
-    };
-    logToken();
-  }, [getToken]);
 
   const { isConflict, isLoading: isSessionCheckLoading } =
     useSingleDeviceSessionGuard();

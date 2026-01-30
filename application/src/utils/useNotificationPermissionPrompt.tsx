@@ -1,56 +1,97 @@
+import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Platform } from 'react-native';
+
+import { updatePushToken } from '@/features/users';
+import { storage } from '@/lib/storage';
+
+import getOrCreateDeviceId from './getOrCreatedId';
+
+const PROMPT_INTERVAL = 10 * 60 * 1000; // 10 min (testing)
+const LAST_PROMPT_TIME_KEY = 'last_notification_prompt_time';
+const PUSH_REGISTERED_KEY = 'push_token_registered';
 
 export function useNotificationPermissionPrompt() {
-  const lastPromptTime = useRef<number>(0);
   const [modalVisible, setModalVisible] = useState(false);
   const [enabled, setEnabled] = useState(false);
 
+  const hasRegistered = useRef(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const clearPromptInterval = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  };
+
   const checkPermissions = useCallback(async () => {
-    if (!Device.isDevice) return;
-    if (!enabled) return;
+    if (!Device.isDevice || !enabled) return;
 
-    const { status: existingStatus } =
-      await Notifications.getPermissionsAsync();
+    const { status } = await Notifications.getPermissionsAsync();
 
-    let finalStatus = existingStatus;
+    if (status === 'granted') {
+      clearPromptInterval();
+      setModalVisible(false);
 
-    // 🔔 OS-level prompt (only once per session)
-    if (finalStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
+      const projectId =
+        Constants.expoConfig?.extra?.eas?.projectId ??
+        Constants.easConfig?.projectId;
+
+      const { data: expoPushToken } = await Notifications.getExpoPushTokenAsync(
+        { projectId }
+      );
+
+      const deviceId = await getOrCreateDeviceId();
+      const platform = Platform.OS === 'android' ? 'android' : 'ios';
+
+      const alreadyRegistered =
+        storage.getBoolean(PUSH_REGISTERED_KEY) === true;
+
+      // 🔁 Always re-register after logout / fresh login
+      await updatePushToken({
+        deviceId,
+        token: expoPushToken,
+        type: platform,
+      });
+
+      storage.set(PUSH_REGISTERED_KEY, true);
+      hasRegistered.current = true;
+
+      return;
     }
 
+    // ❌ Permission not granted → show modal
     const now = Date.now();
+    const lastPromptTime = storage.getNumber(LAST_PROMPT_TIME_KEY);
 
-    if (
-      finalStatus !== 'granted' &&
-      (!lastPromptTime.current || now - lastPromptTime.current > 10 * 60 * 1000)
-    ) {
-      lastPromptTime.current = now;
+    if (!lastPromptTime || now - lastPromptTime >= PROMPT_INTERVAL) {
+      storage.set(LAST_PROMPT_TIME_KEY, now);
       setModalVisible(true);
     }
   }, [enabled]);
 
-  // Start listening ONLY when enabled
   useEffect(() => {
     if (!enabled) return;
 
     checkPermissions();
 
-    const subscription = Notifications.addNotificationResponseReceivedListener(
-      () => {
-        checkPermissions();
-      }
-    );
+    intervalRef.current = setInterval(checkPermissions, PROMPT_INTERVAL);
 
-    return () => subscription.remove();
+    return () => clearPromptInterval();
   }, [enabled, checkPermissions]);
+
+  const onModalClose = () => {
+    storage.set(LAST_PROMPT_TIME_KEY, Date.now());
+    setModalVisible(false);
+  };
 
   return {
     modalVisible,
     setModalVisible,
     enablePrompt: () => setEnabled(true),
+    onModalClose,
   };
 }

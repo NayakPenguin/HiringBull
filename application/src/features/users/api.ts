@@ -10,11 +10,8 @@ import {
 const BASE_USER_URL = '/api/users/me';
 const BASE_WEB_REGISTRATION_URL = '/api/web-registration';
 
-
-
 export const registerDevice = async (data: DeviceRegistration) => {
-    const res = await client.post<DeviceResponse>('/api/users/devices', data);
- 
+  const res = await client.post<DeviceResponse>('/api/users/devices', data);
   return res.data;
 };
 
@@ -35,10 +32,12 @@ export const checkUserVerification = async (email: string) => {
   return data;
 };
 
-export const resetUser = async (token: string) => {
-  const res = await client.delete<DeviceResponse>(
-    `/api/users/devices/${token}`
-  );
+export const resetUser = async () => {
+  const res = await client.delete<DeviceResponse>(`/api/users/devices/me`);
 
   return res.data;
+};
+export const updatePushToken = async (payload: Partial<DeviceRegistration>) => {
+  const { data } = await client.put('/api/users/devices', payload);
+  return data;
 };
