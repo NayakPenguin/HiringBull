@@ -115,32 +115,10 @@ function RootNavigator() {
       console.log(' checkUserInfo: Starting to fetch user info...');
       setIsLoadingUser(true);
       const data = await getUserInfo();
-      // console.log(
-      //   'checkUserInfo: User data received:',
-      //   JSON.stringify(data, null, 2)
-      // );
       if (Boolean(data.onboarding_completed)) {
         completeOnboarding();
         updateUserInfo(data);
       }
-      const projectId =
-        Constants.expoConfig?.extra?.eas?.projectId ??
-        Constants.easConfig?.projectId;
-
-      const { data: expoPushToken } = await Notifications.getExpoPushTokenAsync(
-        { projectId }
-      );
-      console.log('Expo Push Token:', expoPushToken);
-
-      const deviceId = await getOrCreateDeviceId();
-      const platform = Platform.OS === 'android' ? 'android' : 'ios';
-
-      // 🔁 Always re-register after logout / fresh login
-      await updatePushToken({
-        deviceId: deviceId,
-        token: expoPushToken,
-        type: platform,
-      });
     } catch (e: any) {
       console.error('checkUserInfo: Failed to get user info:', e?.message || e);
     } finally {
