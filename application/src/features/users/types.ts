@@ -3,6 +3,7 @@ import { ExperienceLevel, OnboardedCompanies } from "@/app/onboarding/types";
 export interface DeviceRegistration {
   token: string;
   type: 'ios' | 'android';
+  deviceId: string;
 }
 
 export interface DeviceResponse {

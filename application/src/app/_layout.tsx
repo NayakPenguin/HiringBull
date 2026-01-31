@@ -8,15 +8,18 @@ import { ThemeProvider } from '@react-navigation/native';
 import * as Font from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import React, { useEffect, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { AppState, Platform, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 
 import { APIProvider } from '@/api';
 import { GlobalLoadingOverlay } from '@/components/global-loading-overlay';
 import { Toast } from '@/components/ui/Toast';
-import { getUserInfo } from '@/features/users';
+import { getUserInfo, updatePushToken } from '@/features/users';
+import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
+
 import {
   completeOnboarding,
   hydrateOnboarding,
@@ -30,6 +33,8 @@ import { useThemeConfig } from '@/lib/use-theme-config';
 import { authService } from '@/service/auth-service';
 import { NotificationPromptModal } from '@/utils/NotificationPromptModal';
 import { useNotificationPermissionPrompt } from '@/utils/useNotificationPermissionPrompt';
+import * as Updates from 'expo-updates';
+import getOrCreateDeviceId from '@/utils/getOrCreatedId';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -72,7 +77,7 @@ function RootNavigator() {
   const _isSubscribed = useOnboarding.use.isSubscribed();
 
   const [isLoadingUser, setIsLoadingUser] = useState(false);
-  const { modalVisible, setModalVisible, enablePrompt } =
+  const { modalVisible, setModalVisible, enablePrompt, recheckPermissions } =
     useNotificationPermissionPrompt();
 
   // Sync auth service with Clerk
@@ -110,10 +115,6 @@ function RootNavigator() {
       console.log(' checkUserInfo: Starting to fetch user info...');
       setIsLoadingUser(true);
       const data = await getUserInfo();
-      // console.log(
-      //   'checkUserInfo: User data received:',
-      //   JSON.stringify(data, null, 2)
-      // );
       if (Boolean(data.onboarding_completed)) {
         completeOnboarding();
         updateUserInfo(data);
@@ -124,7 +125,8 @@ function RootNavigator() {
       setIsLoadingUser(false);
     }
   };
-
+  const appState = useRef(AppState.currentState);
+  const isFirstForeground = useRef(true);
   useEffect(() => {
     if (isSignedIn) {
       checkUserInfo();
@@ -135,7 +137,30 @@ function RootNavigator() {
       enablePrompt(); // ✅ starts permission flow
     }
   }, [isAuthenticated]);
+  useEffect(() => {
+    const subscription = AppState.addEventListener(
+      'change',
+      async (nextState) => {
+        // ✅ First foreground OR background → foreground
+        if (
+          nextState === 'active' &&
+          (appState.current !== 'active' || isFirstForeground.current)
+        ) {
+          isFirstForeground.current = false;
 
+          const { status } = await Notifications.getPermissionsAsync();
+
+          if (status !== 'granted') {
+            setModalVisible(true);
+          }
+        }
+
+        appState.current = nextState;
+      }
+    );
+
+    return () => subscription.remove();
+  }, []);
   const [fontsLoaded, setFontsLoaded] = useState(false);
 
   useEffect(() => {

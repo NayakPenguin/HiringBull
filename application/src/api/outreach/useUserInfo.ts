@@ -51,4 +51,8 @@ export const useMyProfile = createQuery<UserMeResponse, void, AxiosError>({
     const res = await client.get('api/users/me');
     return res.data;
   },
+  staleTime: Infinity, // 👈 prevents auto refetch
+  refetchOnMount: false,
+  refetchOnWindowFocus: false,
+  refetchOnReconnect: false,
 });

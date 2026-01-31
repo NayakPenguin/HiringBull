@@ -27,7 +27,7 @@ type OnboardingState = {
   isSubscribed: boolean;
   completeOnboarding: () => void;
   subscribe: () => void;
-  reset: (deviceToken?: string) => Promise<void>;
+  reset: () => Promise<void>;
   hydrate: () => void;
   userInfo: UserInfo | null;
   setUserInfo: (userInfo: UserInfo) => void;
@@ -48,8 +48,7 @@ const _useOnboarding = create<OnboardingState>((set) => ({
     set({ isSubscribed: true });
   },
 
-  reset: async (deviceToken?: string) => {
-    console.log("in reset function->>>>>>")
+  reset: async () => {
     storage.delete(ONBOARDING_COMPLETED_KEY);
     storage.delete(IS_SUBSCRIBED_KEY);
     set({ hasCompletedOnboarding: false, isSubscribed: false });
@@ -82,8 +81,7 @@ export const useOnboarding = createSelectors(_useOnboarding);
 export const completeOnboarding = () =>
   _useOnboarding.getState().completeOnboarding();
 export const subscribe = () => _useOnboarding.getState().subscribe();
-export const resetOnboarding = (deviceToken?: string) =>
-  _useOnboarding.getState().reset(deviceToken);
+export const resetOnboarding = () => _useOnboarding.getState().reset();
 export const hydrateOnboarding = () => _useOnboarding.getState().hydrate();
 export const updateUserInfo = (userInfo: UserInfo) =>
   _useOnboarding.getState().setUserInfo(userInfo);

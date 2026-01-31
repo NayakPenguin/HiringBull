@@ -127,7 +127,6 @@ export default function Jobs() {
   const hasShownToastRef = React.useRef(false);
 
   useEffect(() => {
-    console.log(isFetching);
     if (isFetching && data && !hasShownToastRef.current) {
       hasShownToastRef.current = true;
     }

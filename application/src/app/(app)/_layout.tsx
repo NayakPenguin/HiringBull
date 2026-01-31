@@ -1,32 +1,78 @@
-import { useAuth } from '@clerk/clerk-expo';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useQueryClient } from '@tanstack/react-query';
+import Constants from 'expo-constants';
+import * as Notifications from 'expo-notifications';
 import { Tabs } from 'expo-router';
 import { useColorScheme } from 'nativewind';
-import React, { useEffect } from 'react';
-import { View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { AppState, Platform, View } from 'react-native';
 
+import { updatePushToken } from '@/features/users';
 import { useSingleDeviceSessionGuard } from '@/lib/hooks/useSingleDeviceSessionGuard';
+import getOrCreateDeviceId from '@/utils/getOrCreatedId';
 
 import DeviceConflict from './outreach/deviceConflict';
 
 export default function TabLayout() {
-  const { getToken } = useAuth();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
-
+  const appState = useRef(AppState.currentState);
+  const queryClient = useQueryClient();
   useEffect(() => {
-    const logToken = async () => {
-      const token = await getToken();
-      console.log('getToken:', token);
-    };
-    logToken();
-  }, [getToken]);
+    const subscription = AppState.addEventListener(
+      'change',
+      async (nextAppState) => {
+        // app coming back to foreground
+        if (
+          appState.current.match(/inactive|background/) &&
+          nextAppState === 'active'
+        ) {
+          console.log('App came to foreground');
+
+          // 1️⃣ Check permission
+          const { status } = await Notifications.getPermissionsAsync();
+
+          if (status === 'granted') {
+            console.log('Permission granted');
+
+            // 2️⃣ CALL YOUR API HERE
+            // await callNotificationEnabledAPI();
+            console.log('callNotificationEnabledAPI()');
+            const projectId =
+              Constants.expoConfig?.extra?.eas?.projectId ??
+              Constants.easConfig?.projectId;
+
+            const { data: expoPushToken } =
+              await Notifications.getExpoPushTokenAsync({ projectId });
+            console.log('Expo Push Token:', expoPushToken);
+
+            const deviceId = await getOrCreateDeviceId();
+            const platform = Platform.OS === 'android' ? 'android' : 'ios';
+
+            // 🔁 Always re-register after logout / fresh login
+            await updatePushToken({
+              deviceId: deviceId,
+              token: expoPushToken,
+              type: platform,
+            });
+            queryClient.invalidateQueries({
+              queryKey: ['users', 'me'],
+            });
+          }
+        }
+
+        appState.current = nextAppState;
+      }
+    );
+
+    return () => subscription.remove();
+  }, []);
 
   const { isConflict, isLoading: isSessionCheckLoading } =
     useSingleDeviceSessionGuard();
 
   if (!isSessionCheckLoading && isConflict) {
-    console.log("device conflict", isConflict)
+    // console.log("device conflict", isConflict)
     return <DeviceConflict />;
   }
 
