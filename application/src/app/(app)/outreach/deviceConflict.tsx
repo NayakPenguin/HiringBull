@@ -4,6 +4,7 @@ import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { resetOnboarding } from '@/lib';
+import { clearMembership } from '@/lib/membership';
 
 export default function DeviceConflict() {
   const { navigate } = useRouter();
@@ -23,6 +24,7 @@ export default function DeviceConflict() {
         onPress={async () => {
           await signOut();
           resetOnboarding();
+          clearMembership();
           navigate('/login');
         }}
         className="mt-6 rounded-lg bg-neutral-900 px-6 py-3"

@@ -4,12 +4,13 @@ import { useRouter } from 'expo-router';
 import { Linking, Pressable, ScrollView } from 'react-native';
 
 import { SafeAreaView, Text, View } from '@/components/ui';
-import { resetOnboarding } from '@/lib';
+import { hideGlobalLoading, resetOnboarding, showGlobalLoading } from '@/lib';
+import { useEffect } from 'react';
+import { clearMembership } from '@/lib/membership';
 
 export default function NoActiveMembership() {
   const { navigate } = useRouter();
   const { signOut } = useAuth();
-
   return (
     <SafeAreaView className="flex-1 bg-white">
       {/* Header */}
@@ -18,6 +19,7 @@ export default function NoActiveMembership() {
           onPress={async () => {
             await signOut();
             resetOnboarding();
+            clearMembership();
             navigate('/login');
           }}
           className="size-10 items-center justify-center rounded-full bg-neutral-100"

@@ -215,6 +215,7 @@ function RootNavigator() {
 
         {/* SSO callback route - accessible during OAuth flow */}
         <Stack.Screen name="sso-callback" options={{ headerShown: false }} />
+        <Stack.Screen name="no-membership" options={{ headerShown: false }} />
       </Stack>
       {shouldInitNotifications && (
         <NotificationPromptModal

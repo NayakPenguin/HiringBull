@@ -2,13 +2,14 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useQueryClient } from '@tanstack/react-query';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
-import { Tabs } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import React, { useEffect, useRef } from 'react';
 import { AppState, Platform, View } from 'react-native';
 
 import { updatePushToken } from '@/features/users';
 import { useSingleDeviceSessionGuard } from '@/lib/hooks/useSingleDeviceSessionGuard';
+import { getMembership, isMembershipValid } from '@/lib/membership';
 import getOrCreateDeviceId from '@/utils/getOrCreatedId';
 
 import DeviceConflict from './outreach/deviceConflict';
@@ -18,6 +19,14 @@ export default function TabLayout() {
   const isDark = colorScheme === 'dark';
   const appState = useRef(AppState.currentState);
   const queryClient = useQueryClient();
+  const router = useRouter();
+  useEffect(() => {
+    const membershipData = getMembership();
+    if (membershipData && !isMembershipValid(membershipData.membershipEnd)) {
+      router.replace('/no-membership');
+      return;
+    }
+  }, []);
   useEffect(() => {
     const subscription = AppState.addEventListener(
       'change',
@@ -28,7 +37,15 @@ export default function TabLayout() {
           nextAppState === 'active'
         ) {
           console.log('App came to foreground');
-
+          const membershipData = getMembership();
+          console.log('Membership Data in TabLayout:', membershipData);
+          if (
+            membershipData &&
+            !isMembershipValid(membershipData.membershipEnd)
+          ) {
+            router.replace('/no-membership');
+            return;
+          }
           // 1️⃣ Check permission
           const { status } = await Notifications.getPermissionsAsync();
 
