@@ -1,76 +1,76 @@
 {
-    "cli": {
-      "version": ">= 3.8.1",
-      "appVersionSource": "remote"
+  "cli": {
+    "version": ">= 3.8.1",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "production": {
+      "channel": "production",
+      "distribution": "store",
+      "pnpm": "9.12.3",
+      "autoIncrement": true,
+      "ios": {
+        "image": "latest"
+      },
+      "android": {
+        "buildType": "app-bundle",
+        "image": "latest"
+      },
+      "env": {
+        "APP_ENV": "production",
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsuaGlyaW5nYnVsbC5vcmck",
+        "EXPO_NO_DOTENV": "1",
+        "FLIPPER_DISABLE": "1"
+      }
     },
-    "build": {
-         "production": {
-            "channel": "production",
-            "distribution": "store",
-            "pnpm": "9.12.3",
-             "autoIncrement": true,
-            "ios": {
-                "image": "latest"
-            },
-            "android": {
-                "buildType": "apk",
-                "image": "latest"
-            },
-            "env": {
-                "APP_ENV": "production",
-                "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsuaGlyaW5nYnVsbC5vcmck",
-                "EXPO_NO_DOTENV": "1",
-                "FLIPPER_DISABLE": "1"
-            }
-        },
-        "staging": {
-            "distribution": "internal",
-            "pnpm": "9.12.3",
-            "ios": {
-                "image": "latest"
-            },
-            "android": {
-                "buildType": "apk",
-                "image": "latest"
-            },
-            "env": {
-                "APP_ENV": "staging",
-                "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsuaGlyaW5nYnVsbC5vcmck",
-                "EXPO_NO_DOTENV": "1",
-                "FLIPPER_DISABLE": "1"
-            }
-        },
-        "development": {
-            "developmentClient": true,
-            "distribution": "internal",
-            "pnpm": "9.12.3",
-            "ios": {
-                "image": "latest"
-            },
-            "android": {
-                "image": "latest"
-            },
-            "env": {
-                "APP_ENV": "development",
-                "EXPO_NO_DOTENV": "1"
-            }
-        },
-        "simulator": {
-            "pnpm": "9.12.3",
-            "ios": {
-                "simulator": true,
-                "image": "latest"
-            },
-            "android": {
-                "image": "latest"
-            },
-            "env": {
-                "APP_ENV": "development",
-                "EXPO_NO_DOTENV": "1"
-            }
-        }
+    "staging": {
+      "distribution": "internal",
+      "pnpm": "9.12.3",
+      "ios": {
+        "image": "latest"
+      },
+      "android": {
+        "buildType": "apk",
+        "image": "latest"
+      },
+      "env": {
+        "APP_ENV": "staging",
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsuaGlyaW5nYnVsbC5vcmck",
+        "EXPO_NO_DOTENV": "1",
+        "FLIPPER_DISABLE": "1"
+      }
     },
-    "submit": {
-        "production": {}
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "pnpm": "9.12.3",
+      "ios": {
+        "image": "latest"
+      },
+      "android": {
+        "image": "latest"
+      },
+      "env": {
+        "APP_ENV": "development",
+        "EXPO_NO_DOTENV": "1"
+      }
+    },
+    "simulator": {
+      "pnpm": "9.12.3",
+      "ios": {
+        "simulator": true,
+        "image": "latest"
+      },
+      "android": {
+        "image": "latest"
+      },
+      "env": {
+        "APP_ENV": "development",
+        "EXPO_NO_DOTENV": "1"
+      }
     }
+  },
+  "submit": {
+    "production": {}
+  }
 }

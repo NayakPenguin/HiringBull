@@ -58,7 +58,7 @@ const Privacy = () => {
 
       <h2>8. Contact</h2>
       <p>
-        For privacy-related questions, contact us at support@hiringbull.org.
+        For privacy-related questions, contact us at team@hiringbull.org.
       </p>
     </Container>
   );
