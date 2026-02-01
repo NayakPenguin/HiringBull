@@ -13,6 +13,7 @@ import { checkUserVerification, UserRegistration } from '@/features/users';
 import useRegisterOrEditUser from '@/features/users/hooks/useRegisterOrEditUser';
 import { useOnboarding, showGlobalLoading, hideGlobalLoading } from '@/lib';
 import NoActiveMembership from '../no-membership';
+import { getMembership, isMembershipValid, saveMembership } from '@/lib/membership';
 
 
 type StepIndicatorProps = {
@@ -85,8 +86,17 @@ export default function Onboarding() {
       const verificationData = await checkUserVerification(
         user.primaryEmailAddress.emailAddress
       );
+      console.log(
+        'User Verification Data:',
+        isMembershipValid(verificationData.data.membershipEnd),
+        verificationData.data
+      );
+      saveMembership({
+        email: user.primaryEmailAddress.emailAddress,
+        membershipEnd: verificationData.data.membershipEnd,
+      });
 
-      if (!verificationData.registered) {
+      if (!isMembershipValid(verificationData.data.membershipEnd)) {
         setIsVerifiedUser(false);
         return;
       }
@@ -94,7 +104,7 @@ export default function Onboarding() {
     };
 
     checkIfVerified();
-  }, [getToken]);
+  }, [user]);
 
   const handleToggleCompany = (companyId: string) => {
     setSelectedCompanies((prev) =>

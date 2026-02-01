@@ -8,7 +8,7 @@ import {
 } from './types';
 
 const BASE_USER_URL = '/api/users/me';
-const BASE_WEB_REGISTRATION_URL = '/api/web-registration';
+const BASE_WEB_REGISTRATION_URL = '/api/membership';
 
 export const registerDevice = async (data: DeviceRegistration) => {
   const res = await client.post<DeviceResponse>('/api/users/devices', data);
@@ -26,8 +26,8 @@ export const getUserInfo = async () => {
 };
 
 export const checkUserVerification = async (email: string) => {
-  const { data } = await client.get<{ registered: boolean }>(
-    `${BASE_WEB_REGISTRATION_URL}/check?email=${email}`
+  const { data } = await client.get<{ membershipEnd: string }>(
+    `${BASE_WEB_REGISTRATION_URL}/${email}`
   );
   return data;
 };

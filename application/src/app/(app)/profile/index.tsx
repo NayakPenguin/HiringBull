@@ -16,6 +16,7 @@ import {
 import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
 import { resetOnboarding } from '@/lib';
 import { resetUser } from '@/features/users';
+import { getMembership, isMembershipValid } from '@/lib/membership';
 
 type SettingsItem = {
   label: string;
@@ -129,17 +130,8 @@ export default function Profile() {
       }
     }
   };
-  const isMembershipValid = (expiryDate: string) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const expiry = new Date(expiryDate);
-    expiry.setHours(0, 0, 0, 0);
-
-    return expiry > today;
-  };
-  const MEMBERSHIP_EXPIRY = userInfo?.planExpiry || userInfo?.expiry; // YYYY-MM-DD
-  const isValid = isMembershipValid(MEMBERSHIP_EXPIRY);
+  const membershipData = getMembership();
+  const isValid = isMembershipValid(membershipData?.membershipEnd);
 
   return (
     <>
@@ -230,11 +222,14 @@ export default function Profile() {
                       isValid ? 'text-neutral-600' : 'text-danger-600'
                     }`}
                   >
-                    {new Date(MEMBERSHIP_EXPIRY).toLocaleDateString('en-IN', {
-                      day: '2-digit',
-                      month: 'long',
-                      year: 'numeric',
-                    })}
+                    {new Date(membershipData?.membershipEnd).toLocaleDateString(
+                      'en-IN',
+                      {
+                        day: '2-digit',
+                        month: 'long',
+                        year: 'numeric',
+                      }
+                    )}
                   </Text>
                 </View>
               </View>
