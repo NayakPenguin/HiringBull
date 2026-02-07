@@ -17,16 +17,12 @@ import { CircularProgress } from '@material-ui/core';
 import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
 
 const JoinMembershipForm = () => {
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    phone: "",
-    socialProfile: "",
-    reason: "",
-    referralEmail: "",
-    acknowledged: false,
-    isDiscountApplied: false
-  });
+  const [errors, setErrors] = useState({});
+  const [currentStep, setCurrentStep] = useState(3);
+  const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [referralStatus, setReferralStatus] = useState(null);
+  const [mainError, setMainError] = useState(null);
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -39,12 +35,12 @@ const JoinMembershipForm = () => {
     };
   }, []);
 
-  const [errors, setErrors] = useState({});
-  const [currentStep, setCurrentStep] = useState(1);
-  const [submitted, setSubmitted] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [referralStatus, setReferralStatus] = useState(null);
-  const [mainError, setMainError] = useState(null);
+  const STEPS = [
+    { id: 1, label: "Overview" },
+    { id: 2, label: "Application" },
+    { id: 3, label: "Payment" },
+    // { id: 4, label: "Approval" },
+  ];
 
   useEffect(() => {
     window.scrollTo({
@@ -52,6 +48,20 @@ const JoinMembershipForm = () => {
       // behavior: "smooth", // optional
     });
   }, [currentStep]);
+
+
+  // Form related states
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    socialProfile: "",
+    reasonOption: "",
+    reasonText: "",
+    referralEmail: "",
+    acknowledged: false,
+    isDiscountApplied: false
+  });
 
   const isValidUrl = (value) => {
     try {
@@ -81,8 +91,8 @@ const JoinMembershipForm = () => {
         }
         break;
       case 'reason':
-        if (value.length < 80) {
-          newErrors.reason = 'Please provide at least 80 characters';
+        if (value.length < 5) {
+          newErrors.reason = 'Please provide at least 5 characters';
         } else {
           delete newErrors.reason;
         }
@@ -123,12 +133,23 @@ const JoinMembershipForm = () => {
       newErrors.email = "Enter a valid email";
     }
 
-    if (!isValidUrl(formData.socialProfile)) {
+    // socialProfile is now optional
+    if (
+      formData.socialProfile &&
+      !isValidUrl(formData.socialProfile)
+    ) {
       newErrors.socialProfile = "Valid link required";
     }
 
-    if (formData.reason.trim().length < 25) {
-      newErrors.reason = "Just 1–2 lines is enough";
+    if (!formData.reasonOption) {
+      newErrors.reasonOption = "Please select one";
+    }
+
+    if (
+      formData.reasonOption === "other" &&
+      formData.reasonText.trim().length == 0
+    ) {
+      newErrors.reasonText = "Please write a reason (or select a different option)";
     }
 
     if (!formData.acknowledged) {
@@ -146,6 +167,7 @@ const JoinMembershipForm = () => {
     setCurrentStep(3);
     setIsSubmitting(false);
   };
+
   const renderStatus = (value, required = true, validator = null) => {
     const hasValue = value && (value.trim().length > 0);
     const isValid = validator ? validator(value) : hasValue;
@@ -179,15 +201,9 @@ const JoinMembershipForm = () => {
     return null;
   };
 
-  const STEPS = [
-    { id: 1, label: "Overview" },
-    { id: 2, label: "Application" },
-    { id: 3, label: "Payment" },
-    // { id: 4, label: "Approval" },
-  ];
-
   const isValidEmail = (value) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
 
   const handleReferralClick = async () => {
     setReferralStatus("checking");
@@ -219,12 +235,18 @@ const JoinMembershipForm = () => {
 
   const submitApplication = async () => {
     try {
+      const finalReason =
+        formData.reasonOption === "other"
+          ? formData.reasonText
+          : formData.reasonOption;
+
       const payload = {
         full_name: formData.fullName,
         email: formData.email,
         phone: formData.phone || "",
-        social_profile: formData.socialProfile,
-        reason: formData.reason
+        social_profile:
+          formData.socialProfile || "https://hiringbull.org/profile-not-provided",
+        reason: finalReason,
       };
 
       const res = await fetch("https://api.hiringbull.org/api/membership", {
@@ -233,24 +255,19 @@ const JoinMembershipForm = () => {
         body: JSON.stringify(payload),
       });
 
-      // ❌ HTTP error (4xx / 5xx)
       if (!res.ok) {
         let errorMessage = "Failed to submit application";
-
         try {
           const data = await res.json();
           errorMessage = data?.message || errorMessage;
-        } catch {
-          // response not JSON
-        }
-
+        } catch { }
         throw new Error(errorMessage);
       }
 
-      return await res.json(); // optional, if backend returns data
+      return await res.json();
     } catch (err) {
       console.error("❌ submitApplication error:", err);
-      throw err; // VERY IMPORTANT → lets caller show error UI
+      throw err;
     }
   };
 
@@ -329,16 +346,16 @@ const JoinMembershipForm = () => {
   return (
     <Container>
       <Navbar>
-        {/* <div className="top">
-          <span>Already a member?</span> Stay ahead with the HiringBull app on Google Play Store <div className="download-btn">Download Now ↗</div>
-        </div> */}
-        <div className="bottom">
+        <div className="top">
+          <span>Already a member?</span> <p>Stay ahead with the HiringBull app on Google Play Store</p> <div className="download-btn">Download <b>HiringBull Membership App</b> Now ↗</div>
+        </div>
+        {/* <div className="bottom">
           <div className="middle">
             <OfflineBoltIcon />
             Join HiringBull Membership
             <img className='logobig' src={logo} alt="" />
           </div>
-        </div>
+        </div> */}
         {/* <div className="info">
           <InfoIcon />
           <div className="text">To protect quality, memberships are reviewed manually and approved within 24–48 hours.
@@ -412,14 +429,22 @@ const JoinMembershipForm = () => {
               </h1>
 
               {/* <img className='membership-img' src={membershipGoldCoin} alt="" /> */}
+              <h2>
+                HiringBull is a <b>curated membership</b> for serious job seekers who want <b>early access to verified openings</b> from official company career pages. Instead of competing with thousands on public job portals, members apply when roles are still fresh and lightly contested.
+              </h2>
 
-              <h2>HiringBull is a curated membership for serious job seekers who want early access to verified openings on official company career pages and real visibility with company employees. Instead of competing with thousands on public job portals, members apply when openings are still fresh and lightly contested.</h2>
+              <h2>
+                We continuously monitor company career pages and trusted signals to detect job postings the moment they go live. This lets you <b>apply within minutes</b>, not days later when positions are already saturated with applications.
+              </h2>
 
-              <h2>We continuously monitor official career pages and trusted social signals to detect job postings the moment they go live. This allows you to apply within minutes, not days later when roles are already saturated with applications. Every alert is intentional, relevant, and sourced directly from the company.</h2>
+              <h2>
+                Members also get <b>limited, high-signal outreach</b> opportunities to verified employees and recruiters through curated communities, designed to keep communication meaningful and spam-free.
+              </h2>
 
-              <h2>Beyond early access, HiringBull enables limited, high-signal outreach to verified employees and recruiters through curated communities. Outreach is capped to prevent spam and ensure that messages remain meaningful, relevant, and respectful of the people reviewing them.</h2>
+              <h2>
+                Your membership is <b>activated immediately after payment</b>, so you can start receiving early job alerts and community access right away.
+              </h2>
 
-              <h2>To maintain quality and fairness, every membership is manually reviewed and approved within 24–48 hours. If an application is not approved, the payment is automatically refunded, ensuring a risk-free and transparent experience for every applicant.</h2>
               <div className="next-btn" onClick={() => setCurrentStep(2)}>Continue to Your Details →</div>
             </OneContent>
           ) : (
@@ -430,10 +455,7 @@ const JoinMembershipForm = () => {
                   <img src={logo} alt="" />
                 </h1>
 
-                <h2>
-                  This information helps us review your application quickly.
-                  Your details are private, securely handled, and never shared.
-                </h2>
+                <h2>This information helps us review your application quickly. Your details are private, securely handled, and never shared. </h2>
 
                 {/* Full Name */}
                 <div className="input">
@@ -476,7 +498,7 @@ const JoinMembershipForm = () => {
                   <div className="left">
                     <div className="label-row">
                       <div className="label">
-                        Phone <span>(Optional – WhatsApp alerts)</span>
+                        Phone Number <span>(Optional – to join WhatsApp groups with fellow job seekers)</span>
                       </div>
                       <div className="status">{renderStatus(formData.phone, false)}</div>
                     </div>
@@ -484,28 +506,7 @@ const JoinMembershipForm = () => {
                       type="tel"
                       value={formData.phone}
                       onChange={handleChange("phone")}
-                      placeholder="Phone number (optional)"
-                    />
-                  </div>
-                </div>
-
-                {/* Social Profile */}
-                <div className="input">
-                  <div className="left">
-                    <div className="label-row">
-                      <div className="label">
-                        Profile <span>(LinkedIn / GitHub / Portfolio)</span>
-                      </div>
-                      <div className="status">
-                        {renderStatus(formData.socialProfile, true, isValidUrl)}
-                      </div>
-                    </div>
-                    <input
-                      type="url"
-                      value={formData.socialProfile}
-                      onChange={handleChange("socialProfile")}
-                      placeholder="https://linkedin.com/in/..."
-                      aria-required="true"
+                      placeholder="Phone number"
                     />
                   </div>
                 </div>
@@ -515,45 +516,120 @@ const JoinMembershipForm = () => {
                   <div className="left">
                     <div className="label-row">
                       <div className="label">
-                        What problem are you trying to solve with HiringBull?
+                        What is the main issue you are facing in your job search?
+                      </div>
+                      <div className="status">
+                        {renderStatus(formData.reasonOption, true)}
                       </div>
                     </div>
-                    <textarea
-                      value={formData.reason}
-                      onChange={handleChange("reason")}
-                      placeholder="1–2 lines is enough (early alerts, less competition, etc.)"
-                      aria-required="true"
-                    />
-                  </div>
-                </div>
 
-                {/* Info Text */}
-                <p className="acknowledgement">
-                  Membership activates immediately after payment. Applications are reviewed within 24–48 hours, and if not approved, your payment is automatically refunded — no questions asked. Currently, HiringBull is focused on supporting candidates with less than 3 years of professional experience.
-                </p>
+                    <div className="options">
+                      <label>
+                        <input
+                          type="radio"
+                          name="reason"
+                          value="want_notifications"
+                          checked={formData.reasonOption === "want_notifications"}
+                          onChange={handleChange("reasonOption")}
+                        />
+                        <div className="text">
+                          I don’t want to constantly search for jobs, I want to get notified
+                        </div>
+                      </label>
 
-                {/* Acknowledgement */}
-                <div className="checkbox-input">
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={formData.acknowledged}
-                      onChange={(e) =>
-                        setFormData(prev => ({
-                          ...prev,
-                          acknowledged: e.target.checked
-                        }))
-                      }
-                    />
-                    I understand the membership and refund policy
-                  </label>
+                      <label>
+                        <input
+                          type="radio"
+                          name="reason"
+                          value="late_job_alerts"
+                          checked={formData.reasonOption === "late_job_alerts"}
+                          onChange={handleChange("reasonOption")}
+                        />
+                        <div className="text">
+                          I usually find openings too late, after hundreds of people have applied
+                        </div>
+                      </label>
 
-                  {submitted && errors.acknowledged && (
-                    <div className="status">
-                      <InfoIcon />
-                      <span>{errors.acknowledged}</span>
+                      <label>
+                        <input
+                          type="radio"
+                          name="reason"
+                          value="too_much_competition"
+                          checked={formData.reasonOption === "too_much_competition"}
+                          onChange={handleChange("reasonOption")}
+                        />
+                        <div className="text">
+                          There’s too much competition on job portals, and my application gets lost
+                        </div>
+                      </label>
+
+
+                      <label>
+                        <input
+                          type="radio"
+                          name="reason"
+                          value="no_responses"
+                          checked={formData.reasonOption === "no_responses"}
+                          onChange={handleChange("reasonOption")}
+                        />
+                        <div className="text">
+                          I apply to many roles but rarely receive interview calls or responses
+                        </div>
+                      </label>
+
+                      <label>
+                        <input
+                          type="radio"
+                          name="reason"
+                          value="no_referrals"
+                          checked={formData.reasonOption === "no_referrals"}
+                          onChange={handleChange("reasonOption")}
+                        />
+                        <div className="text">
+                          I don’t have referrals or connections inside companies
+                        </div>
+                      </label>
+
+                      <label>
+                        <input
+                          type="radio"
+                          name="reason"
+                          value="not_finding_relevant_roles"
+                          checked={formData.reasonOption === "not_finding_relevant_roles"}
+                          onChange={handleChange("reasonOption")}
+                        />
+                        <div className="text">
+                          I struggle to find roles that actually match my skills and experience
+                        </div>
+                      </label>
+
+                      <label>
+                        <input
+                          type="radio"
+                          name="reason"
+                          value="confused_where_to_apply"
+                          checked={formData.reasonOption === "confused_where_to_apply"}
+                          onChange={handleChange("reasonOption")}
+                        />
+                        <div className="text">
+                          I’m not sure where to apply or how to track good openings consistently
+                        </div>
+                      </label>
+
+                      <label>
+                        <input
+                          type="radio"
+                          name="reason"
+                          value="confused_where_to_apply"
+                          checked={formData.reasonOption === "confused_where_to_apply"}
+                          onChange={handleChange("reasonOption")}
+                        />
+                        <div className="text">
+                          None of the above
+                        </div>
+                      </label>
                     </div>
-                  )}
+                  </div>
                 </div>
 
                 {/* Global Error */}
@@ -823,190 +899,198 @@ const Container = styled.div`
 `;
 
 const Navbar = styled.div`
-  position: relative;
-  z-index: 10;
-  width: 100vw; 
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);   
+  width: 100%;
+  max-width: 100%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
   display: flex;
   flex-direction: column;
 
-  .top{
+  .top {
     height: 40px;
     border-bottom: 1px solid black;
-    
-    display: flex; 
-    align-items: center;  
+
+    display: flex;
+    align-items: center;
     justify-content: center;
     padding: 0 20px;
 
-    background-color: #ffc502;
+    background-color: #000000;
+    color: white;
 
     font-size: 0.85rem;
     font-weight: 300;
-    
-    span{
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+
+    span {
+      color: white;
       margin-right: 5px;
       font-weight: 500;
     }
 
-    .download-btn{
+    p{
+      color: #d4d1d1;
+    }
+
+    .download-btn {
       margin-left: 5px;
       padding: 5px 10px;
-      background-color: black;
+      background-color: #312f2f;
       color: white;
       border-radius: 100px;
       cursor: pointer;
       font-size: 0.75rem;
+      white-space: nowrap;
+
+      b{
+        display: none;
+      }
     }
   }
 
-  .bottom{
+  .bottom {
     height: 45px;
-    border-bottom: 1px solid black;
-    background-color: black;
+    /* background-color: whitesmoke; */
+    border-bottom: 1px solid #e1dbdb;
 
-    display: flex; 
-    align-items: center;  
-    justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     padding: 0 50px;
 
-
-    .middle{
+    .left {
+      width: auto;
       height: 30px;
 
-      display: flex;  
+      display: flex;
       align-items: center;
       cursor: pointer;
 
       text-transform: uppercase;
       font-size: 1.1rem;
-      font-weight: 600; 
+      font-weight: 600;
       letter-spacing: 1.5px;
-      color: yellow;
 
-      img{
+      img {
         height: 26px;
         scale: 1.75;
-        margin: 0 20px;
-      }
-
-      svg{
-        font-size: 1.5rem;
-        margin: 0 10px;
-        fill: yellow;
+        margin-right: 12px;
       }
     }
-  }
 
-  .info{
-    display: flex;
-    align-items: center;
-    padding: 10px 10px 0px 10px;
-    background-color: white;
-    /* background-color: #ffc60040; */
-    /* border: 1px solid #ffc60070; */
-    border-radius: 10px;
-    
-    svg{
-      font-size: 1.5rem;
-      margin-right: 10px;
-      fill: #efc030;
-    }
-    
-    .text{
-      font-size: 0.85rem;
-      font-weight: 300;
+    .right {
+      display: flex;
+      align-items: center;
+      gap: 25px;
+
+      a {
+        text-decoration: none;
+        color: black;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+      }
+
+      .type2 {
+        padding: 5px 15px;
+        border-radius: 100px;
+        cursor: pointer;
+
+        background-color: black;
+        color: #ffffff;
+
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      svg {
+        font-size: 1.25rem;
+        fill: #ffc502;
+      }
+
+      img {
+        height: 25px;
+        margin-top: 6px;
+      }
     }
   }
 
   /* ========================= */
-    /* 📱 MOBILE (≤500px) */
-    /* ========================= */
-    @media (max-width: 500px) {
-      padding: 0;
+  /* 📱 MOBILE (≤500px) */
+  /* ========================= */
 
-      .top{
-        height: 40px;
-        border-bottom: 1px solid black;
-        
-        display: flex; 
-        align-items: center;  
-        justify-content: center;
-        padding: 0 20px;
+  @media (max-width: 500px) {
+    .top {
+      padding: 0 12px;
+      font-size: 0.75rem;
 
-        background-color: #ffc502;
+      p{
+        display: none;
+      }
 
-        font-size: 0.85rem;
-        font-weight: 300;
-        
-        span{
-          margin-right: 5px;
-          font-weight: 500;
-        }
+      span{
+        display: none;
+      }
 
-        .download-btn{
-          margin-left: 5px;
-          padding: 5px 10px;
-          background-color: black;
+
+      .download-btn {
+        padding: 4px 8px;
+        font-size: 0.7rem;
+
+        b{
+          display: inline;
           color: white;
-          border-radius: 100px;
-          cursor: pointer;
-          font-size: 0.75rem;
+          font-weight: 600;
         }
       }
-
-      .bottom{
-        height: 45px;
-        border-bottom: 1px solid black;
-        background-color: black;
-
-        display: flex; 
-        align-items: center;  
-        justify-content: center;
-        padding: 0;
-
-
-        .middle{
-          height: 30px;
-          font-size: 0.85rem;
-
-          img{
-            height: 20px;
-            scale: 1.75;
-            margin: 0 20px;
-          }
-
-          svg{
-            font-size: 1.5rem;
-            margin: 0 10px;
-            fill: yellow;
-          }
-        }
-      }
-
-      .info{
-        display: flex;
-        align-items: center;
-        padding: 10px;
-        background-color: white;
-        /* background-color: #ffc60040; */
-        /* border: 1px solid #ffc60070; */
-        border-radius: 10px;
-        
-        svg{
-          font-size: 1.25rem;
-          margin-right: 10px;
-          fill: #efc030;
-        }
-        
-        .text{
-          font-size: 0.75rem;
-          font-weight: 300;
-        }
-      }
-
     }
+
+    .bottom {
+      padding: 0 16px;
+      height: 52px;
+
+      .left {
+        font-size: 0.9rem;
+        letter-spacing: 1px;
+
+        img {
+          height: 22px;
+          scale: 1.4;
+          margin-right: 8px;
+        }
+      }
+
+      .right {
+        gap: 12px;
+
+        /* Hide normal links on mobile */
+        a {
+          display: none;
+        }
+
+        /* Keep primary CTA */
+        .type2 {
+          padding: 5px 12px;
+          font-size: 0.75rem;
+        }
+
+        svg {
+          font-size: 1.1rem;
+        }
+
+        img {
+          height: 22px;
+          margin-top: 0;
+        }
+      }
+    }
+  }
 `;
 
 
@@ -1102,6 +1186,7 @@ const Pagination = styled.div`
     margin: 0 auto;
     scale: 0.8;
     padding-bottom: 25px;
+    padding-top: 20px;
   }  
 `
 
@@ -1153,9 +1238,7 @@ const OneContent = styled.div`
     text-align: left;
 
     b{
-      font-weight: 500;
-      background-color: #ffc60042;
-      padding: 0 10px;
+      font-weight: 400;
     }
   }
 
@@ -1233,21 +1316,20 @@ const OneContent = styled.div`
         background-color: #fafafa;
         border: 1px solid #d5d5d5;
         width: 100%;
-        padding: 5px 10px;
-        font-size: 0.85rem;
+        padding: 7.5px 12.5px;
+        font-size: 0.75rem;
         font-weight: 300;
-        letter-spacing: 0.1rem;
-        transition: all 0.2s ease;
-        border-radius: 4px;
+        letter-spacing: 0.07rem;
+        border-radius: 100px;
         
         &:focus {
           outline: none;
-          border-color: #ffc600;
-          box-shadow: 0 0 0 2px rgba(255, 198, 0, 0.2);
+          border: 1px solid #939393;
+          box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.8);
         }
         
         &:hover {
-          border-color: #b0b0b0;
+          border: 1px solid #939393;
         }
         
         &:disabled {
@@ -1277,6 +1359,26 @@ const OneContent = styled.div`
         
         &:hover {
           border-color: #b0b0b0;
+        }
+      }
+
+      .options{
+        display: flex;
+        flex-direction: column;
+
+        label{ 
+          cursor: pointer;
+          height: 50px;
+          display: flex;
+          align-items: center;
+          justify-content: flex-start;
+
+          input{
+            width: 30px;
+          }
+
+          font-size: 0.85rem;
+          font-weight: 300;
         }
       }
     }
@@ -1319,93 +1421,6 @@ const OneContent = styled.div`
       margin-bottom: 15px;
       text-align: left;
     }
-    
-    .dropdown-container{
-      width: 100%;
-      max-width: 300px;
-      
-      .experience-dropdown{
-        width: 100%;
-        padding: 12px 40px 12px 16px;
-        font-size: 0.9rem;
-        font-weight: 500;
-        color: #333;
-        background-color: white;
-        border: 2px solid #e0e0e0;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        outline: none;
-        appearance: none;
-        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
-        background-repeat: no-repeat;
-        background-position: right 12px center;
-        background-size: 20px;
-        
-        &:hover{
-          border-color: #ffc600;
-        }
-        
-        &:focus{
-          border-color: #ffc600;
-          box-shadow: 0 0 0 0px rgba(255, 198, 0, 0);
-        }
-        
-        option{
-          padding: 12px 16px;
-          font-size: 0.9rem;
-          color: #333;
-          background-color: white;
-        }
-      }
-    }
-  }
-
-  .checkbox-input{
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    margin: 25px 0 15px 0;
-    padding-left: 2px;
-
-    
-
-    input{
-      margin-right: 8px;
-      scale: 1.25;
-      vertical-align: middle;
-    }
-    
-    label {
-      display: flex;
-      align-items: center;
-      cursor: pointer;
-
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1rem;
-      font-weight: 600;
-    }
-
-    .status{
-      min-width: 80px;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      
-
-      svg{
-        font-size: 1rem;
-        margin-right: 2.5px;
-      }
-
-      span{
-        font-size: 0.7rem;
-        text-align: right;
-      }
-    } 
   }
 
   .container600{
@@ -1622,20 +1637,29 @@ const OneContent = styled.div`
       /* flex-direction: column; */
       
       input{
-        background-color: #f5f5f5;
-        border: 1px solid #b2b0b0;
+        background-color: #fafafa;
+        border: 1px solid #d5d5d5;
         width: 100%;
-        padding: 7.5px 10px;
-        font-size: 0.85rem;
+        padding: 7.5px 12.5px;
+        font-size: 0.75rem;
         font-weight: 300;
-        border-radius: 10px;
-        margin-right: 20px;
-        transition: all 0.2s ease;
+        letter-spacing: 0.07rem;
+        border-radius: 100px;
+        margin-right: 10px;
         
         &:focus {
           outline: none;
-          border-color: #ffc600;
-          box-shadow: 0 0 0 2px rgba(255, 198, 0, 0.2);
+          border: 1px solid #939393;
+          box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.8);
+        }
+        
+        &:hover {
+          border: 1px solid #939393;
+        }
+        
+        &:disabled {
+          background-color: #f0f0f0;
+          cursor: not-allowed;
         }
       }
 
@@ -1712,7 +1736,9 @@ const OneContent = styled.div`
   }
 
   @media (max-width: 500px) {
-    padding: 0 30px;
+    padding: 10px 30px;
+
+
     h1{
       font-size: 1.5rem;
       text-align: left;
@@ -1761,49 +1787,7 @@ const OneContent = styled.div`
         }
 
         input{
-          background-color: #fafafa;
-          border: 1px solid #d5d5d5;
           width: 100%;
-          padding: 7.5px 10px;
-          font-size: 0.85rem;
-          font-weight: 300;
-          letter-spacing: 0.1rem;
-          transition: all 0.2s ease;
-          border-radius: 4px;
-          
-          &:focus {
-            outline: none;
-            border-color: #ffc600;
-            box-shadow: 0 0 0 2px rgba(255, 198, 0, 0.2);
-          }
-          
-          &:hover {
-            border-color: #b0b0b0;
-          }
-        }
-
-        textarea{
-          background-color: #fafafa;
-          border: 1px solid #d5d5d5;
-          width: 100%;
-          padding: 7.5px 10px;
-          font-size: 0.85rem;
-          font-weight: 300;
-          letter-spacing: 0.05rem;
-          height: 160px;
-          transition: all 0.2s ease;
-          border-radius: 4px;
-          resize: vertical;
-          
-          &:focus {
-            outline: none;
-            border-color: #ffc600;
-            box-shadow: 0 0 0 2px rgba(255, 198, 0, 0.2);
-          }
-          
-          &:hover {
-            border-color: #b0b0b0;
-          }
         }
       }
     }
@@ -1827,21 +1811,7 @@ const OneContent = styled.div`
         gap: 10px;
         
         input{
-          background-color: #f5f5f5;
-          border: 1px solid #b2b0b0;
           width: 100%;
-          padding: 7.5px 10px;
-          font-size: 0.85rem;
-          font-weight: 300;
-          border-radius: 10px;
-          margin-right: 0;
-          transition: all 0.2s ease;
-          
-          &:focus {
-            outline: none;
-            border-color: #ffc600;
-            box-shadow: 0 0 0 2px rgba(255, 198, 0, 0.2);
-          }
         }
 
         button{
@@ -1870,6 +1840,21 @@ const OneContent = styled.div`
     .next-btn{
       width: 100%;
       text-align: center;
+    }
+
+    .options{
+      label{
+        height: 180px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        margin-bottom: 10px;
+
+        input{
+          width: 40px;
+        }
+      } 
+      
     }
   }
 `

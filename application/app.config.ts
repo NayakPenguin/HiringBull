@@ -48,6 +48,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     typedRoutes: true,
   },
   android: {
+    versionCode: 4, 
     adaptiveIcon: {
       foregroundImage: './assets/adaptive-icon.png',
       backgroundColor: '#2E3C4B',
