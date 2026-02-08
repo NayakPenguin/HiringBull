@@ -805,6 +805,7 @@ const Container = styled.div`
   }
 `;
 
+
 const Navbar = styled.div`
   width: 100%;
   max-width: 100%;

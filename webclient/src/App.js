@@ -9,10 +9,9 @@ import Privacy from "./Screens/Privacy";
 import Refund from "./Screens/Refund";
 import Referral from "./Screens/Referral";
 import TrailJobs from "./Screens/TrailJobs";
+import FreeJobs from "./Screens/FreeJobs";
 import TestPayment from "./Screens/TestPayment";
 import AddJobs from "./Screens/AddJobs";
-
-
 
 const App = () => {
   return (
@@ -26,6 +25,7 @@ const App = () => {
         <Route path="/refund" element={<Refund />} />
         <Route path="/referral-program" element={<Referral />} />
         <Route path="/jobs" element={<TrailJobs />} />
+        <Route path="/jobs-updates" element={<FreeJobs />} />
         <Route path="/test-payment" element={<TestPayment />} />
         <Route path="/add-jobs-manual" element={<AddJobs />} />
       </Routes>
