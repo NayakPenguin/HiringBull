@@ -5,6 +5,7 @@ import logo from '../utils/logo.png';
 import FavoriteBorderIcon from '@material-ui/icons/FavoriteBorder';
 import FavoriteIcon from '@material-ui/icons/Favorite';
 import CallMadeIcon from '@material-ui/icons/CallMade';
+import SearchIcon from '@material-ui/icons/Search';
 
 const CACHE_KEY = "freeJobs";
 const TIMESTAMP_KEY = "freeJobsTimestamp";
@@ -74,15 +75,38 @@ const FreeJobs = () => {
     loadJobs();
   }, []);
 
+  function formatPostedTime(dateString) {
+  const now = new Date();
+  const posted = new Date(dateString);
+  const diffMs = now - posted;
+
+  const seconds = Math.floor(diffMs / 1000);
+  const minutes = Math.floor(diffMs / (1000 * 60));
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const weeks = Math.floor(days / 7);
+
+  if (seconds < 60) return `Posted ${seconds} second${seconds !== 1 ? "s" : ""} ago`;
+  if (minutes < 60) return `Posted ${minutes} min ago`;
+  if (hours < 24) return `Posted ${hours} hour${hours !== 1 ? "s" : ""} ago`;
+  if (days === 1) return `Posted Yesterday`;
+  if (days < 7) return `Posted ${days} days ago`;
+  if (weeks === 1) return `Posted 1 week ago`;
+  if (weeks < 4) return `Posted few weeks ago`;
+
+  const months = Math.floor(days / 30);
+  if (months === 1) return `Posted 1 month ago`;
+  if (months < 12) return `Posted ${months} months ago`;
+
+  const years = Math.floor(days / 365);
+  return `Posted ${years} year${years !== 1 ? "s" : ""} ago`;
+}
+
   return (
     <Container>
       <Navbar>
         <div className="top">
-          <span>Using the free version?</span>
-          <p>See jobs from 25 companies with a 48-hour delay.</p>
-          <div className="download-btn">
-            Get the App for <b>Real-Time Alerts from 100+ Companies</b> ↗
-          </div>
+          <span>Already a member?</span> <p>Stay ahead with the HiringBull app on Google Play Store</p> <div className="download-btn">Download <b>HiringBull Membership App</b> Now ↗</div>
         </div>
 
         <div className="bottom">
@@ -100,7 +124,16 @@ const FreeJobs = () => {
 
       <Page>
         <Main>
-          <div className="controls">
+          <div className="top-info">
+            <h1>Explore Jobs <span>Free Version</span></h1>
+            <p className='desc'>Find your dream job from our curated list of opportunities. This is the free version, where jobs are displayed with a 24–48 hour delay. For instant alerts and early access, try our app and get notified the moment a new job goes live.</p>
+          </div>
+          <div className="search-bar">
+            <input type="text" placeholder='Search company or job title ...' />
+            <SearchIcon />
+          </div>
+
+          {/* <div className="controls">
             <button onClick={fetchJobsFromAPI} disabled={loading}>
               {loading ? "Refreshing..." : "Refresh Jobs"}
             </button>
@@ -110,7 +143,7 @@ const FreeJobs = () => {
                 Last updated: {lastUpdated.toLocaleString()}
               </span>
             )}
-          </div>
+          </div> */}
 
           <div className="all-jobs">
             {loading ? (
@@ -124,8 +157,6 @@ const FreeJobs = () => {
                 <div
                   className="job"
                   key={index}
-                  onClick={() => window.open(job.careerpage_link || "#", "_blank")}
-                  style={{ cursor: "pointer" }}
                 >
                   <div className="left">
                     {job.companyRel && job.companyRel.logo ? (
@@ -138,14 +169,26 @@ const FreeJobs = () => {
                     )}
                   </div>
                   <div className="center">
-                    <p className="title">{job.title}</p>
+                    <p className="title">
+                      {job.title}
+                      <span>
+                        {job.segment
+                          ?.toLowerCase()
+                          .split("_")
+                          .join(" ")
+                          .replace(/\b\w/g, (c) => c.toUpperCase())}
+                      </span>
+                    </p>
                     <p className="company">{job.company}</p>
-                    <div className="tags">
-                      {job.tags && job.tags.map((tag, idx) => (
+                    {/* <div className="tags">
+                      {job.tags && job.tags.slice(0, 3).map((tag, idx) => (
                         <span key={idx} className="tag">
                           {tag}
                         </span>
                       ))}
+                    </div> */}
+                    <div className="date">
+                      {formatPostedTime(job.created_at)}
                     </div>
                   </div>
 
@@ -153,7 +196,8 @@ const FreeJobs = () => {
                     <div className="button">
                       <FavoriteBorderIcon />
                     </div>
-                    <div className="button">
+                    <div className="button" onClick={() => window.open(job.careerpage_link || "#", "_blank")}
+                      style={{ cursor: "pointer" }}>
                       <CallMadeIcon />
                     </div>
                   </div>
@@ -262,7 +306,7 @@ const Navbar = styled.div`
       img {
         height: 26px;
         scale: 1.75;
-        margin-right: 12px;
+        margin-right: 20px;
       }
     }
 
@@ -394,7 +438,86 @@ const Main = styled.div`
   justify-content: flex-start;
   flex-direction: column;
 
-  padding: 0 20px;
+  padding: 20px 40px;
+  
+  .top-info{
+    h1 {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600; 
+      font-size: 1.75rem;
+
+      span{
+        font-size: 0.75rem; 
+        background-color: #21f488;
+        color: #000000;
+        padding: 5px 10px;
+        border-radius: 100px;
+        font-weight: 500;
+      }
+    }   
+
+    .desc{
+      margin-top: 10px;
+      font-size: 0.9rem;
+      font-weight: 300;
+      color: #0000008a;
+    }
+  }
+  
+  .search-bar{
+    width: 100%;
+    height: 60px;
+    background-color: #fff;
+    border: 1px solid #e1dbdb;
+    border-radius: 100px;
+    margin-top: 20px;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 0 25px;
+
+    input{
+      flex: 1;
+      height: 100%;
+      border: none;
+      outline: none;
+      font-size: 0.9rem;
+      border-radius: 100px;
+    }
+
+    svg{
+      font-size: 1.75rem;
+      fill: #0000008a;
+    } 
+  }
+
+  .controls{
+    button{
+      font-size: 0.75rem; 
+      border: none;
+      /* background-color: transparent; */
+      padding: 5px 10px;
+      border-radius: 100px;
+      background-color: #000;
+      color: #fff;
+    }
+
+    font-size: 0.85rem; 
+    color: #0000008a;
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+
+    .last-updated{
+      font-size: 0.75rem;
+      color: #0000005e;
+    }
+  }
 
   .all-jobs{
     width: 100%;
@@ -436,6 +559,17 @@ const Main = styled.div`
         .title{ 
           font-size: 1.1rem;
           font-weight: 500;
+          
+          span{
+            margin-left: 10px;
+            display: inline-block;
+            font-size: 0.65rem;
+            background-color: #f6f6f6;
+            color: #000000;
+            padding: 5px 10px;
+            border-radius: 100px;
+            font-weight: 400; 
+          }
         }
 
         .tags{
@@ -445,7 +579,7 @@ const Main = styled.div`
           margin-top: 8px;
 
           .tag{
-            font-size: 0.75rem;
+            font-size: 0.65rem;
             padding: 3px 8px;
             background-color: #f6f6f6;
             color: #000000;
@@ -453,6 +587,14 @@ const Main = styled.div`
             display: inline-block;
             margin-top: 8px;  
           }
+        }
+
+        .date{
+          margin-top: 10px;
+          padding-top: 10px;
+          border-top: 1px solid #e1dbdb7d;
+          font-size: 0.65rem;
+          color: #0000005e;
         }
       }
 
@@ -462,9 +604,10 @@ const Main = styled.div`
         gap: 10px;
 
         .button{
-          height: 60px;
+          height: 50px;
           aspect-ratio: 1/1;
-          background-color: #f6f6f6;
+          background-color: whitesmoke;
+          border: 1px solid #333;
           border-radius: 100px;
           cursor: pointer;
           font-size: 0.75rem;
@@ -474,7 +617,7 @@ const Main = styled.div`
           place-items: center;
 
           svg{
-            font-size: 1.25rem;
+            font-size: 1.5rem;
             /* fill: white; */
           }
         } 

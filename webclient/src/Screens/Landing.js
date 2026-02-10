@@ -887,7 +887,7 @@ const Navbar = styled.div`
       img {
         height: 26px;
         scale: 1.75;
-        margin-right: 12px;
+        margin-right: 20px;
       }
     }
 
