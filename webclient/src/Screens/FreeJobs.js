@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import OfflineBoltIcon from '@material-ui/icons/OfflineBolt';
 import logo from '../utils/logo.png';
+import logoBig from '../utils/logo-big.png';
 import FavoriteBorderIcon from '@material-ui/icons/FavoriteBorder';
 import FavoriteIcon from '@material-ui/icons/Favorite';
 import CallMadeIcon from '@material-ui/icons/CallMade';
@@ -76,31 +77,39 @@ const FreeJobs = () => {
   }, []);
 
   function formatPostedTime(dateString) {
-  const now = new Date();
-  const posted = new Date(dateString);
-  const diffMs = now - posted;
+    const now = new Date();
+    const posted = new Date(dateString);
+    const diffMs = now - posted;
 
-  const seconds = Math.floor(diffMs / 1000);
-  const minutes = Math.floor(diffMs / (1000 * 60));
-  const hours = Math.floor(diffMs / (1000 * 60 * 60));
-  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  const weeks = Math.floor(days / 7);
+    const seconds = Math.floor(diffMs / 1000);
+    const minutes = Math.floor(diffMs / (1000 * 60));
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const weeks = Math.floor(days / 7);
 
-  if (seconds < 60) return `Posted ${seconds} second${seconds !== 1 ? "s" : ""} ago`;
-  if (minutes < 60) return `Posted ${minutes} min ago`;
-  if (hours < 24) return `Posted ${hours} hour${hours !== 1 ? "s" : ""} ago`;
-  if (days === 1) return `Posted Yesterday`;
-  if (days < 7) return `Posted ${days} days ago`;
-  if (weeks === 1) return `Posted 1 week ago`;
-  if (weeks < 4) return `Posted few weeks ago`;
+    if (seconds < 60) return `Posted ${seconds} second${seconds !== 1 ? "s" : ""} ago`;
+    if (minutes < 60) return `Posted ${minutes} min ago`;
+    if (hours < 24) return `Posted ${hours} hour${hours !== 1 ? "s" : ""} ago`;
+    if (days === 1) return `Posted Yesterday`;
+    if (days < 7) return `Posted ${days} days ago`;
+    if (weeks === 1) return `Posted 1 week ago`;
+    if (weeks < 4) return `Posted few weeks ago`;
 
-  const months = Math.floor(days / 30);
-  if (months === 1) return `Posted 1 month ago`;
-  if (months < 12) return `Posted ${months} months ago`;
+    const months = Math.floor(days / 30);
+    if (months === 1) return `Posted 1 month ago`;
+    if (months < 12) return `Posted ${months} months ago`;
 
-  const years = Math.floor(days / 365);
-  return `Posted ${years} year${years !== 1 ? "s" : ""} ago`;
-}
+    const years = Math.floor(days / 365);
+    return `Posted ${years} year${years !== 1 ? "s" : ""} ago`;
+  }
+
+  const premiumFeatures = [
+    "Early alerts from verified career pages",
+    "Get referrals through direct outreach to employees.",
+    "Curated hiring signals from social posts",
+    "Priority support & profile boosting",
+    "Free mock interviews with employees"
+  ];
 
   return (
     <Container>
@@ -128,9 +137,15 @@ const FreeJobs = () => {
             <h1>Explore Jobs <span>Free Version</span></h1>
             <p className='desc'>Find your dream job from our curated list of opportunities. This is the free version, where jobs are displayed with a 24–48 hour delay. For instant alerts and early access, try our app and get notified the moment a new job goes live.</p>
           </div>
-          <div className="search-bar">
-            <input type="text" placeholder='Search company or job title ...' />
-            <SearchIcon />
+          <div className="controls">
+            <div className="search-bar">
+              <input type="text" placeholder='Search company or job title ...' />
+              <SearchIcon />
+            </div>
+            <div className="download-excel">
+              Download Excel
+              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Microsoft_Office_Excel_%282019%E2%80%932025%29.svg/960px-Microsoft_Office_Excel_%282019%E2%80%932025%29.svg.png" alt="" />
+            </div>
           </div>
 
           {/* <div className="controls">
@@ -206,6 +221,29 @@ const FreeJobs = () => {
             )}
           </div>
         </Main>
+        <Advertisement>
+          <div className="one-ad">
+            <img src={logoBig} alt="HiringBull Logo" />
+            <h2>Don't Let 48 Hours Cost You the Job.</h2>
+            <p>Free users see jobs 2 days late. Premium members apply the moment they go live. Be the first applicant, not the last.</p>
+
+            <div className="features">
+              {premiumFeatures.map((text, index) => (
+                <div className="feature" key={index}>
+                  <OfflineBoltIcon />
+                  <div className="text">{text}</div>
+                </div>
+              ))}
+            </div>
+            <a href="/join-membership" className="apply-btn">
+              Apply for Membership <OfflineBoltIcon />
+            </a>
+            <a href="/join-membership" className="demo-btn">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/YouTube_full-color_icon_%282017%29.svg/960px-YouTube_full-color_icon_%282017%29.svg.png" alt="" />
+              Watch App Demo Video ↗
+            </a>          
+          </div>
+        </Advertisement>
       </Page>
     </Container>
   );
@@ -432,7 +470,7 @@ const Page = styled.div`
 `
 
 const Main = styled.div`
-  width: calc(100% - 500px);
+  width: calc(100% - 400px);
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
@@ -466,33 +504,59 @@ const Main = styled.div`
     }
   }
   
-  .search-bar{
+  .controls{
     width: 100%;
-    height: 60px;
-    background-color: #fff;
-    border: 1px solid #e1dbdb;
-    border-radius: 100px;
-    margin-top: 20px;
-
     display: flex;
     align-items: center;
-    gap: 10px;
+    margin-top: 20px;
 
-    padding: 0 25px;
-
-    input{
+    .search-bar{
       flex: 1;
-      height: 100%;
-      border: none;
-      outline: none;
-      font-size: 0.9rem;
+      height: 60px;
+      background-color: #fff;
+      border: 1px solid #e1dbdb;
       border-radius: 100px;
+  
+      display: flex;
+      align-items: center;
+      gap: 10px;
+  
+      padding: 0 25px;
+  
+      input{
+        flex: 1;
+        height: 100%;
+        border: none;
+        outline: none;
+        font-size: 0.9rem;
+        border-radius: 100px;
+      }
+  
+      svg{
+        font-size: 1.75rem;
+        fill: #0000008a;
+      } 
     }
 
-    svg{
-      font-size: 1.75rem;
-      fill: #0000008a;
-    } 
+    .download-excel{
+      height: 60px;
+      background-color: #fff;
+      border: 1px solid #e1dbdb;
+      border-radius: 100px;
+
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      padding: 0 20px;
+      cursor: pointer;
+
+      font-weight: 500;
+
+      img{
+        height: 25px;
+      }
+    }
   }
 
   .controls{
@@ -625,4 +689,113 @@ const Main = styled.div`
     } 
   }
 
+`;
+
+const Advertisement = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: calc(400px - 50px);
+  
+  .one-ad{
+    background-color: #fff;
+    border: 1px solid #e1dbdb;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+  
+    img {
+      max-width: 70%;
+      border-radius: 10px;
+    }
+
+    .youtube-icon{
+      height: 40px;
+      display: inline-block;
+    }
+  
+    h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+  
+    p {
+      font-size: 0.9rem;
+      color: #0000008a;
+    }
+  
+    .features{
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+      margin-top: 15px;
+      gap: 10px;
+      
+      .feature{
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 10px; 
+        .text{
+          font-size: 0.85rem;
+          color: #0000008a;
+        }
+  
+        svg{
+          font-size: 1.5rem;
+          fill: #000;
+        }
+      } 
+    }
+  
+    .apply-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 20px;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 10px 15px;
+      border-radius: 100px;
+      cursor: pointer;
+  
+      background-color: black;
+      color: #ffffff;
+  
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .demo-btn{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 10px;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 10px 15px;
+      border-radius: 100px;
+      cursor: pointer;
+
+      background-color: transparent;
+      color: black;
+      border: 1px solid #fbdfdf;
+
+      display: flex;
+      align-items: center;
+      gap: 5px; 
+
+      img{
+        height: 20px;
+        margin-right: 5px;
+      }
+    }
+  
+    svg {
+      font-size: 1.25rem;
+      fill: #ffc502;
+    }
+  }
 `;
