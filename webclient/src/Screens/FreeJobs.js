@@ -7,6 +7,7 @@ import FavoriteBorderIcon from '@material-ui/icons/FavoriteBorder';
 import FavoriteIcon from '@material-ui/icons/Favorite';
 import CallMadeIcon from '@material-ui/icons/CallMade';
 import SearchIcon from '@material-ui/icons/Search';
+import * as XLSX from "xlsx";
 
 const CACHE_KEY = "freeJobs";
 const TIMESTAMP_KEY = "freeJobsTimestamp";
@@ -140,6 +141,24 @@ const FreeJobs = () => {
     );
   }, [jobs, search]);
 
+  const downloadExcel = () => {
+    if (!filteredJobs.length) return;
+
+    const data = filteredJobs.map((job) => ({
+      Title: job.title || "",
+      Company: job.company || "",
+      Segment: job.segment || "",
+      "Job Link": job.careerpage_link || "",
+      Applied: "No", // default column
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Jobs");
+
+    XLSX.writeFile(workbook, "HiringBull_Jobs.xlsx");
+  };
+
   return (
     <Container>
       <Navbar>
@@ -185,7 +204,13 @@ const FreeJobs = () => {
               />
               <SearchIcon />
             </div>
-            <div className="download-excel"> Download Excel <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Microsoft_Office_Excel_%282019%E2%80%932025%29.svg/960px-Microsoft_Office_Excel_%282019%E2%80%932025%29.svg.png" alt="" /> </div>
+            <div className="download-excel" onClick={downloadExcel}>
+              Download Excel
+              <img
+                src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Microsoft_Office_Excel_%282019%E2%80%932025%29.svg/960px-Microsoft_Office_Excel_%282019%E2%80%932025%29.svg.png"
+                alt=""
+              />
+            </div>
           </div>
 
           <div className="showing-results">
@@ -218,7 +243,7 @@ const FreeJobs = () => {
 
                     <div className="center">
                       <p className="title">
-                        {job.title}
+                        <p>{job.title}</p>
                         <span>
                           {job.segment
                             ?.toLowerCase()
@@ -240,7 +265,7 @@ const FreeJobs = () => {
                         style={{ cursor: "pointer" }}
                       >
                         {isFav
-                          ? <FavoriteIcon/>
+                          ? <FavoriteIcon />
                           : <FavoriteBorderIcon />
                         }
                       </div>
@@ -427,10 +452,6 @@ const Navbar = styled.div`
     }
   }
 
-  /* ========================= */
-  /* 📱 MOBILE (≤500px) */
-  /* ========================= */
-
   @media (max-width: 500px) {
     .top {
       padding: 0 12px;
@@ -598,6 +619,10 @@ const Main = styled.div`
       img{
         height: 25px;
       }
+
+      @media (max-width: 1100px) {
+        display: none;
+      }
     }
   }
 
@@ -649,9 +674,13 @@ const Main = styled.div`
         .title{ 
           font-size: 1.1rem;
           font-weight: 500;
+
+          p{
+            margin-right: 10px;
+            display: inline-block;
+          }
           
           span{
-            margin-left: 10px;
             display: inline-block;
             font-size: 0.65rem;
             background-color: #f6f6f6;
@@ -735,6 +764,101 @@ const Main = styled.div`
     } 
   }
 
+  @media (max-width: 1100px) {
+    width: 100%;
+
+    padding: 20px;
+
+    .all-jobs{
+      .job{
+        position: relative;
+        width: 100%;
+        height: auto;
+
+        display: flex;  
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+
+        padding: 20px;
+        padding-bottom: 0;
+
+        .left{
+          height: auto;
+          
+          img{
+            height: 45px;
+          }
+        }
+        
+        .center{
+          flex: 1;
+          margin: 10px 0;
+
+          .title{ 
+            font-size: 1.1rem;
+            font-weight: 500; 
+          }
+
+          .date{
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e1dbdb7d;
+            font-size: 0.65rem;
+            color: #0000005e;
+          }
+        }
+
+        .right{
+          position: absolute;
+          top: 15px;
+          right: 15px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+
+          .button{
+            height: 30px;
+            aspect-ratio: 1/1;
+            /* background-color: whitesmoke; */
+            border: 1px solid #333;
+            border-radius: 100px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            white-space: nowrap;
+
+            display: grid;
+            place-items: center;
+
+            svg{
+              font-size: 1.15rem;
+              /* fill: white; */
+            }
+
+            &:hover{
+              background-color: #333;
+              border-color: #333;
+              transition-duration: 250ms;
+
+              svg{
+                fill: #fff;
+              }
+            }
+          } 
+
+          .fav{
+            /* background-color: #333; */
+            border-color: #333;
+            transition-duration: 250ms;
+
+            svg{
+              fill: #333;
+            }
+          }
+        }
+      } 
+    }
+  }
 `;
 
 const Advertisement = styled.div`
@@ -845,5 +969,9 @@ const Advertisement = styled.div`
       font-size: 1.25rem;
       fill: #ffc502;
     }
+  }
+
+  @media (max-width: 1100px) {
+    display: none;
   }
 `;

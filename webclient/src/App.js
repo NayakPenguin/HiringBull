@@ -25,7 +25,7 @@ const App = () => {
         <Route path="/refund" element={<Refund />} />
         <Route path="/referral-program" element={<Referral />} />
         <Route path="/jobs" element={<TrailJobs />} />
-        <Route path="/jobs-updates" element={<FreeJobs />} />
+        <Route path="/explore-jobs" element={<FreeJobs />} />
         <Route path="/test-payment" element={<TestPayment />} />
         <Route path="/add-jobs-manual" element={<AddJobs />} />
       </Routes>
