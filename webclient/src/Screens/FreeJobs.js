@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import styled from 'styled-components';
 import OfflineBoltIcon from '@material-ui/icons/OfflineBolt';
 import logo from '../utils/logo.png';
@@ -17,6 +17,12 @@ const FreeJobs = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [search, setSearch] = useState("");
+
+  const [favorites, setFavorites] = useState(() => {
+    const saved = localStorage.getItem("favoriteJobs");
+    return saved ? JSON.parse(saved) : {};
+  });
 
   const fetchJobsFromAPI = async () => {
     try {
@@ -34,7 +40,6 @@ const FreeJobs = () => {
       const data = await response.json();
       const jobsArray = data?.data || data || [];
 
-      // Save to cache
       localStorage.setItem(CACHE_KEY, JSON.stringify(jobsArray));
       localStorage.setItem(TIMESTAMP_KEY, Date.now().toString());
 
@@ -68,7 +73,6 @@ const FreeJobs = () => {
       }
     }
 
-    // Cache expired or not present
     fetchJobsFromAPI();
   };
 
@@ -106,16 +110,45 @@ const FreeJobs = () => {
   const premiumFeatures = [
     "Early alerts from verified career pages",
     "Get referrals through direct outreach to employees.",
-    "Curated hiring signals from social posts",
-    "Priority support & profile boosting",
-    "Free mock interviews with employees"
+    "Curated hiring posts from LinkedIn",
+    "Free mock interviews with employees",
+    "Priority support with insider connections",
   ];
+
+  const toggleFavorite = (job) => {
+    setFavorites((prev) => {
+      const updated = { ...prev };
+      const key = job.id;
+
+      if (updated[key]) {
+        delete updated[key];
+      } else {
+        updated[key] = job;
+      }
+
+      localStorage.setItem("favoriteJobs", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  // Filtered jobs based on search
+  const filteredJobs = useMemo(() => {
+    const text = search.toLowerCase();
+    return jobs.filter((job) =>
+      job.title?.toLowerCase().includes(text) ||
+      job.company?.toLowerCase().includes(text)
+    );
+  }, [jobs, search]);
 
   return (
     <Container>
       <Navbar>
         <div className="top">
-          <span>Already a member?</span> <p>Stay ahead with the HiringBull app on Google Play Store</p> <div className="download-btn">Download <b>HiringBull Membership App</b> Now ↗</div>
+          <span>Already a member?</span>
+          <p>Stay ahead with the HiringBull app on Google Play Store</p>
+          <div className="download-btn">
+            Download <b>HiringBull Membership App</b> Now ↗
+          </div>
         </div>
 
         <div className="bottom">
@@ -135,97 +168,108 @@ const FreeJobs = () => {
         <Main>
           <div className="top-info">
             <h1>Explore Jobs <span>Free Version</span></h1>
-            <p className='desc'>Find your dream job from our curated list of opportunities. This is the free version, where jobs are displayed with a 24–48 hour delay. For instant alerts and early access, try our app and get notified the moment a new job goes live.</p>
+            <p className='desc'>
+              Find your dream job from our curated list of opportunities.
+              This is the free version, where jobs are displayed with a
+              24–48 hour delay.
+            </p>
           </div>
+
           <div className="controls">
             <div className="search-bar">
-              <input type="text" placeholder='Search company or job title ...' />
+              <input
+                type="text"
+                placeholder="Search company or job title ..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
               <SearchIcon />
             </div>
-            <div className="download-excel">
-              Download Excel
-              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Microsoft_Office_Excel_%282019%E2%80%932025%29.svg/960px-Microsoft_Office_Excel_%282019%E2%80%932025%29.svg.png" alt="" />
-            </div>
+            <div className="download-excel"> Download Excel <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Microsoft_Office_Excel_%282019%E2%80%932025%29.svg/960px-Microsoft_Office_Excel_%282019%E2%80%932025%29.svg.png" alt="" /> </div>
           </div>
 
-          {/* <div className="controls">
-            <button onClick={fetchJobsFromAPI} disabled={loading}>
-              {loading ? "Refreshing..." : "Refresh Jobs"}
-            </button>
-
-            {lastUpdated && (
-              <span className="last-updated">
-                Last updated: {lastUpdated.toLocaleString()}
-              </span>
-            )}
-          </div> */}
+          <div className="showing-results">
+            Showing {filteredJobs.length} job
+            {filteredJobs.length !== 1 ? "s" : ""} with a 24–48 hour delay
+          </div>
 
           <div className="all-jobs">
             {loading ? (
               <p>Loading jobs...</p>
             ) : error ? (
               <p>Error loading jobs.</p>
-            ) : jobs.length === 0 ? (
-              <p>No jobs available.</p>
+            ) : filteredJobs.length === 0 ? (
+              <p>No jobs found.</p>
             ) : (
-              jobs.map((job, index) => (
-                <div
-                  className="job"
-                  key={index}
-                >
-                  <div className="left">
-                    {job.companyRel && job.companyRel.logo ? (
-                      <img
-                        src={job.companyRel.logo}
-                        alt={job.company}
-                      />
-                    ) : (
-                      null
-                    )}
-                  </div>
-                  <div className="center">
-                    <p className="title">
-                      {job.title}
-                      <span>
-                        {job.segment
-                          ?.toLowerCase()
-                          .split("_")
-                          .join(" ")
-                          .replace(/\b\w/g, (c) => c.toUpperCase())}
-                      </span>
-                    </p>
-                    <p className="company">{job.company}</p>
-                    {/* <div className="tags">
-                      {job.tags && job.tags.slice(0, 3).map((tag, idx) => (
-                        <span key={idx} className="tag">
-                          {tag}
-                        </span>
-                      ))}
-                    </div> */}
-                    <div className="date">
-                      {formatPostedTime(job.created_at)}
-                    </div>
-                  </div>
+              filteredJobs.map((job, index) => {
+                const key = job.id;
+                const isFav = favorites[key];
 
-                  <div className="right">
-                    <div className="button">
-                      <FavoriteBorderIcon />
+                return (
+                  <div className="job" key={index}>
+                    <div className="left">
+                      {job.companyRel?.logo && (
+                        <img
+                          src={job.companyRel.logo}
+                          alt={job.company}
+                        />
+                      )}
                     </div>
-                    <div className="button" onClick={() => window.open(job.careerpage_link || "#", "_blank")}
-                      style={{ cursor: "pointer" }}>
-                      <CallMadeIcon />
+
+                    <div className="center">
+                      <p className="title">
+                        {job.title}
+                        <span>
+                          {job.segment
+                            ?.toLowerCase()
+                            .split("_")
+                            .join(" ")
+                            .replace(/\b\w/g, (c) => c.toUpperCase())}
+                        </span>
+                      </p>
+                      <p className="company">{job.company}</p>
+                      <div className="date">
+                        {formatPostedTime(job.created_at)}
+                      </div>
+                    </div>
+
+                    <div className="right">
+                      <div
+                        className={`button ${isFav ? "fav" : ""}`}
+                        onClick={() => toggleFavorite(job)}
+                        style={{ cursor: "pointer" }}
+                      >
+                        {isFav
+                          ? <FavoriteIcon/>
+                          : <FavoriteBorderIcon />
+                        }
+                      </div>
+
+                      <div
+                        className="button"
+                        onClick={() =>
+                          window.open(job.careerpage_link || "#", "_blank")
+                        }
+                        style={{ cursor: "pointer" }}
+                      >
+                        <CallMadeIcon />
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </Main>
+
         <Advertisement>
           <div className="one-ad">
             <img src={logoBig} alt="HiringBull Logo" />
             <h2>Don't Let 48 Hours Cost You the Job.</h2>
-            <p>Free users see jobs 2 days late. Premium members apply the moment they go live. Be the first applicant, not the last.</p>
+            <p>
+              Free users see jobs 2 days late. Premium members apply the
+              moment they go live.
+            </p>
 
             <div className="features">
               {premiumFeatures.map((text, index) => (
@@ -235,13 +279,10 @@ const FreeJobs = () => {
                 </div>
               ))}
             </div>
+
             <a href="/join-membership" className="apply-btn">
               Apply for Membership <OfflineBoltIcon />
             </a>
-            <a href="/join-membership" className="demo-btn">
-              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/YouTube_full-color_icon_%282017%29.svg/960px-YouTube_full-color_icon_%282017%29.svg.png" alt="" />
-              Watch App Demo Video ↗
-            </a>          
           </div>
         </Advertisement>
       </Page>
@@ -488,11 +529,10 @@ const Main = styled.div`
 
       span{
         font-size: 0.75rem; 
-        background-color: #21f488;
-        color: #000000;
+        border: 1px solid #a59e9e;
         padding: 5px 10px;
         border-radius: 100px;
-        font-weight: 500;
+        font-weight: 300;
       }
     }   
 
@@ -543,6 +583,7 @@ const Main = styled.div`
       background-color: #fff;
       border: 1px solid #e1dbdb;
       border-radius: 100px;
+      margin-left: 10px;
 
       display: flex;
       align-items: center;
@@ -552,6 +593,7 @@ const Main = styled.div`
       cursor: pointer;
 
       font-weight: 500;
+      font-size: 0.85rem;
 
       img{
         height: 25px;
@@ -559,28 +601,12 @@ const Main = styled.div`
     }
   }
 
-  .controls{
-    button{
-      font-size: 0.75rem; 
-      border: none;
-      /* background-color: transparent; */
-      padding: 5px 10px;
-      border-radius: 100px;
-      background-color: #000;
-      color: #fff;
-    }
-
-    font-size: 0.85rem; 
+  .showing-results{
+    margin-top: 20px;
+    font-size: 0.75rem;
     color: #0000008a;
-    margin-top: 12px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-
-    .last-updated{
-      font-size: 0.75rem;
-      color: #0000005e;
-    }
+    font-weight: 300;
+    /* font-style: italic; */
   }
 
   .all-jobs{
@@ -670,7 +696,7 @@ const Main = styled.div`
         .button{
           height: 50px;
           aspect-ratio: 1/1;
-          background-color: whitesmoke;
+          /* background-color: whitesmoke; */
           border: 1px solid #333;
           border-radius: 100px;
           cursor: pointer;
@@ -684,7 +710,27 @@ const Main = styled.div`
             font-size: 1.5rem;
             /* fill: white; */
           }
+
+          &:hover{
+            background-color: #333;
+            border-color: #333;
+            transition-duration: 250ms;
+
+            svg{
+              fill: #fff;
+            }
+          }
         } 
+
+        .fav{
+          /* background-color: #333; */
+          border-color: #333;
+          transition-duration: 250ms;
+
+          svg{
+            fill: #333;
+          }
+        }
       }
     } 
   }
@@ -695,6 +741,8 @@ const Advertisement = styled.div`
   display: flex;
   flex-direction: column;
   width: calc(400px - 50px);
+  position: sticky;
+  top: 40px;
   
   .one-ad{
     background-color: #fff;
