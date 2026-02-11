@@ -19,6 +19,7 @@ const FreeJobs = () => {
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [search, setSearch] = useState("");
+  const [showAd, setShowAd] = useState(true);
 
   const [favorites, setFavorites] = useState(() => {
     const saved = localStorage.getItem("favoriteJobs");
@@ -244,15 +245,20 @@ const FreeJobs = () => {
                     <div className="center">
                       <p className="title">
                         <p>{job.title}</p>
-                        <span>
-                          {job.segment
-                            ?.toLowerCase()
-                            .split("_")
-                            .join(" ")
-                            .replace(/\b\w/g, (c) => c.toUpperCase())}
-                        </span>
+                        <p>
+                          <span className="no-desktop">
+                            {job.company}
+                          </span>
+                          <span>
+                            {job.segment
+                              ?.toLowerCase()
+                              .split("_")
+                              .join(" ")
+                              .replace(/\b\w/g, (c) => c.toUpperCase())}
+                          </span>
+                        </p>
                       </p>
-                      <p className="company">{job.company}</p>
+                      <p className="company no-mobile">{job.company}</p>
                       <div className="date">
                         {formatPostedTime(job.created_at)}
                       </div>
@@ -311,6 +317,20 @@ const FreeJobs = () => {
           </div>
         </Advertisement>
       </Page>
+
+      {showAd && (
+        <AdvertisementMobile>
+          You’re seeing jobs with a 48-hour delay - while Premium members apply the moment they go live, reach out to employees for referrals, and get interview support to stay ahead of the competition.
+          <div className="btns">
+            <button onClick={() => window.location.href = "/join-membership"}>
+              Get Premium
+            </button>
+            <button onClick={() => setShowAd(false)}>
+              I don't want to upgrade
+            </button>
+          </div>
+        </AdvertisementMobile>
+      )}
     </Container>
   );
 };
@@ -658,7 +678,13 @@ const Main = styled.div`
 
       .left{
         height: 100%;
-        
+        border: 1px solid #e1dbdb;
+        padding: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+
         img{
           height: 100%;
           aspect-ratio: 1/1;
@@ -688,6 +714,10 @@ const Main = styled.div`
             padding: 5px 10px;
             border-radius: 100px;
             font-weight: 400; 
+          }
+
+          .no-desktop{
+            display: none;
           }
         }
 
@@ -726,7 +756,7 @@ const Main = styled.div`
           height: 50px;
           aspect-ratio: 1/1;
           /* background-color: whitesmoke; */
-          border: 1px solid #333;
+          border: 1px solid #e1dbdb;
           border-radius: 100px;
           cursor: pointer;
           font-size: 0.75rem;
@@ -741,13 +771,8 @@ const Main = styled.div`
           }
 
           &:hover{
-            background-color: #333;
-            border-color: #333;
+            border: 1px solid #444;
             transition-duration: 250ms;
-
-            svg{
-              fill: #fff;
-            }
           }
         } 
 
@@ -766,8 +791,57 @@ const Main = styled.div`
 
   @media (max-width: 1100px) {
     width: 100%;
-
     padding: 20px;
+
+    .top-info{
+      h1 { 
+        font-size: 1.5rem;
+      }   
+
+      .desc{
+        font-size: 0.8rem;
+      }
+    }
+
+    .controls{
+      width: 100%;
+
+      .search-bar{
+        flex: 1;
+        min-width: 0;
+        height: 50px;
+        background-color: #fff;
+        border: 1px solid #e1dbdb;
+        border-radius: 100px;
+    
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    
+        padding: 0;
+    
+        input{
+          flex: 1;
+          min-width: 0;
+          height: 100%;
+          border: none;
+          outline: none;
+          font-size: 0.85rem;
+          border-radius: 100px;
+          margin-left: 20px;
+        }
+    
+        svg{
+          margin-right: 20px;
+          font-size: 1.75rem;
+          fill: #0000008a;
+        } 
+      }
+
+      .download-excel{
+        display: none;
+      }
+    }
 
     .all-jobs{
       .job{
@@ -796,8 +870,23 @@ const Main = styled.div`
           margin: 10px 0;
 
           .title{ 
-            font-size: 1.1rem;
+            font-size: 0.9rem;
             font-weight: 500; 
+
+            display: flex;
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 5px;
+
+            span{
+              border: 1px solid #e1dbdb;
+            }
+
+            .no-desktop{
+              font-weight: 500;
+              display: inline-block;
+              margin-right: 5px;
+            }
           }
 
           .date{
@@ -818,43 +907,10 @@ const Main = styled.div`
           gap: 10px;
 
           .button{
-            height: 30px;
+            height: 55px;
             aspect-ratio: 1/1;
-            /* background-color: whitesmoke; */
-            border: 1px solid #333;
-            border-radius: 100px;
-            cursor: pointer;
-            font-size: 0.75rem;
-            white-space: nowrap;
-
-            display: grid;
-            place-items: center;
-
-            svg{
-              font-size: 1.15rem;
-              /* fill: white; */
-            }
-
-            &:hover{
-              background-color: #333;
-              border-color: #333;
-              transition-duration: 250ms;
-
-              svg{
-                fill: #fff;
-              }
-            }
+            border-radius: 10px;
           } 
-
-          .fav{
-            /* background-color: #333; */
-            border-color: #333;
-            transition-duration: 250ms;
-
-            svg{
-              fill: #333;
-            }
-          }
         }
       } 
     }
@@ -972,6 +1028,65 @@ const Advertisement = styled.div`
   }
 
   @media (max-width: 1100px) {
+    display: none;
+  }
+`;
+
+
+const AdvertisementMobile = styled.div`
+  position: fixed;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100vw - 30px);
+
+  /* Glass effect */
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px); /* Safari support */
+
+  border: 1px solid white;
+  border-radius: 14px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+
+  padding: 10px;
+  margin-top: 20px;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  flex-direction: column;
+  gap: 15px;
+
+  font-size: 0.75rem;
+
+  .btns{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    button{
+      padding: 8px 12px;
+      border-radius: 100px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+
+      &:first-child{
+        background-color: black;
+        color: white;
+      }
+
+      &:last-child{
+        background-color: transparent;
+        color: black;
+        border: 1px solid #e1dbdb;
+      }
+    }
+  }
+
+  @media (min-width: 1100px) {
     display: none;
   }
 `;
