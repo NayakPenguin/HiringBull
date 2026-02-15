@@ -9,6 +9,7 @@ import social2 from '../utils/social2.png';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import CheckBoxIcon from '@material-ui/icons/CheckBox';
+import WorkOutlineIcon from '@material-ui/icons/WorkOutline';
 
 const Landing = () => {
   const rows = [
@@ -234,9 +235,17 @@ const Landing = () => {
           Compete with <u>50 applicants</u>, not 50,000.
         </p>
 
-        <a href='/join-membership' className="apply-btn">
-          Apply for Membership <OfflineBoltIcon />
-        </a>
+        <div className="btns">
+          <a href='/explore-jobs' className="btn">
+            Explore All Jobs 
+            <WorkOutlineIcon/>
+          </a>
+
+          <a href='/join-membership' className="apply-btn">
+            Apply for Membership <OfflineBoltIcon />
+          </a>
+        </div>
+
 
         <div className="dancing-scroll-action" onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}>
           <ExpandMoreIcon />
@@ -1049,26 +1058,50 @@ const Page1 = styled.div`
     }
   }
 
-  .apply-btn{
-    margin-top: 30px;
-    padding: 12px 25px;
-    background-color: black;    
-    color: white;
-    border-radius: 100px;
-    cursor: pointer;
-    font-size: 1.1rem;
-    font-weight: 600;
-
-    text-decoration: none;
-
+  .btns{
     display: flex;
     align-items: center;
-    gap: 8px;
-  }
+    justify-content: center;
+    gap: 12px;  
 
-  svg{
-    font-size: 1.5rem;  
-    fill: #ffc502;
+    .btn{
+      margin-top: 30px;
+      padding: 12px 25px;
+      color: #000;
+      border: 1px solid #000;
+      border-radius: 100px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      font-weight: 600;
+  
+      text-decoration: none;
+  
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .apply-btn{
+      margin-top: 30px;
+      padding: 12px 25px;
+      background-color: black;    
+      color: white;
+      border-radius: 100px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      font-weight: 600;
+  
+      text-decoration: none;
+  
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      svg{
+        font-size: 1.5rem;  
+        fill: #ffc502;
+      }
+    }
   }
 
   .dancing-scroll-action {
@@ -1137,11 +1170,31 @@ const Page1 = styled.div`
       font-size: 1.25rem;
     }
 
-    .apply-btn{
-      margin-top: 30px;
-      padding: 10px 20px;
-      font-size: 0.9rem;
+    .btns{
+      flex-direction: column;
+      margin-top: 40px;
+      
+      .btn{
+        margin: 0;
+        padding: 10px 20px;
+        font-size: 0.9rem;
+        background-color: black;
+        color: white;
+
+        svg{
+          font-size: 1.5rem;  
+          fill: #ffc502;
+        }
+      }
+
+      .apply-btn{
+        display: none;
+        margin: 0;
+        padding: 10px 20px;
+        font-size: 0.9rem;
+      }
     }
+
   }
 `;
 

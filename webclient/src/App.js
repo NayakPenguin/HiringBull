@@ -12,13 +12,15 @@ import TrailJobs from "./Screens/TrailJobs";
 import FreeJobs from "./Screens/FreeJobs";
 import TestPayment from "./Screens/TestPayment";
 import AddJobs from "./Screens/AddJobs";
+import GetMembership from "./Screens/GetMembership";
 
 const App = () => {
   return (
     <Container>
       <Routes>
         <Route path="/" element={<Landing />} />
-        <Route path="join-membership" element={<JoinMembershipForm />} />
+        {/* <Route path="join-membership" element={<JoinMembershipForm />} /> */}
+        <Route path="join-membership" element={<GetMembership />} />
         <Route path="/membership/:userEmail" element={<Membership />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
