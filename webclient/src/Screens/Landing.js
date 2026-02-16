@@ -216,6 +216,7 @@ const Landing = () => {
             HiringBull
           </div>
           <div className="right">
+            <a href="/explore-jobs" style={{ cursor: 'pointer' }}>Jobs</a>
             <a href="#features" onClick={(e) => { e.preventDefault(); smoothScrollTo('features'); }} style={{ cursor: 'pointer' }}>Features</a>
             <a href="#compare" onClick={(e) => { e.preventDefault(); smoothScrollTo('compare'); }} style={{ cursor: 'pointer' }}>Compare</a>
             <a href="#pricing" onClick={(e) => { e.preventDefault(); smoothScrollTo('pricing'); }} style={{ cursor: 'pointer' }}>Pricing</a>
