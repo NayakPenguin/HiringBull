@@ -1,8 +1,6 @@
 // Import  global CSS file
 import '../../global.css';
 
-import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
-import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { ThemeProvider } from '@react-navigation/native';
 import * as Font from 'expo-font';
@@ -17,6 +15,7 @@ import { APIProvider } from '@/api';
 import { GlobalLoadingOverlay } from '@/components/global-loading-overlay';
 import { Toast } from '@/components/ui/Toast';
 import { getUserInfo, updatePushToken } from '@/features/users';
+import { hydrateAuth, useAuth } from '@/lib/auth';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 
@@ -30,7 +29,6 @@ import {
   useOnboarding,
 } from '@/lib';
 import { useThemeConfig } from '@/lib/use-theme-config';
-import { authService } from '@/service/auth-service';
 import { NotificationPromptModal } from '@/utils/NotificationPromptModal';
 import { useNotificationPermissionPrompt } from '@/utils/useNotificationPermissionPrompt';
 import * as Updates from 'expo-updates';
@@ -43,6 +41,7 @@ export const unstable_settings = {
 };
 
 hydrateOnboarding();
+hydrateAuth();
 loadSelectedTheme();
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -72,7 +71,7 @@ function NotificationInitializer() {
 
 function RootNavigator() {
   const [isFirstTime] = useIsFirstTime();
-  const { isSignedIn, isLoaded, getToken } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
   const hasCompletedOnboarding = useOnboarding.use.hasCompletedOnboarding();
   const _isSubscribed = useOnboarding.use.isSubscribed();
 
@@ -80,16 +79,7 @@ function RootNavigator() {
   const { modalVisible, setModalVisible, enablePrompt, recheckPermissions } =
     useNotificationPermissionPrompt();
 
-  // Sync auth service with Clerk
-  useEffect(() => {
-    if (isSignedIn) {
-      authService.setGetTokenFunction(getToken);
-    } else {
-      authService.clearAuth();
-    }
-  }, [isSignedIn, getToken]);
-
-  // Wait for Clerk to load before determining auth state
+  // Wait for auth store to hydrate before determining auth state
   const isAuthenticated = isLoaded ? (isSignedIn ?? false) : false;
 
   // Notifications should only be initialized for authenticated users
@@ -103,7 +93,7 @@ function RootNavigator() {
   //   const isSubscribed = true;
   // const shouldInitNotifications = true
 
-  // Hide splash only after Clerk has loaded
+  // Hide splash once auth has loaded
   useEffect(() => {
     if (isLoaded) {
       SplashScreen.hideAsync();
@@ -112,7 +102,6 @@ function RootNavigator() {
 
   const checkUserInfo = async () => {
     try {
-      console.log(' checkUserInfo: Starting to fetch user info...');
       setIsLoadingUser(true);
       const data = await getUserInfo();
       if (Boolean(data.onboarding_completed)) {
@@ -213,8 +202,7 @@ function RootNavigator() {
           />
         </Stack.Protected>
 
-        {/* SSO callback route - accessible during OAuth flow */}
-        <Stack.Screen name="sso-callback" options={{ headerShown: false }} />
+        {/* SSO callback route removed — custom auth doesn't need it */}
         <Stack.Screen name="no-membership" options={{ headerShown: false }} />
       </Stack>
       {shouldInitNotifications && (
@@ -236,10 +224,6 @@ function Providers({ children }: { children: React.ReactNode }) {
     >
       <KeyboardProvider>
         <ThemeProvider value={theme}>
-          <ClerkProvider
-            tokenCache={tokenCache}
-            publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
-          >
             <APIProvider>
               <BottomSheetModalProvider>
                 {children}
@@ -247,7 +231,6 @@ function Providers({ children }: { children: React.ReactNode }) {
                 <GlobalLoadingOverlay />
               </BottomSheetModalProvider>
             </APIProvider>
-          </ClerkProvider>
         </ThemeProvider>
       </KeyboardProvider>
     </GestureHandlerRootView>

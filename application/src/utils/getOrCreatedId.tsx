@@ -6,7 +6,8 @@ const getOrCreateDeviceId = async () => {
 
   if (!deviceId) {
     deviceId =
-      Application.getAndroidId() ?? Application.getIosIdForVendorAsync();
+      Application.getAndroidId() ??
+      (await Application.getIosIdForVendorAsync());
 
     await SecureStore.setItemAsync('DEVICE_ID', String(deviceId));
   }

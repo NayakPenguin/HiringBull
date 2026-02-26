@@ -1,4 +1,3 @@
-import { useAuth } from '@clerk/clerk-expo';
 import { create } from 'zustand';
 
 import { resetUser, type UserInfo } from '@/features/users';
@@ -8,19 +7,6 @@ import { createSelectors } from '../utils';
 
 const ONBOARDING_COMPLETED_KEY = 'ONBOARDING_COMPLETED';
 const IS_SUBSCRIBED_KEY = 'IS_SUBSCRIBED';
-
-const clearUser = async () => {
-  const { getToken } = useAuth();
-  const token = await getToken();
-  try {
-    if (!token) return;
-
-    await resetUser(token);
-    console.log('logout device token:', token);
-  } catch (e) {
-    console.warn('Failed to remove device', e);
-  }
-};
 
 type OnboardingState = {
   hasCompletedOnboarding: boolean;
@@ -53,14 +39,10 @@ const _useOnboarding = create<OnboardingState>((set) => ({
     storage.delete(IS_SUBSCRIBED_KEY);
     set({ hasCompletedOnboarding: false, isSubscribed: false });
     set({ userInfo: null });
-    if (deviceToken) {
-      try {
-        console.log("calling api->>>>>>>>>")
-        await resetUser(deviceToken);
-        console.log('logout device token:', deviceToken);
-      } catch (e) {
-        console.warn('Failed to remove device', e);
-      }
+    try {
+      await resetUser();
+    } catch (e) {
+      console.warn('Failed to remove device', e);
     }
   },
 

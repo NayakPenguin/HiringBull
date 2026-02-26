@@ -1,4 +1,4 @@
-import { useAuth, useUser } from '@clerk/clerk-expo';
+import { useAuth, getUserEmail } from '@/lib/auth';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -22,7 +22,6 @@ type StepIndicatorProps = {
 };
 
 function StepIndicator({ currentStep, totalSteps }: StepIndicatorProps) {
-  console.log(currentStep);
   return (
     <View className="mb-4 w-full flex-row items-center">
       {[1, 2, 3].map((step, index) => {
@@ -51,9 +50,7 @@ function StepIndicator({ currentStep, totalSteps }: StepIndicatorProps) {
 
 export default function Onboarding() {
   const router = useRouter();
-  const { getToken } = useAuth();
   const completeOnboarding = useOnboarding.use.completeOnboarding();
-  const { user } = useUser();
   const [isVerifiedUser, setIsVerifiedUser] = useState(false);
 
   const [step, setStep] = useState(1);
@@ -72,27 +69,15 @@ export default function Onboarding() {
     useRegisterOrEditUser();
 
   useEffect(() => {
-    const logToken = async () => {
-      const token = await getToken();
-      console.log('getToken:', token);
-    };
-    logToken();
-
     const checkIfVerified = async () => {
-      if (!user?.primaryEmailAddress?.emailAddress) {
+      const email = getUserEmail();
+      if (!email) {
         return;
       }
 
-      const verificationData = await checkUserVerification(
-        user.primaryEmailAddress.emailAddress
-      );
-      console.log(
-        'User Verification Data:',
-        isMembershipValid(verificationData.data.membershipEnd),
-        verificationData.data
-      );
+      const verificationData = await checkUserVerification(email);
       saveMembership({
-        email: user.primaryEmailAddress.emailAddress,
+        email,
         membershipEnd: verificationData.data.membershipEnd,
       });
 
@@ -104,7 +89,7 @@ export default function Onboarding() {
     };
 
     checkIfVerified();
-  }, [user]);
+  }, []);
 
   const handleToggleCompany = (companyId: string) => {
     setSelectedCompanies((prev) =>

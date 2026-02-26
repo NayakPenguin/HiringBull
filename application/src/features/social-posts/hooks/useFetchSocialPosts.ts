@@ -1,4 +1,4 @@
-import { useAuth } from '@clerk/clerk-expo';
+import { useAuth } from '@/lib/auth';
 import { useInfiniteQuery } from '@tanstack/react-query';
 
 import { fetchSocialPosts, type SocialPostsResponse } from '@/api';

@@ -33,11 +33,8 @@ export function useNotificationObserver() {
       const url = data?.url;
       
       if (typeof url === 'string') {
-        console.log('Navigating to:', url);
         router.push(url as any);
       } else {
-        // Default: navigate to explore page (home/index)
-        console.log('Navigating to explore page (default)');
         router.push('/(app)');
       }
     }
@@ -62,7 +59,6 @@ export function useNotifications() {
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {
         setNotification(notification);
-        console.log('Notification received:', notification);
       });
 
     return () => {
@@ -86,10 +82,7 @@ async function registerForPushNotificationsAsync(): Promise<
     });
   }
 
-  if (!Device.isDevice) {
-    console.warn('Push notifications require a physical device');
-    return;
-  }
+  if (!Device.isDevice) return;
 
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
   let finalStatus = existingStatus;
@@ -99,10 +92,7 @@ async function registerForPushNotificationsAsync(): Promise<
   //   finalStatus = status;
   // }
 
-  if (finalStatus !== 'granted') {
-    console.warn('Push notification permission not granted');
-    return;
-  }
+  if (finalStatus !== 'granted') return;
 
   const projectId =
     Constants?.expoConfig?.extra?.eas?.projectId ??
@@ -113,6 +103,5 @@ async function registerForPushNotificationsAsync(): Promise<
   }
 
   const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
-  console.log('Expo Push Token:', token);
   return token;
 }

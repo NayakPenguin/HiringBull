@@ -1,4 +1,4 @@
-import { useUser } from '@clerk/clerk-expo';
+import { getUserEmail } from '@/lib/auth';
 import { Ionicons } from '@expo/vector-icons';
 import { type BottomSheetModal } from '@gorhom/bottom-sheet';
 import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
@@ -113,7 +113,6 @@ function CompanyCard({
 }
 
 export default function Outreach() {
-  const { user } = useUser();
   const queryClient = useQueryClient();
 
   const { form } = useOutreachForm();
@@ -135,10 +134,11 @@ export default function Outreach() {
   const { mutate: sendOutreach, isPending } = useSendOutreach();
 
   useEffect(() => {
-    if (user?.primaryEmailAddress?.emailAddress) {
-      setValue('email', user.primaryEmailAddress.emailAddress);
+    const email = getUserEmail();
+    if (email) {
+      setValue('email', email);
     }
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     if (selectedCompany) {
@@ -150,8 +150,6 @@ export default function Outreach() {
     if (!canSendNow || !selectedCompany) return;
 
     const values = form.getValues();
-    console.log('Sending outreach with values:', values);
-
     sendOutreach(
       {
         email: values.email,
@@ -177,10 +175,8 @@ export default function Outreach() {
           });
 
           router.push('/outreach/requests');
-          console.log('Outreach sent successfully', res);
         },
         onError: (error) => {
-          console.log('Outreach failed:', error.response?.data);
           const apiMessage =
             error.response?.data?.error ||
             'Failed to send outreach. Please try again.';

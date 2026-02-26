@@ -1,4 +1,4 @@
-import { useAuth } from '@clerk/clerk-expo';
+import { useAuth } from '@/lib/auth';
 import { Ionicons } from '@expo/vector-icons';
 import { type BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useQueryClient } from '@tanstack/react-query';
@@ -68,7 +68,6 @@ export default function Profile() {
 
   const userInfo = queryClient.getQueryData(['users', 'me']);
   // const userInfo = useOnboarding.use.userInfo();
-  console.log(userInfo.devices);
 
   const handleLogout = () => {
     setConfirmAction('logout');

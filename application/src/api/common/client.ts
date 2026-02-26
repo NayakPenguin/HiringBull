@@ -4,11 +4,7 @@ import { authService } from '@/service/auth-service';
 
 
 // API URL from environment variables
-// Defaults to production URL if not set
-const BASE_URL ='https://api.hiringbull.org/';
-
-// Debug: Log the API URL on startup
-console.log('🔗 API BASE_URL:', BASE_URL);
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://10.240.46.168:4000';
 
 export const client = axios.create({
   baseURL: BASE_URL,
@@ -18,39 +14,23 @@ export const client = axios.create({
   },
 });
 
-// Request interceptor - adds Clerk token
+// Request interceptor - adds JWT auth token
 client.interceptors.request.use(
   async (config) => {
-    console.log('📤 API Request:', config.method?.toUpperCase(), config.url);
-    // Get token from auth service
     const token = await authService.getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('📤 Token attached to request');
-    } else {
-      console.log('📤 No token available for request');
     }
     return config;
   },
-  (error) => {
-    console.error('📤 Request error:', error);
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 // Response interceptor - handles errors
 client.interceptors.response.use(
-  (response) => {
-    console.log('📥 API Response:', response.status, response.config.url);
-    return response;
-  },
+  (response) => response,
   async (error: AxiosError) => {
-    console.error('📥 API Error:', error.response?.status, error.config?.url, error.message);
-    // Handle 401 Unauthorized
-    if (error.response?.status === 401) {
-      // You might want to trigger a logout or token refresh here
-      console.log('Authentication failed');
-    }
+    // TODO: Handle 401 — trigger logout or token refresh
     return Promise.reject(error);
   }
 );

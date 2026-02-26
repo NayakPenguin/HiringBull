@@ -1,221 +1,171 @@
-import { useSignIn, useSignUp, useSSO } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
 import * as AuthSession from 'expo-auth-session';
+import * as Google from 'expo-auth-session/providers/google';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, Platform, Pressable } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 
+import { client } from '@/api/common/client';
 import { FocusAwareStatusBar, Input, Text, View } from '@/components/ui';
 import { OTPInput } from '@/components/ui/otp-input';
 import { useRegisterDevice } from '@/features/users';
 import { hideGlobalLoading, showGlobalLoading } from '@/lib';
+import { useAuth } from '@/lib/auth';
 import getOrCreateDeviceId from '@/utils/getOrCreatedId';
 
-/* ----------------------------- Utils ----------------------------- */
-
-const useWarmUpBrowser = () => {
-  useEffect(() => {
-    if (Platform.OS !== 'android') return;
-    WebBrowser.warmUpAsync();
-    return () => {
-      void WebBrowser.coolDownAsync();
-    };
-  }, []);
-};
-
 WebBrowser.maybeCompleteAuthSession();
+
+/* ---------- LinkedIn discovery document ---------- */
+const linkedinDiscovery: AuthSession.DiscoveryDocument = {
+  authorizationEndpoint: 'https://www.linkedin.com/oauth/v2/authorization',
+  tokenEndpoint: 'https://www.linkedin.com/oauth/v2/accessToken',
+};
 
 /* ----------------------------- Screen ----------------------------- */
 
 export default function Login() {
-  useWarmUpBrowser();
-
   const router = useRouter();
-  const {
-    signIn,
-    setActive: setActiveSignIn,
-    isLoaded: isSignInLoaded,
-  } = useSignIn();
-  const {
-    signUp,
-    setActive: setActiveSignUp,
-    isLoaded: isSignUpLoaded,
-  } = useSignUp();
-  const { startSSOFlow } = useSSO();
+  const { signIn } = useAuth();
+  const { mutate: registerDevice } = useRegisterDevice();
 
   const [step, setStep] = useState<'email' | 'otp'>('email');
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
-  const [authMode, setAuthMode] = useState<'signIn' | 'signUp' | null>(null);
   const [error, setError] = useState('');
+
+  /* ---------- Shared: register device + navigate ---------- */
+
+  const registerDeviceAndNavigate = async () => {
+    const deviceId = await getOrCreateDeviceId();
+    registerDevice({
+      deviceId,
+      type: Platform.OS === 'ios' ? 'ios' : 'android',
+    });
+    router.replace('/');
+  };
 
   /* ----------------------------- Google ----------------------------- */
 
-  const handleGoogleLogin = useCallback(async () => {
+  const [googleRequest, googleResponse, googlePromptAsync] =
+    Google.useIdTokenAuthRequest({
+      androidClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID,
+      iosClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS,
+      webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB,
+    });
+
+  useEffect(() => {
+    if (googleResponse?.type === 'success') {
+      const idToken = googleResponse.params.id_token;
+      handleGoogleToken(idToken);
+    }
+  }, [googleResponse]);
+
+  const handleGoogleToken = async (idToken: string) => {
     showGlobalLoading();
     setError('');
-
     try {
-      const redirectUrl = AuthSession.makeRedirectUri({
-        path: 'sso-callback',
-      });
-
-      console.log('OAuth Redirect URL:', redirectUrl);
-
-      const { createdSessionId, setActive } = await startSSOFlow({
-        strategy: 'oauth_google',
-        redirectUrl,
-      });
-
-      console.log('OAuth completed - createdSessionId:', createdSessionId);
-
-      if (createdSessionId) {
-        await setActive!({ session: createdSessionId });
-        console.log(' Session activated, navigating to home');
-        router.replace('/');
-      }
+      const { data } = await client.post('/api/auth/google', { idToken });
+      await signIn(data.token);
+      await registerDeviceAndNavigate();
     } catch (err: any) {
-      console.error(' OAuth Error:', err?.message || err);
-      setError('Google sign-in failed');
+      setError(err?.response?.data?.error || 'Google sign-in failed');
     } finally {
       hideGlobalLoading();
     }
-  }, [router, startSSOFlow]);
-
-  /* ----------------------------- Email Step ----------------------------- */
-
-  // Email validation regex
-  const isValidEmail = (emailStr: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(emailStr.trim());
   };
+
+  /* ----------------------------- LinkedIn ----------------------------- */
+
+  const linkedinRedirectUri = AuthSession.makeRedirectUri({ path: 'login' });
+
+  const [linkedinRequest, linkedinResponse, linkedinPromptAsync] =
+    AuthSession.useAuthRequest(
+      {
+        clientId: process.env.EXPO_PUBLIC_LINKEDIN_CLIENT_ID ?? '',
+        scopes: ['openid', 'profile', 'email'],
+        redirectUri: linkedinRedirectUri,
+        responseType: AuthSession.ResponseType.Code,
+      },
+      linkedinDiscovery
+    );
+
+  useEffect(() => {
+    if (linkedinResponse?.type === 'success') {
+      const code = linkedinResponse.params.code;
+      handleLinkedInCode(code);
+    }
+  }, [linkedinResponse]);
+
+  const handleLinkedInCode = async (code: string) => {
+    showGlobalLoading();
+    setError('');
+    try {
+      const { data } = await client.post('/api/auth/linkedin', {
+        code,
+        redirectUri: linkedinRedirectUri,
+      });
+      await signIn(data.token);
+      await registerDeviceAndNavigate();
+    } catch (err: any) {
+      setError(err?.response?.data?.error || 'LinkedIn sign-in failed');
+    } finally {
+      hideGlobalLoading();
+    }
+  };
+
+  /* ----------------------------- Email OTP ----------------------------- */
+
+  const isValidEmail = (emailStr: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr.trim());
 
   const handleContinue = async () => {
-    // --------- CLIENT SIDE VALIDATION ---------
-    if (!email.trim()) {
-      setError('Please enter your email');
-      return;
-    }
-
-    if (!isValidEmail(email)) {
-      setError('Please enter a valid email address');
-      return;
-    }
-
-    if (!isSignInLoaded || !isSignUpLoaded) return;
+    if (!email.trim()) return setError('Please enter your email');
+    if (!isValidEmail(email))
+      return setError('Please enter a valid email address');
 
     showGlobalLoading();
     setError('');
 
     try {
-      // Try sign-in first
-      const attempt = await signIn.create({ identifier: email.trim() });
-
-      const factor = attempt.supportedFirstFactors?.find(
-        (f) => f.strategy === 'email_code'
-      );
-
-      if (factor && 'emailAddressId' in factor) {
-        await signIn.prepareFirstFactor({
-          strategy: 'email_code',
-          emailAddressId: factor.emailAddressId,
-        });
-      }
-
-      setAuthMode('signIn');
+      await client.post('/api/auth/email/send-otp', { email: email.trim() });
       setStep('otp');
-    } catch (e: any) {
-      // If user not found → Sign up flow
-      if (e?.errors?.[0]?.code === 'form_identifier_not_found') {
-        try {
-          await signUp.create({ emailAddress: email.trim() });
-          await signUp.prepareEmailAddressVerification({
-            strategy: 'email_code',
-          });
-
-          setAuthMode('signUp');
-          setStep('otp');
-        } catch {
-          setError('Unable to send verification code');
-        }
-      } else {
-        setError('Something went wrong. Please try again');
-      }
+    } catch (err: any) {
+      setError(
+        err?.response?.data?.error || 'Unable to send verification code'
+      );
     } finally {
       hideGlobalLoading();
     }
   };
 
-  /* ----------------------------- OTP ----------------------------- */
-  // const { expoPushToken } = useNotifications();
-  const { mutate: registerDevice } = useRegisterDevice();
-  const handleVerify = async () => {
-    // --------- CLIENT SIDE VALIDATION ---------
-    if (!otp.trim()) {
-      setError('Please enter the 6-digit code');
-      return;
-    }
+  /* ----------------------------- OTP Verify ----------------------------- */
 
-    if (otp.length !== 6) {
-      setError('OTP must be 6 digits');
-      return;
-    }
+  const handleVerify = async () => {
+    if (!otp.trim()) return setError('Please enter the 6-digit code');
+    if (otp.length !== 6) return setError('OTP must be 6 digits');
 
     showGlobalLoading();
     setError('');
 
-    const deviceId = await getOrCreateDeviceId();
-
     try {
-      if (authMode === 'signIn' && signIn) {
-        const res = await signIn.attemptFirstFactor({
-          strategy: 'email_code',
-          code: otp,
-        });
-
-        if (res.status === 'complete' && setActiveSignIn) {
-          await setActiveSignIn({ session: res.createdSessionId });
-          const deviceType = Platform.OS === 'ios' ? 'ios' : 'android';
-          registerDevice({
-            deviceId: deviceId,
-            type: deviceType,
-          });
-          router.replace('/');
-        } else {
-          console.log(' SignIn not complete, status:', res.status);
-        }
-      }
-
-      if (authMode === 'signUp' && signUp) {
-        const res = await signUp.attemptEmailAddressVerification({ code: otp });
-
-        if (res.status === 'complete' && setActiveSignUp) {
-          await setActiveSignUp({ session: res.createdSessionId });
-
-          const deviceType = Platform.OS === 'ios' ? 'ios' : 'android';
-          registerDevice({
-            deviceId: deviceId,
-            type: deviceType,
-          });
-          router.replace('/');
-        } else {
-          console.log(' SignUp not complete, status:', res.status);
-        }
-      }
-    } catch (e: any) {
-      console.error(' OTP Error:', e?.message || e, e?.errors);
-      setError('Invalid or expired code');
+      const { data } = await client.post('/api/auth/email/verify-otp', {
+        email: email.trim(),
+        code: otp,
+      });
+      await signIn(data.token);
+      await registerDeviceAndNavigate();
+    } catch (err: any) {
+      setError(err?.response?.data?.error || 'Invalid or expired code');
     } finally {
       hideGlobalLoading();
     }
   };
+
   useEffect(() => {
-    if (otp.length === 6) {
-      handleVerify();
-    }
+    if (otp.length === 6) handleVerify();
   }, [otp]);
   /* ----------------------------- UI ----------------------------- */
 
@@ -294,6 +244,45 @@ export default function Login() {
               >
                 <Text className="text-center text-lg font-bold text-white">
                   Continue to Proceed
+                </Text>
+              </Pressable>
+
+              {/* Social logins */}
+              <View className="my-6 flex-row items-center">
+                <View className="h-px flex-1 bg-neutral-200" />
+                <Text className="mx-4 text-sm text-neutral-400">or</Text>
+                <View className="h-px flex-1 bg-neutral-200" />
+              </View>
+
+              <Pressable
+                onPress={() => googlePromptAsync()}
+                disabled={!googleRequest}
+                className="mb-3 flex-row items-center justify-center rounded-xl border border-neutral-200 py-4"
+              >
+                <Ionicons
+                  name="logo-google"
+                  size={20}
+                  color="#4285F4"
+                  style={{ marginRight: 8 }}
+                />
+                <Text className="text-base font-semibold text-neutral-700">
+                  Continue with Google
+                </Text>
+              </Pressable>
+
+              <Pressable
+                onPress={() => linkedinPromptAsync()}
+                disabled={!linkedinRequest}
+                className="flex-row items-center justify-center rounded-xl border border-neutral-200 py-4"
+              >
+                <Ionicons
+                  name="logo-linkedin"
+                  size={20}
+                  color="#0A66C2"
+                  style={{ marginRight: 8 }}
+                />
+                <Text className="text-base font-semibold text-neutral-700">
+                  Continue with LinkedIn
                 </Text>
               </Pressable>
             </>

@@ -36,9 +36,7 @@ export default function TabLayout() {
           appState.current.match(/inactive|background/) &&
           nextAppState === 'active'
         ) {
-          console.log('App came to foreground');
           const membershipData = getMembership();
-          console.log('Membership Data in TabLayout:', membershipData);
           if (
             membershipData &&
             !isMembershipValid(membershipData.membershipEnd)
@@ -50,18 +48,12 @@ export default function TabLayout() {
           const { status } = await Notifications.getPermissionsAsync();
 
           if (status === 'granted') {
-            console.log('Permission granted');
-
-            // 2️⃣ CALL YOUR API HERE
-            // await callNotificationEnabledAPI();
-            console.log('callNotificationEnabledAPI()');
             const projectId =
               Constants.expoConfig?.extra?.eas?.projectId ??
               Constants.easConfig?.projectId;
 
             const { data: expoPushToken } =
               await Notifications.getExpoPushTokenAsync({ projectId });
-            console.log('Expo Push Token:', expoPushToken);
 
             const deviceId = await getOrCreateDeviceId();
             const platform = Platform.OS === 'android' ? 'android' : 'ios';
