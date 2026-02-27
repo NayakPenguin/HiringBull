@@ -76,7 +76,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // ['app-icon-badge', appIconBadgeConfig],
     ['react-native-edge-to-edge'],
     'expo-notifications',
-     "expo-web-browser"
+     "expo-web-browser",
+    "@react-native-google-signin/google-signin",
   ],
   extra: {
     ...ClientEnv,

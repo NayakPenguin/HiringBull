@@ -1,6 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
+import {
+  GoogleSignin,
+  isErrorWithCode,
+  statusCodes,
+} from '@react-native-google-signin/google-signin';
 import * as AuthSession from 'expo-auth-session';
-import * as Google from 'expo-auth-session/providers/google';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useEffect, useState } from 'react';
@@ -17,6 +21,12 @@ import { useAuth } from '@/lib/auth';
 import getOrCreateDeviceId from '@/utils/getOrCreatedId';
 
 WebBrowser.maybeCompleteAuthSession();
+
+/* ---------- Google Sign-In Configuration ---------- */
+GoogleSignin.configure({
+  webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB,
+  offlineAccess: false,
+});
 
 /* ---------- LinkedIn discovery document ---------- */
 const linkedinDiscovery: AuthSession.DiscoveryDocument = {
@@ -49,29 +59,42 @@ export default function Login() {
 
   /* ----------------------------- Google ----------------------------- */
 
-  const [googleRequest, googleResponse, googlePromptAsync] =
-    Google.useIdTokenAuthRequest({
-      androidClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID,
-      iosClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS,
-      webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB,
-    });
-
-  useEffect(() => {
-    if (googleResponse?.type === 'success') {
-      const idToken = googleResponse.params.id_token;
-      handleGoogleToken(idToken);
-    }
-  }, [googleResponse]);
-
-  const handleGoogleToken = async (idToken: string) => {
+  const handleGoogleSignIn = async () => {
     showGlobalLoading();
     setError('');
     try {
+      await GoogleSignin.hasPlayServices();
+      const response = await GoogleSignin.signIn();
+      console.log('[Login:Google] Native sign-in success, getting idToken...');
+      const idToken = response.data?.idToken;
+      if (!idToken) {
+        throw new Error('No ID token returned from Google');
+      }
+      console.log('[Login:Google] Sending idToken to server...');
       const { data } = await client.post('/api/auth/google', { idToken });
+      console.log('[Login:Google] Success, userId:', data.user?.id);
       await signIn(data.token);
       await registerDeviceAndNavigate();
     } catch (err: any) {
-      setError(err?.response?.data?.error || 'Google sign-in failed');
+      if (isErrorWithCode(err)) {
+        switch (err.code) {
+          case statusCodes.SIGN_IN_CANCELLED:
+            console.log('[Login:Google] User cancelled');
+            break;
+          case statusCodes.IN_PROGRESS:
+            console.log('[Login:Google] Already in progress');
+            break;
+          case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
+            setError('Google Play Services not available');
+            break;
+          default:
+            console.error('[Login:Google] Error code:', err.code, err.message);
+            setError(err?.response?.data?.error || 'Google sign-in failed');
+        }
+      } else {
+        console.error('[Login:Google] Failed:', err?.response?.data || err.message);
+        setError(err?.response?.data?.error || 'Google sign-in failed');
+      }
     } finally {
       hideGlobalLoading();
     }
@@ -103,13 +126,16 @@ export default function Login() {
     showGlobalLoading();
     setError('');
     try {
+      console.log('[Login:LinkedIn] Exchanging code, redirectUri:', linkedinRedirectUri);
       const { data } = await client.post('/api/auth/linkedin', {
         code,
         redirectUri: linkedinRedirectUri,
       });
+      console.log('[Login:LinkedIn] Success, userId:', data.user?.id);
       await signIn(data.token);
       await registerDeviceAndNavigate();
     } catch (err: any) {
+      console.error('[Login:LinkedIn] Failed:', err?.response?.data || err.message);
       setError(err?.response?.data?.error || 'LinkedIn sign-in failed');
     } finally {
       hideGlobalLoading();
@@ -130,7 +156,9 @@ export default function Login() {
     setError('');
 
     try {
+      console.log('[Login:OTP] Sending OTP to:', email.trim());
       await client.post('/api/auth/email/send-otp', { email: email.trim() });
+      console.log('[Login:OTP] OTP sent successfully');
       setStep('otp');
     } catch (err: any) {
       setError(
@@ -151,10 +179,12 @@ export default function Login() {
     setError('');
 
     try {
+      console.log('[Login:OTP] Verifying OTP for:', email.trim());
       const { data } = await client.post('/api/auth/email/verify-otp', {
         email: email.trim(),
         code: otp,
       });
+      console.log('[Login:OTP] Verify success, userId:', data.user?.id);
       await signIn(data.token);
       await registerDeviceAndNavigate();
     } catch (err: any) {
@@ -255,8 +285,7 @@ export default function Login() {
               </View>
 
               <Pressable
-                onPress={() => googlePromptAsync()}
-                disabled={!googleRequest}
+                onPress={handleGoogleSignIn}
                 className="mb-3 flex-row items-center justify-center rounded-xl border border-neutral-200 py-4"
               >
                 <Ionicons

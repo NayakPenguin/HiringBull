@@ -45,6 +45,7 @@
         "@expo/vector-icons": "^15.1.1",
         "@gorhom/bottom-sheet": "^5.0.5",
         "@hookform/resolvers": "^3.9.0",
+        "@react-native-google-signin/google-signin": "^16.1.1",
         "@react-navigation/native": "^7.1.8",
         "@shopify/flash-list": "2.0.2",
         "@tanstack/react-query": "^5.52.1",

@@ -2,6 +2,7 @@ import * as SecureStore from 'expo-secure-store';
 import { create } from 'zustand';
 
 const TOKEN_KEY = 'auth_token';
+const TAG = '[Auth]';
 
 type AuthState = {
   token: string | null;
@@ -24,7 +25,9 @@ const _useAuth = create<AuthState>((set, get) => ({
   isSignedIn: false,
 
   hydrate: async () => {
+    console.log(`${TAG} Hydrating auth from SecureStore...`);
     const token = await SecureStore.getItemAsync(TOKEN_KEY);
+    console.log(`${TAG} Hydrate result: ${token ? 'token found' : 'no token'}`);
     set({
       token,
       isSignedIn: !!token,
@@ -33,13 +36,17 @@ const _useAuth = create<AuthState>((set, get) => ({
   },
 
   signIn: async (token: string) => {
+    console.log(`${TAG} Signing in, storing token...`);
     await SecureStore.setItemAsync(TOKEN_KEY, token);
     set({ token, isSignedIn: true });
+    console.log(`${TAG} Sign in complete`);
   },
 
   signOut: async () => {
+    console.log(`${TAG} Signing out, clearing token...`);
     await SecureStore.deleteItemAsync(TOKEN_KEY);
     set({ token: null, isSignedIn: false });
+    console.log(`${TAG} Sign out complete`);
   },
 }));
 
