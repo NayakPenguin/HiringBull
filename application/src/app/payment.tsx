@@ -82,6 +82,7 @@ const PLANS = [
 const productIds = PLANS.map((p) => p.id);
 
 export default function PaymentScreen() {
+  console.log('[PaymentScreen] Screen rendered');
   const router = useRouter();
   const { signOut } = useAuth();
 

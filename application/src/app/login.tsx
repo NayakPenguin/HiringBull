@@ -14,6 +14,7 @@ import Animated, { FadeInUp } from 'react-native-reanimated';
 
 import { client } from '@/api/common/client';
 import { FocusAwareStatusBar, Input, Text, View } from '@/components/ui';
+import { GoogleLogo } from '@/components/ui/GoogleLogo';
 import { OTPInput } from '@/components/ui/otp-input';
 import { useRegisterDevice } from '@/features/users';
 import { hideGlobalLoading, showGlobalLoading } from '@/lib';
@@ -49,11 +50,14 @@ export default function Login() {
   /* ---------- Shared: register device + navigate ---------- */
 
   const registerDeviceAndNavigate = async () => {
+    console.log('[Login:Nav] registerDeviceAndNavigate called');
     const deviceId = await getOrCreateDeviceId();
+    console.log('[Login:Nav] deviceId:', deviceId);
     registerDevice({
       deviceId,
       type: Platform.OS === 'ios' ? 'ios' : 'android',
     });
+    console.log('[Login:Nav] About to router.replace("/") — root layout will decide where to go');
     router.replace('/');
   };
 
@@ -241,10 +245,44 @@ export default function Login() {
             Find your dream job effortlessly
           </Text>
 
-          {/* EMAIL / OTP */}
+          {/* SOCIAL LOGINS + EMAIL / OTP */}
 
           {step === 'email' ? (
             <>
+              {/* Social logins — above email per client request */}
+              <Pressable
+                onPress={handleGoogleSignIn}
+                className="mb-3 flex-row items-center justify-center rounded-xl border border-neutral-200 py-4"
+              >
+                <View style={{ marginRight: 8 }}>
+                  <GoogleLogo size={20} />
+                </View>
+                <Text className="text-base font-semibold text-neutral-700">
+                  Continue with Google
+                </Text>
+              </Pressable>
+
+              <Pressable
+                onPress={handleLinkedInSignIn}
+                className="mb-3 flex-row items-center justify-center rounded-xl border border-neutral-200 py-4"
+              >
+                <Ionicons
+                  name="logo-linkedin"
+                  size={20}
+                  color="#0A66C2"
+                  style={{ marginRight: 8 }}
+                />
+                <Text className="text-base font-semibold text-neutral-700">
+                  Continue with LinkedIn
+                </Text>
+              </Pressable>
+
+              <View className="my-5 flex-row items-center">
+                <View className="h-px flex-1 bg-neutral-200" />
+                <Text className="mx-4 text-sm text-neutral-400">or continue with email</Text>
+                <View className="h-px flex-1 bg-neutral-200" />
+              </View>
+
               <Text className="mb-2 text-base font-semibold text-neutral-500">
                 Enter Email Address
               </Text>
@@ -278,43 +316,6 @@ export default function Login() {
               >
                 <Text className="text-center text-lg font-bold text-white">
                   Continue to Proceed
-                </Text>
-              </Pressable>
-
-              {/* Social logins */}
-              <View className="my-6 flex-row items-center">
-                <View className="h-px flex-1 bg-neutral-200" />
-                <Text className="mx-4 text-sm text-neutral-400">or</Text>
-                <View className="h-px flex-1 bg-neutral-200" />
-              </View>
-
-              <Pressable
-                onPress={handleGoogleSignIn}
-                className="mb-3 flex-row items-center justify-center rounded-xl border border-neutral-200 py-4"
-              >
-                <Ionicons
-                  name="logo-google"
-                  size={20}
-                  color="#4285F4"
-                  style={{ marginRight: 8 }}
-                />
-                <Text className="text-base font-semibold text-neutral-700">
-                  Continue with Google
-                </Text>
-              </Pressable>
-
-              <Pressable
-                onPress={handleLinkedInSignIn}
-                className="flex-row items-center justify-center rounded-xl border border-neutral-200 py-4"
-              >
-                <Ionicons
-                  name="logo-linkedin"
-                  size={20}
-                  color="#0A66C2"
-                  style={{ marginRight: 8 }}
-                />
-                <Text className="text-base font-semibold text-neutral-700">
-                  Continue with LinkedIn
                 </Text>
               </Pressable>
             </>
@@ -368,6 +369,28 @@ export default function Login() {
               >
                 <Text className="text-center text-lg font-bold text-white">
                   Verify & Continue
+                </Text>
+              </Pressable>
+
+              {/* Resend OTP */}
+              <Pressable
+                onPress={async () => {
+                  setError('');
+                  showGlobalLoading();
+                  try {
+                    console.log('[Login:OTP] Resending OTP to:', email.trim());
+                    await client.post('/api/auth/email/send-otp', { email: email.trim() });
+                    console.log('[Login:OTP] OTP resent successfully');
+                  } catch (err: any) {
+                    setError(err?.response?.data?.error || 'Failed to resend code');
+                  } finally {
+                    hideGlobalLoading();
+                  }
+                }}
+                className="mt-4"
+              >
+                <Text className="text-center text-sm font-semibold text-blue-600">
+                  Didn't receive the code? Resend OTP
                 </Text>
               </Pressable>
             </>

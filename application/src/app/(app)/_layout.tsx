@@ -22,13 +22,23 @@ export default function TabLayout() {
   const router = useRouter();
   useEffect(() => {
     const membershipData = getMembership();
+    console.log('[TabLayout] Mount: membershipData =', JSON.stringify(membershipData));
     // Redirect to no-membership if:
     // - No membership data at all (new user who hasn't purchased)
     // - Membership data exists but is expired
-    if (!membershipData || !isMembershipValid(membershipData.membershipEnd)) {
+    if (!membershipData) {
+      console.log('[TabLayout] No membership data → redirecting to /no-membership');
       router.replace('/no-membership');
       return;
     }
+    const isValid = isMembershipValid(membershipData.membershipEnd);
+    console.log('[TabLayout] Membership valid =', isValid, '| membershipEnd =', membershipData.membershipEnd);
+    if (!isValid) {
+      console.log('[TabLayout] Membership expired → redirecting to /no-membership');
+      router.replace('/no-membership');
+      return;
+    }
+    console.log('[TabLayout] Membership is valid, staying in (app)');
   }, []);
   useEffect(() => {
     const subscription = AppState.addEventListener(

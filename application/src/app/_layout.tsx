@@ -103,20 +103,27 @@ function RootNavigator() {
   const checkUserInfo = async () => {
     try {
       setIsLoadingUser(true);
+      console.log('[RootLayout] checkUserInfo: fetching user info...');
       const data = await getUserInfo();
+      console.log('[RootLayout] checkUserInfo: onboarding_completed =', data.onboarding_completed);
       if (Boolean(data.onboarding_completed)) {
         completeOnboarding();
         updateUserInfo(data);
+        console.log('[RootLayout] checkUserInfo: onboarding marked complete');
+      } else {
+        console.log('[RootLayout] checkUserInfo: onboarding NOT completed yet');
       }
     } catch (e: any) {
-      console.error('checkUserInfo: Failed to get user info:', e?.message || e);
+      console.error('[RootLayout] checkUserInfo: Failed to get user info:', e?.message || e);
     } finally {
       setIsLoadingUser(false);
+      console.log('[RootLayout] checkUserInfo: done, isLoadingUser=false');
     }
   };
   const appState = useRef(AppState.currentState);
   const isFirstForeground = useRef(true);
   useEffect(() => {
+    console.log('[RootLayout] Auth state changed: isSignedIn =', isSignedIn);
     if (isSignedIn) {
       checkUserInfo();
     }
@@ -174,6 +181,13 @@ function RootNavigator() {
     <>
       {shouldInitNotifications && <NotificationInitializer />}
 
+      {/* DEBUG: Log nav guard state every render */}
+      {(() => {
+        console.log('[RootLayout:Render] isAuthenticated =', isAuthenticated, '| isLoadingUser =', isLoadingUser, '| hasCompletedOnboarding =', hasCompletedOnboarding);
+        console.log('[RootLayout:Render] Guards → login:', !isAuthenticated, '| onboarding:', !hasCompletedOnboarding, '| (app):', hasCompletedOnboarding);
+        return null;
+      })()}
+
       <Stack>
         {/* <Stack.Protected guard={isFirstTime}>
           <Stack.Screen name="landing" options={{ headerShown: false }} />
@@ -183,7 +197,7 @@ function RootNavigator() {
           <Stack.Screen name="login" options={{ headerShown: false }} />
         </Stack.Protected>
 
-        <Stack.Protected guard={!isLoadingUser && !hasCompletedOnboarding}>
+        <Stack.Protected guard={!hasCompletedOnboarding}>
           <Stack.Screen name="onboarding" options={{ headerShown: false }} />
         </Stack.Protected>
 

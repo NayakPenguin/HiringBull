@@ -6,9 +6,10 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 /**
  * Sign a JWT for a user (365-day expiry)
+ * Includes email so the client can identify the user without an API call
  */
-export const signToken = (userId) => {
-  return jwt.sign({ sub: userId }, JWT_SECRET, { expiresIn: "365d" });
+export const signToken = (userId, email) => {
+  return jwt.sign({ sub: userId, email: email || null }, JWT_SECRET, { expiresIn: "365d" });
 };
 
 /**

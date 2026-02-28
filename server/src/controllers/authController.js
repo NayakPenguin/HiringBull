@@ -57,8 +57,8 @@ const findOrCreateUser = async ({ email, name, provider, providerId, imgUrl }) =
     throw error;
   }
 
-  const token = signToken(user.id);
-  log(`[Auth] JWT issued for user ${user.id}`);
+  const token = signToken(user.id, user.email);
+  log(`[Auth] JWT issued for user ${user.id} (email=${user.email})`);
   return { token, user };
 };
 
@@ -582,6 +582,6 @@ export const verifyOtp = catchAsync(async (req, res) => {
  */
 export const refreshToken = catchAsync(async (req, res) => {
   log(`[Auth:Refresh] Token refresh for userId=${req.user.id}`);
-  const token = signToken(req.user.id);
+  const token = signToken(req.user.id, req.user.email);
   res.status(httpStatus.OK).json({ token });
 });

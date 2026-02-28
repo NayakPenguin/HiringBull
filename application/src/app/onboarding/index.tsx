@@ -68,29 +68,40 @@ export default function Onboarding() {
   const { mutate: registerUser, isPending: isRegistering } =
     useRegisterOrEditUser();
 
+  const [membershipLoading, setMembershipLoading] = useState(true);
+
   useEffect(() => {
     const checkIfVerified = async () => {
       const email = getUserEmail();
+      console.log('[Onboarding] checkIfVerified: email =', email);
       if (!email) {
+        console.log('[Onboarding] No email in JWT, cannot check membership');
+        setMembershipLoading(false);
         return;
       }
 
       try {
+        console.log('[Onboarding] Calling checkUserVerification for:', email);
         const verificationData = await checkUserVerification(email);
+        console.log('[Onboarding] Verification response:', JSON.stringify(verificationData));
         saveMembership({
           email,
           membershipEnd: verificationData.data.membershipEnd,
         });
 
-        if (!isMembershipValid(verificationData.data.membershipEnd)) {
+        const isValid = isMembershipValid(verificationData.data.membershipEnd);
+        console.log('[Onboarding] Membership valid =', isValid, '| membershipEnd =', verificationData.data.membershipEnd);
+        if (!isValid) {
           setIsVerifiedUser(false);
-          return;
+        } else {
+          setIsVerifiedUser(true);
         }
-        setIsVerifiedUser(true);
       } catch (err: any) {
         // 404 = no membership record exists → user has no membership
         console.log('[Onboarding] Membership check failed:', err?.response?.status || err.message);
         setIsVerifiedUser(false);
+      } finally {
+        setMembershipLoading(false);
       }
     };
 
@@ -182,9 +193,21 @@ export default function Onboarding() {
       'https://www.hiringbull.in/join-membership'
     );
   };
+  if (membershipLoading) {
+    console.log('[Onboarding] Still checking membership, showing loading...');
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <Text className="text-base text-neutral-500">Checking membership...</Text>
+      </View>
+    );
+  }
+
+  console.log('[Onboarding] isVerifiedUser =', isVerifiedUser);
   if (!isVerifiedUser) {
+    console.log('[Onboarding] User has no valid membership → showing NoActiveMembership');
     return <NoActiveMembership />;
   }
+  console.log('[Onboarding] User has valid membership → showing onboarding steps');
 
   return (
     <View className="flex-1 bg-white dark:bg-neutral-900">

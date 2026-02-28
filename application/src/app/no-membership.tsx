@@ -10,6 +10,7 @@ import { clearMembership } from '@/lib/membership';
 export default function NoActiveMembership() {
   const router = useRouter();
   const { signOut } = useAuth();
+  console.log('[NoMembership] Screen rendered');
   return (
     <SafeAreaView className="flex-1 bg-white">
       {/* Header */}
@@ -83,7 +84,10 @@ export default function NoActiveMembership() {
         </Pressable>
 
         <Pressable
-          onPress={() => router.push('/payment')}
+          onPress={() => {
+            console.log('[NoMembership] "Get Membership" pressed → navigating to /payment');
+            router.push('/payment');
+          }}
           className="rounded-xl bg-black py-4"
         >
           <Text className="text-center text-base font-bold text-white">

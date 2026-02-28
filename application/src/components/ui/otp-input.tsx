@@ -1,5 +1,5 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { TextInput, View, Pressable, StyleSheet } from 'react-native';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { TextInput, View, Pressable, StyleSheet, Platform } from 'react-native';
 
 interface OTPInputProps {
   length?: number;
@@ -14,94 +14,78 @@ export function OTPInput({
   onChange, 
   autoFocus = true 
 }: OTPInputProps) {
-  const inputRefs = useRef<(TextInput | null)[]>([]);
-  const [focusedIndex, setFocusedIndex] = useState(0);
+  // Use a single hidden TextInput approach to avoid multi-box focus issues
+  const hiddenInputRef = useRef<TextInput | null>(null);
+  const [isFocused, setIsFocused] = useState(false);
 
   // Split value into array for display
   const otpValues = value.split('').concat(Array(length - value.length).fill(''));
+  const activeIndex = Math.min(value.length, length - 1);
 
   useEffect(() => {
-    if (autoFocus && inputRefs.current[0]) {
-      inputRefs.current[0]?.focus();
+    if (autoFocus) {
+      // Small delay to let layout settle
+      setTimeout(() => {
+        hiddenInputRef.current?.focus();
+      }, 100);
     }
   }, [autoFocus]);
 
-  const handleChange = (text: string, index: number) => {
+  const handleChange = useCallback((text: string) => {
     // Only allow digits
-    const digit = text.replace(/[^0-9]/g, '');
-    
-    if (digit.length > 1) {
-      // Handle paste - distribute digits across boxes
-      const digits = digit.slice(0, length);
-      onChange(digits);
-      const nextIndex = Math.min(digits.length, length - 1);
-      inputRefs.current[nextIndex]?.focus();
+    const digits = text.replace(/[^0-9]/g, '').slice(0, length);
+    console.log('[OTPInput] handleChange: raw =', JSON.stringify(text), '| cleaned =', digits);
+    onChange(digits);
+  }, [length, onChange]);
+
+  const handleKeyPress = useCallback((e: any) => {
+    if (e.nativeEvent.key === 'Backspace' && value.length === 0) {
+      // Already empty, do nothing
       return;
     }
+  }, [value]);
 
-    // Build new value
-    const newValue = value.split('');
-    newValue[index] = digit;
-    const joinedValue = newValue.join('').slice(0, length);
-    onChange(joinedValue);
-
-    // Move to next input if digit entered
-    if (digit && index < length - 1) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleKeyPress = (e: any, index: number) => {
-    if (e.nativeEvent.key === 'Backspace') {
-      if (!otpValues[index] && index > 0) {
-        // If current box is empty, move to previous and clear it
-        const newValue = value.split('');
-        newValue[index - 1] = '';
-        onChange(newValue.join(''));
-        inputRefs.current[index - 1]?.focus();
-      } else {
-        // Clear current box
-        const newValue = value.split('');
-        newValue[index] = '';
-        onChange(newValue.join(''));
-      }
-    }
-  };
-
-  const handleFocus = (index: number) => {
-    setFocusedIndex(index);
-  };
-
-  const handleBoxPress = (index: number) => {
-    inputRefs.current[index]?.focus();
-  };
+  const handleBoxPress = useCallback(() => {
+    hiddenInputRef.current?.focus();
+  }, []);
 
   return (
     <View style={styles.container}>
+      {/* Hidden input that captures all keyboard input */}
+      <TextInput
+        ref={hiddenInputRef}
+        value={value}
+        onChangeText={handleChange}
+        onKeyPress={handleKeyPress}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        keyboardType="number-pad"
+        maxLength={length}
+        caretHidden
+        autoComplete="one-time-code"
+        textContentType="oneTimeCode"
+        style={styles.hiddenInput}
+      />
+
+      {/* Visual boxes */}
       {Array.from({ length }).map((_, index) => (
         <Pressable
           key={index}
-          onPress={() => handleBoxPress(index)}
+          onPress={handleBoxPress}
           style={[
             styles.box,
-            focusedIndex === index && styles.boxFocused,
+            isFocused && index === activeIndex && styles.boxFocused,
             otpValues[index] && styles.boxFilled,
           ]}
         >
-          <TextInput
-            ref={(ref) => {
-              inputRefs.current[index] = ref;
-            }}
-            style={styles.input}
-            value={otpValues[index]}
-            onChangeText={(text) => handleChange(text, index)}
-            onKeyPress={(e) => handleKeyPress(e, index)}
-            onFocus={() => handleFocus(index)}
-            keyboardType="number-pad"
-            maxLength={index === 0 ? length : 1} // Allow paste on first box
-            selectTextOnFocus
-            caretHidden
-          />
+          <View style={styles.digitContainer}>
+            <TextInput
+              style={styles.input}
+              value={otpValues[index]}
+              editable={false}
+              pointerEvents="none"
+            />
+          </View>
         </Pressable>
       ))}
     </View>
@@ -113,6 +97,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 10,
+    position: 'relative',
+  },
+  hiddenInput: {
+    position: 'absolute',
+    width: 1,
+    height: 1,
+    opacity: 0,
   },
   box: {
     width: 48,
@@ -131,6 +122,12 @@ const styles = StyleSheet.create({
   boxFilled: {
     borderColor: '#171717',
     backgroundColor: '#fff',
+  },
+  digitContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    height: '100%',
   },
   input: {
     fontSize: 24,
