@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import prisma from "../prismaClient.js";
+import { log } from "../utils/logger.js";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -41,11 +42,13 @@ export const requireAuth = async (req, res, next) => {
   try {
     const token = extractToken(req);
     if (!token) {
+      log(`[Auth] No token in request: ${req.method} ${req.originalUrl}`);
       return res.status(401).json({ message: "Authentication required" });
     }
 
     const payload = verifyToken(token);
     if (!payload?.sub) {
+      log(`[Auth] Invalid/expired token: ${req.method} ${req.originalUrl}`);
       return res.status(401).json({ message: "Invalid or expired token" });
     }
 
@@ -54,16 +57,20 @@ export const requireAuth = async (req, res, next) => {
     });
 
     if (!user) {
+      log(`[Auth] User not found for sub=${payload.sub}`);
       return res.status(401).json({ message: "User not found" });
     }
 
     if (!user.active) {
+      log(`[Auth] Disabled account: userId=${user.id}`);
       return res.status(403).json({ message: "Account disabled" });
     }
 
+    log(`[Auth] Authenticated: userId=${user.id} → ${req.method} ${req.originalUrl}`);
     req.user = user;
     next();
   } catch (error) {
+    log(`[Auth] Middleware error:`, error.message);
     return res.status(500).json({ message: "Authentication error" });
   }
 };

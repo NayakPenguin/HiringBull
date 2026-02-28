@@ -3,6 +3,7 @@ import { Resend } from "resend";
 import httpStatus from "http-status";
 import prisma from "../prismaClient.js";
 import { signToken } from "../middlewares/auth.js";
+import { log } from "../utils/logger.js";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -16,10 +17,12 @@ const catchAsync = (fn) => (req, res, next) => {
  * Find or create a user by email + provider, then return a JWT.
  */
 const findOrCreateUser = async ({ email, name, provider, providerId, imgUrl }) => {
+  log(`[Auth] findOrCreateUser: email=${email}, provider=${provider}`);
   // 1) Try by email first (handles existing Clerk-era users)
   let user = await prisma.user.findUnique({ where: { email } });
 
   if (user) {
+    log(`[Auth] Existing user found: id=${user.id}, email=${email}`);
     // Backfill provider fields if missing (migration from Clerk)
     const updates = {};
     if (!user.provider) updates.provider = provider;
@@ -28,10 +31,12 @@ const findOrCreateUser = async ({ email, name, provider, providerId, imgUrl }) =
     if (!user.name && name) updates.name = name;
 
     if (Object.keys(updates).length > 0) {
+      log(`[Auth] Backfilling fields for user ${user.id}:`, Object.keys(updates));
       user = await prisma.user.update({ where: { id: user.id }, data: updates });
     }
   } else {
     // 2) Create new user
+    log(`[Auth] Creating new user: email=${email}, provider=${provider}`);
     user = await prisma.user.create({
       data: {
         email,
@@ -42,15 +47,18 @@ const findOrCreateUser = async ({ email, name, provider, providerId, imgUrl }) =
         active: true,
       },
     });
+    log(`[Auth] New user created: id=${user.id}`);
   }
 
   if (!user.active) {
+    log(`[Auth] Account disabled: id=${user.id}`);
     const error = new Error("Account disabled");
     error.statusCode = httpStatus.FORBIDDEN;
     throw error;
   }
 
   const token = signToken(user.id);
+  log(`[Auth] JWT issued for user ${user.id}`);
   return { token, user };
 };
 
@@ -74,15 +82,47 @@ const generateOtp = async (email) => {
 // ─── Google OAuth ───────────────────────────────────────────
 
 /**
- * POST /api/auth/google
- * Body: { idToken: string }
- *
- * Verifies a Google ID token (from the mobile app's Google Sign-In)
- * and returns a JWT + user record.
+ * @swagger
+ * /api/auth/google:
+ *   post:
+ *     summary: Google Sign-In
+ *     description: Verifies a Google ID token and returns a JWT + user record.
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [idToken]
+ *             properties:
+ *               idToken:
+ *                 type: string
+ *                 description: Google ID token from mobile Google Sign-In
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                   description: JWT token (365-day expiry)
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Missing idToken
+ *       401:
+ *         description: Invalid Google token
  */
 export const googleLogin = catchAsync(async (req, res) => {
   const { idToken } = req.body;
+  log(`[Auth:Google] Login attempt`);
   if (!idToken) {
+    log(`[Auth:Google] Missing idToken`);
     return res.status(httpStatus.BAD_REQUEST).json({ message: "idToken is required" });
   }
 
@@ -100,9 +140,11 @@ export const googleLogin = catchAsync(async (req, res) => {
 
   const payload = ticket.getPayload();
   if (!payload?.email) {
+    log(`[Auth:Google] Token verified but no email in payload`);
     return res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid Google token" });
   }
 
+  log(`[Auth:Google] Token verified for ${payload.email}`);
   const { token, user } = await findOrCreateUser({
     email: payload.email,
     name: payload.name,
@@ -111,21 +153,56 @@ export const googleLogin = catchAsync(async (req, res) => {
     imgUrl: payload.picture,
   });
 
+  log(`[Auth:Google] Login success: userId=${user.id}`);
   res.status(httpStatus.OK).json({ token, user });
 });
 
 // ─── LinkedIn OpenID Connect ────────────────────────────────
 
 /**
- * POST /api/auth/linkedin
- * Body: { code: string, redirectUri: string }
- *
- * Exchanges a LinkedIn authorization code for user info via OpenID Connect,
- * then returns a JWT + user record.
+ * @swagger
+ * /api/auth/linkedin:
+ *   post:
+ *     summary: LinkedIn Sign-In
+ *     description: Exchanges a LinkedIn authorization code for user info, returns JWT + user.
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [code, redirectUri]
+ *             properties:
+ *               code:
+ *                 type: string
+ *                 description: LinkedIn authorization code
+ *               redirectUri:
+ *                 type: string
+ *                 description: Redirect URI used in the auth request
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Missing code or redirectUri
+ *       401:
+ *         description: LinkedIn auth failed
  */
 export const linkedinLogin = catchAsync(async (req, res) => {
   const { code, redirectUri } = req.body;
+  log(`[Auth:LinkedIn] Login attempt, redirectUri=${redirectUri}`);
   if (!code || !redirectUri) {
+    log(`[Auth:LinkedIn] Missing code or redirectUri`);
     return res.status(httpStatus.BAD_REQUEST).json({
       message: "code and redirectUri are required",
     });
@@ -145,10 +222,12 @@ export const linkedinLogin = catchAsync(async (req, res) => {
   });
 
   if (!tokenResponse.ok) {
+    log(`[Auth:LinkedIn] Token exchange failed: status=${tokenResponse.status}`);
     return res.status(httpStatus.UNAUTHORIZED).json({ message: "LinkedIn token exchange failed" });
   }
 
   const tokenData = await tokenResponse.json();
+  log(`[Auth:LinkedIn] Token exchange successful`);
 
   // 2) Fetch user info from LinkedIn's OpenID Connect userinfo endpoint
   const userInfoResponse = await fetch("https://api.linkedin.com/v2/userinfo", {
@@ -167,6 +246,7 @@ export const linkedinLogin = catchAsync(async (req, res) => {
     });
   }
 
+  log(`[Auth:LinkedIn] Profile fetched: email=${profile.email}`);
   const { token, user } = await findOrCreateUser({
     email: profile.email,
     name: profile.name,
@@ -175,24 +255,55 @@ export const linkedinLogin = catchAsync(async (req, res) => {
     imgUrl: profile.picture || null,
   });
 
+  log(`[Auth:LinkedIn] Login success: userId=${user.id}`);
   res.status(httpStatus.OK).json({ token, user });
 });
 
 // ─── Email OTP ──────────────────────────────────────────────
 
 /**
- * POST /api/auth/email/send-otp
- * Body: { email: string }
- *
- * Sends a 6-digit OTP to the given email address via Resend.
+ * @swagger
+ * /api/auth/email/send-otp:
+ *   post:
+ *     summary: Send Email OTP
+ *     description: Sends a 6-digit OTP to the given email address.
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: OTP sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: OTP sent
+ *       400:
+ *         description: Missing email
  */
 export const sendOtp = catchAsync(async (req, res) => {
   const { email } = req.body;
+  log(`[Auth:OTP] Send OTP request for: ${email}`);
   if (!email) {
+    log(`[Auth:OTP] Missing email`);
     return res.status(httpStatus.BAD_REQUEST).json({ message: "email is required" });
   }
 
   const code = await generateOtp(email);
+  log(`[Auth:OTP] OTP generated for ${email}`);
 
   await resend.emails.send({
     // TODO: Change to "HiringBull <noreply@hiringbull.org>" before production push
@@ -209,18 +320,55 @@ export const sendOtp = catchAsync(async (req, res) => {
     `,
   });
 
+  log(`[Auth:OTP] Email sent to ${email}`);
   res.status(httpStatus.OK).json({ message: "OTP sent" });
 });
 
 /**
- * POST /api/auth/email/verify-otp
- * Body: { email: string, code: string }
- *
- * Verifies the OTP and returns a JWT + user record.
+ * @swagger
+ * /api/auth/email/verify-otp:
+ *   post:
+ *     summary: Verify Email OTP
+ *     description: Verifies the OTP and returns a JWT + user record.
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, code]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               code:
+ *                 type: string
+ *                 description: 6-digit OTP code
+ *                 example: "123456"
+ *     responses:
+ *       200:
+ *         description: OTP verified, login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Missing email or code
+ *       401:
+ *         description: Invalid or expired OTP
  */
 export const verifyOtp = catchAsync(async (req, res) => {
   const { email, code } = req.body;
+  log(`[Auth:OTP] Verify attempt: email=${email}`);
   if (!email || !code) {
+    log(`[Auth:OTP] Missing email or code`);
     return res.status(httpStatus.BAD_REQUEST).json({ message: "email and code are required" });
   }
 
@@ -230,10 +378,12 @@ export const verifyOtp = catchAsync(async (req, res) => {
   });
 
   if (!otp) {
+    log(`[Auth:OTP] Invalid OTP for ${email}`);
     return res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid OTP" });
   }
 
   if (new Date() > otp.expiresAt) {
+    log(`[Auth:OTP] OTP expired for ${email}`);
     await prisma.otp.delete({ where: { id: otp.id } });
     return res.status(httpStatus.UNAUTHORIZED).json({ message: "OTP expired" });
   }
@@ -249,18 +399,37 @@ export const verifyOtp = catchAsync(async (req, res) => {
     imgUrl: null,
   });
 
+  log(`[Auth:OTP] Verify success: email=${email}, userId=${user.id}`);
   res.status(httpStatus.OK).json({ token, user });
 });
 
 // ─── Token Refresh ──────────────────────────────────────────
 
 /**
- * POST /api/auth/refresh
- * Requires: Valid JWT in Authorization header (via requireAuth)
- *
- * Issues a fresh JWT for the authenticated user.
+ * @swagger
+ * /api/auth/refresh:
+ *   post:
+ *     summary: Refresh JWT
+ *     description: Issues a fresh JWT for the authenticated user. Requires valid existing JWT.
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: New JWT issued
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                   description: New JWT token (365-day expiry)
+ *       401:
+ *         description: Authentication required or invalid token
  */
 export const refreshToken = catchAsync(async (req, res) => {
+  log(`[Auth:Refresh] Token refresh for userId=${req.user.id}`);
   const token = signToken(req.user.id);
   res.status(httpStatus.OK).json({ token });
 });
