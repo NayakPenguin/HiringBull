@@ -8,7 +8,7 @@ const TAG = '[API]';
 // Production: https://api.hiringbull.org
 // For local dev, set EXPO_PUBLIC_API_URL in your .env.development file
 // const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://api.hiringbull.org';
-  const BASE_URL="http://10.240.46.168:4000"
+  const BASE_URL="https://api.hiringbull.org"
 
 console.log(`${TAG} Base URL: ${BASE_URL}`);
 
