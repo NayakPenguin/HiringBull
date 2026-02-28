@@ -12,5 +12,5 @@ export async function setItem<T>(key: string, value: T) {
 }
 
 export async function removeItem(key: string) {
-  storage.delete(key);
+  storage.remove(key);
 }

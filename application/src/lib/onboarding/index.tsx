@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import { resetUser, type UserInfo } from '@/features/users';
+import { type UserInfo } from '@/features/users';
 
 import { storage } from '../storage';
 import { createSelectors } from '../utils';
@@ -35,15 +35,10 @@ const _useOnboarding = create<OnboardingState>((set) => ({
   },
 
   reset: async () => {
-    storage.delete(ONBOARDING_COMPLETED_KEY);
-    storage.delete(IS_SUBSCRIBED_KEY);
+    storage.remove(ONBOARDING_COMPLETED_KEY);
+    storage.remove(IS_SUBSCRIBED_KEY);
     set({ hasCompletedOnboarding: false, isSubscribed: false });
     set({ userInfo: null });
-    try {
-      await resetUser();
-    } catch (e) {
-      console.warn('Failed to remove device', e);
-    }
   },
 
   hydrate: () => {

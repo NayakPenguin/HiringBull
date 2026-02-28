@@ -16,7 +16,7 @@ import {
 import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
 import { resetOnboarding } from '@/lib';
 import { resetUser } from '@/features/users';
-import { getMembership, isMembershipValid } from '@/lib/membership';
+import { clearMembership, getMembership, isMembershipValid } from '@/lib/membership';
 
 type SettingsItem = {
   label: string;
@@ -121,11 +121,20 @@ export default function Profile() {
   const handleConfirm = async () => {
     if (confirmAction === 'logout') {
       try {
+        // 1. Unregister device while token is still valid
         await resetUser();
-        await signOut();
-        resetOnboarding();
       } catch (error) {
-        console.error('Logout error:', error);
+        console.warn('[Logout] resetUser failed (non-fatal):', error);
+      }
+      try {
+        // 2. Clear token & auth state
+        await signOut();
+        // 3. Clear onboarding/subscription flags (no API call)
+        resetOnboarding();
+        // 4. Clear cached membership
+        clearMembership();
+      } catch (error) {
+        console.error('[Logout] cleanup error:', error);
       }
     }
   };
