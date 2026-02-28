@@ -22,10 +22,23 @@ export default function TabLayout() {
   const router = useRouter();
   useEffect(() => {
     const membershipData = getMembership();
-    if (membershipData && !isMembershipValid(membershipData.membershipEnd)) {
+    console.log('[TabLayout] Mount: membershipData =', JSON.stringify(membershipData));
+    // Redirect to no-membership if:
+    // - No membership data at all (new user who hasn't purchased)
+    // - Membership data exists but is expired
+    if (!membershipData) {
+      console.log('[TabLayout] No membership data → redirecting to /no-membership');
       router.replace('/no-membership');
       return;
     }
+    const isValid = isMembershipValid(membershipData.membershipEnd);
+    console.log('[TabLayout] Membership valid =', isValid, '| membershipEnd =', membershipData.membershipEnd);
+    if (!isValid) {
+      console.log('[TabLayout] Membership expired → redirecting to /no-membership');
+      router.replace('/no-membership');
+      return;
+    }
+    console.log('[TabLayout] Membership is valid, staying in (app)');
   }, []);
   useEffect(() => {
     const subscription = AppState.addEventListener(
@@ -36,11 +49,9 @@ export default function TabLayout() {
           appState.current.match(/inactive|background/) &&
           nextAppState === 'active'
         ) {
-          console.log('App came to foreground');
           const membershipData = getMembership();
-          console.log('Membership Data in TabLayout:', membershipData);
           if (
-            membershipData &&
+            !membershipData ||
             !isMembershipValid(membershipData.membershipEnd)
           ) {
             router.replace('/no-membership');
@@ -50,18 +61,12 @@ export default function TabLayout() {
           const { status } = await Notifications.getPermissionsAsync();
 
           if (status === 'granted') {
-            console.log('Permission granted');
-
-            // 2️⃣ CALL YOUR API HERE
-            // await callNotificationEnabledAPI();
-            console.log('callNotificationEnabledAPI()');
             const projectId =
               Constants.expoConfig?.extra?.eas?.projectId ??
               Constants.easConfig?.projectId;
 
             const { data: expoPushToken } =
               await Notifications.getExpoPushTokenAsync({ projectId });
-            console.log('Expo Push Token:', expoPushToken);
 
             const deviceId = await getOrCreateDeviceId();
             const platform = Platform.OS === 'android' ? 'android' : 'ios';

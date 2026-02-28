@@ -50,7 +50,9 @@ model PaymentTesting {
 
 model User {
   id                     String    @id @default(uuid())
-  clerkId                String?   @unique // Clerk user ID for auth sync
+  clerkId                String?   @unique // Legacy — kept for data migration
+  provider               String?   // "google" | "linkedin" | "email"
+  providerId             String?   // Provider-specific user ID (Google sub, LinkedIn sub, or email)
   name                   String
   img_url                String?
   email                  String    @unique
@@ -86,7 +88,19 @@ model User {
 
   @@index([email])
   @@index([clerkId])
+  @@index([provider, providerId])
   @@index([segment])
+}
+
+model Otp {
+  id        String   @id @default(uuid())
+  email     String
+  code      String
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email, code])
 }
 
 model Company {
@@ -179,6 +193,13 @@ model Payment {
   amount          Float
   status          PaymentStatus @default(PENDING)
 
+  // Payment source: "razorpay" | "google_play"
+  source          String        @default("razorpay")
+
+  // Google Play Billing fields
+  googlePlayToken   String?     // purchaseToken from Google Play
+  googlePlayOrderId String?     // orderId from Google Play receipt
+
   email           String        
 
   userId          String?
@@ -196,6 +217,7 @@ model Payment {
   @@index([email])
   @@index([orderId])
   @@index([planType])
+  @@index([source])
 }
 
 

@@ -1,26 +1,12 @@
-import { useAuth } from '@clerk/clerk-expo';
 import { create } from 'zustand';
 
-import { resetUser, type UserInfo } from '@/features/users';
+import { type UserInfo } from '@/features/users';
 
 import { storage } from '../storage';
 import { createSelectors } from '../utils';
 
 const ONBOARDING_COMPLETED_KEY = 'ONBOARDING_COMPLETED';
 const IS_SUBSCRIBED_KEY = 'IS_SUBSCRIBED';
-
-const clearUser = async () => {
-  const { getToken } = useAuth();
-  const token = await getToken();
-  try {
-    if (!token) return;
-
-    await resetUser(token);
-    console.log('logout device token:', token);
-  } catch (e) {
-    console.warn('Failed to remove device', e);
-  }
-};
 
 type OnboardingState = {
   hasCompletedOnboarding: boolean;
@@ -49,19 +35,10 @@ const _useOnboarding = create<OnboardingState>((set) => ({
   },
 
   reset: async () => {
-    storage.delete(ONBOARDING_COMPLETED_KEY);
-    storage.delete(IS_SUBSCRIBED_KEY);
+    storage.remove(ONBOARDING_COMPLETED_KEY);
+    storage.remove(IS_SUBSCRIBED_KEY);
     set({ hasCompletedOnboarding: false, isSubscribed: false });
     set({ userInfo: null });
-    if (deviceToken) {
-      try {
-        console.log("calling api->>>>>>>>>")
-        await resetUser(deviceToken);
-        console.log('logout device token:', deviceToken);
-      } catch (e) {
-        console.warn('Failed to remove device', e);
-      }
-    }
   },
 
   hydrate: () => {
