@@ -4,12 +4,11 @@ import { useRouter } from 'expo-router';
 import { Linking, Pressable, ScrollView } from 'react-native';
 
 import { SafeAreaView, Text, View } from '@/components/ui';
-import { hideGlobalLoading, resetOnboarding, showGlobalLoading } from '@/lib';
-import { useEffect } from 'react';
+import { resetOnboarding } from '@/lib';
 import { clearMembership } from '@/lib/membership';
 
 export default function NoActiveMembership() {
-  const { navigate } = useRouter();
+  const router = useRouter();
   const { signOut } = useAuth();
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -20,7 +19,7 @@ export default function NoActiveMembership() {
             await signOut();
             resetOnboarding();
             clearMembership();
-            navigate('/login');
+            router.replace('/login');
           }}
           className="size-10 items-center justify-center rounded-full bg-neutral-100"
         >
@@ -84,13 +83,11 @@ export default function NoActiveMembership() {
         </Pressable>
 
         <Pressable
-          onPress={() =>
-            Linking.openURL('https://hiringbull.org/join-membership')
-          }
+          onPress={() => router.push('/payment')}
           className="rounded-xl bg-black py-4"
         >
           <Text className="text-center text-base font-bold text-white">
-            Apply Now
+            Get Membership
           </Text>
         </Pressable>
       </View>

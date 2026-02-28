@@ -191,7 +191,6 @@ function RootNavigator() {
           <Stack.Screen name="(app)" options={{ headerShown: false }} />
         </Stack.Protected>
         <Stack.Protected guard={hasCompletedOnboarding}>
-          <Stack.Screen name="payment" options={{ headerShown: false }} />
           <Stack.Screen
             name="edit-experience"
             options={{ headerShown: false }}
@@ -202,7 +201,8 @@ function RootNavigator() {
           />
         </Stack.Protected>
 
-        {/* SSO callback route removed — custom auth doesn't need it */}
+        {/* Payment + no-membership accessible regardless of onboarding state */}
+        <Stack.Screen name="payment" options={{ headerShown: false }} />
         <Stack.Screen name="no-membership" options={{ headerShown: false }} />
       </Stack>
       {shouldInitNotifications && (

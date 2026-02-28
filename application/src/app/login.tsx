@@ -4,7 +4,7 @@ import {
   isErrorWithCode,
   statusCodes,
 } from '@react-native-google-signin/google-signin';
-import * as AuthSession from 'expo-auth-session';
+// LinkedIn uses server-side OAuth callback (LinkedIn rejects custom scheme redirects)
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useEffect, useState } from 'react';
@@ -28,11 +28,11 @@ GoogleSignin.configure({
   offlineAccess: false,
 });
 
-/* ---------- LinkedIn discovery document ---------- */
-const linkedinDiscovery: AuthSession.DiscoveryDocument = {
-  authorizationEndpoint: 'https://www.linkedin.com/oauth/v2/authorization',
-  tokenEndpoint: 'https://www.linkedin.com/oauth/v2/accessToken',
-};
+/* ---------- LinkedIn: server-side OAuth ---------- */
+// LinkedIn only accepts HTTPS redirect URIs, so we use the server as intermediary.
+// Flow: App opens browser → server → LinkedIn → server callback → app deep link with JWT
+const LINKEDIN_START_URL = `${process.env.EXPO_PUBLIC_API_URL}/api/auth/linkedin/start`;
+const APP_SCHEME = 'exp+hiringbull-nayak';
 
 /* ----------------------------- Screen ----------------------------- */
 
@@ -102,41 +102,45 @@ export default function Login() {
 
   /* ----------------------------- LinkedIn ----------------------------- */
 
-  const linkedinRedirectUri = AuthSession.makeRedirectUri({ path: 'login' });
-
-  const [linkedinRequest, linkedinResponse, linkedinPromptAsync] =
-    AuthSession.useAuthRequest(
-      {
-        clientId: process.env.EXPO_PUBLIC_LINKEDIN_CLIENT_ID ?? '',
-        scopes: ['openid', 'profile', 'email'],
-        redirectUri: linkedinRedirectUri,
-        responseType: AuthSession.ResponseType.Code,
-      },
-      linkedinDiscovery
-    );
-
-  useEffect(() => {
-    if (linkedinResponse?.type === 'success') {
-      const code = linkedinResponse.params.code;
-      handleLinkedInCode(code);
-    }
-  }, [linkedinResponse]);
-
-  const handleLinkedInCode = async (code: string) => {
+  const handleLinkedInSignIn = async () => {
     showGlobalLoading();
     setError('');
     try {
-      console.log('[Login:LinkedIn] Exchanging code, redirectUri:', linkedinRedirectUri);
-      const { data } = await client.post('/api/auth/linkedin', {
-        code,
-        redirectUri: linkedinRedirectUri,
-      });
-      console.log('[Login:LinkedIn] Success, userId:', data.user?.id);
-      await signIn(data.token);
-      await registerDeviceAndNavigate();
+      console.log('[Login:LinkedIn] Opening server OAuth flow:', LINKEDIN_START_URL);
+
+      // Open browser → server redirects to LinkedIn → LinkedIn redirects back to server
+      // → server exchanges code, creates JWT, redirects to app deep link with ?token=...
+      const result = await WebBrowser.openAuthSessionAsync(
+        LINKEDIN_START_URL,
+        `${APP_SCHEME}://login`
+      );
+
+      console.log('[Login:LinkedIn] WebBrowser result type:', result.type);
+
+      if (result.type === 'success' && result.url) {
+        const url = new URL(result.url);
+        const token = url.searchParams.get('token');
+        const errorMsg = url.searchParams.get('error');
+
+        if (errorMsg) {
+          console.error('[Login:LinkedIn] Server returned error:', errorMsg);
+          setError(errorMsg);
+          return;
+        }
+
+        if (token) {
+          console.log('[Login:LinkedIn] Got token from callback, signing in...');
+          await signIn(token);
+          await registerDeviceAndNavigate();
+        } else {
+          setError('No token received from LinkedIn');
+        }
+      } else if (result.type === 'cancel' || result.type === 'dismiss') {
+        console.log('[Login:LinkedIn] User cancelled');
+      }
     } catch (err: any) {
-      console.error('[Login:LinkedIn] Failed:', err?.response?.data || err.message);
-      setError(err?.response?.data?.error || 'LinkedIn sign-in failed');
+      console.error('[Login:LinkedIn] Error:', err.message);
+      setError('LinkedIn sign-in failed');
     } finally {
       hideGlobalLoading();
     }
@@ -300,8 +304,7 @@ export default function Login() {
               </Pressable>
 
               <Pressable
-                onPress={() => linkedinPromptAsync()}
-                disabled={!linkedinRequest}
+                onPress={handleLinkedInSignIn}
                 className="flex-row items-center justify-center rounded-xl border border-neutral-200 py-4"
               >
                 <Ionicons

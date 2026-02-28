@@ -193,6 +193,13 @@ model Payment {
   amount          Float
   status          PaymentStatus @default(PENDING)
 
+  // Payment source: "razorpay" | "google_play"
+  source          String        @default("razorpay")
+
+  // Google Play Billing fields
+  googlePlayToken   String?     // purchaseToken from Google Play
+  googlePlayOrderId String?     // orderId from Google Play receipt
+
   email           String        
 
   userId          String?
@@ -210,6 +217,7 @@ model Payment {
   @@index([email])
   @@index([orderId])
   @@index([planType])
+  @@index([source])
 }
 
 

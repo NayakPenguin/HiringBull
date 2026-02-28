@@ -259,6 +259,158 @@ export const linkedinLogin = catchAsync(async (req, res) => {
   res.status(httpStatus.OK).json({ token, user });
 });
 
+// ─── LinkedIn Mobile OAuth (Server-side callback) ───────────
+//
+// LinkedIn only accepts HTTPS redirect URIs, so mobile apps can't
+// use custom schemes (exp+hiringbull-nayak://).
+//
+// Flow:
+//  1. App opens browser → GET /api/auth/linkedin/start
+//  2. Server redirects → LinkedIn OAuth consent
+//  3. LinkedIn redirects → GET /api/auth/linkedin/callback?code=...
+//  4. Server exchanges code → JWT, then redirects to app deep link
+//     exp+hiringbull-nayak://login?token=JWT&userId=...
+//
+
+const LINKEDIN_SCOPES = "openid profile email";
+const APP_DEEP_LINK = "exp+hiringbull-nayak://login";
+
+/**
+ * @swagger
+ * /api/auth/linkedin/start:
+ *   get:
+ *     summary: Start LinkedIn OAuth (mobile)
+ *     description: Redirects the browser to LinkedIn consent screen. The callback will redirect back to the app with a JWT.
+ *     tags: [Auth]
+ *     security: []
+ *     responses:
+ *       302:
+ *         description: Redirect to LinkedIn
+ */
+export const linkedinStartOAuth = (req, res) => {
+  const clientId = process.env.LINKEDIN_CLIENT_ID;
+  const serverUrl = process.env.SERVER_URL || `http://${req.headers.host}`;
+  const callbackUrl = `${serverUrl}/api/auth/linkedin/callback`;
+
+  // Generate a random state param to prevent CSRF
+  const state = Math.random().toString(36).substring(2, 15);
+
+  const linkedinAuthUrl = new URL("https://www.linkedin.com/oauth/v2/authorization");
+  linkedinAuthUrl.searchParams.set("response_type", "code");
+  linkedinAuthUrl.searchParams.set("client_id", clientId);
+  linkedinAuthUrl.searchParams.set("redirect_uri", callbackUrl);
+  linkedinAuthUrl.searchParams.set("scope", LINKEDIN_SCOPES);
+  linkedinAuthUrl.searchParams.set("state", state);
+
+  log(`[Auth:LinkedIn:Mobile] Starting OAuth, callback=${callbackUrl}`);
+  res.redirect(linkedinAuthUrl.toString());
+};
+
+/**
+ * @swagger
+ * /api/auth/linkedin/callback:
+ *   get:
+ *     summary: LinkedIn OAuth callback (mobile)
+ *     description: >
+ *       LinkedIn redirects here with an authorization code.
+ *       Server exchanges code for token, creates/finds user,
+ *       then redirects to the app's deep link with JWT.
+ *     tags: [Auth]
+ *     security: []
+ *     parameters:
+ *       - in: query
+ *         name: code
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: state
+ *         schema:
+ *           type: string
+ *     responses:
+ *       302:
+ *         description: Redirect to app deep link with token
+ *       400:
+ *         description: Missing code or LinkedIn error
+ */
+export const linkedinCallbackOAuth = catchAsync(async (req, res) => {
+  const { code, error: linkedinError, error_description } = req.query;
+
+  if (linkedinError) {
+    log(`[Auth:LinkedIn:Mobile] LinkedIn error: ${linkedinError} - ${error_description}`);
+    const errorRedirect = `${APP_DEEP_LINK}?error=${encodeURIComponent(error_description || linkedinError)}`;
+    return res.redirect(errorRedirect);
+  }
+
+  if (!code) {
+    log(`[Auth:LinkedIn:Mobile] Missing authorization code`);
+    return res.status(400).send("Missing authorization code");
+  }
+
+  const clientId = process.env.LINKEDIN_CLIENT_ID;
+  const clientSecret = process.env.LINKEDIN_CLIENT_SECRET;
+  const serverUrl = process.env.SERVER_URL || `http://${req.headers.host}`;
+  const callbackUrl = `${serverUrl}/api/auth/linkedin/callback`;
+
+  log(`[Auth:LinkedIn:Mobile] Exchanging code, callbackUrl=${callbackUrl}`);
+
+  // 1) Exchange code for access token
+  const tokenResponse = await fetch("https://www.linkedin.com/oauth/v2/accessToken", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "authorization_code",
+      code,
+      redirect_uri: callbackUrl,
+      client_id: clientId,
+      client_secret: clientSecret,
+    }),
+  });
+
+  if (!tokenResponse.ok) {
+    const errBody = await tokenResponse.text();
+    log(`[Auth:LinkedIn:Mobile] Token exchange failed: ${tokenResponse.status} ${errBody}`);
+    const errorRedirect = `${APP_DEEP_LINK}?error=${encodeURIComponent("LinkedIn authentication failed")}`;
+    return res.redirect(errorRedirect);
+  }
+
+  const tokenData = await tokenResponse.json();
+  log(`[Auth:LinkedIn:Mobile] Token exchange successful`);
+
+  // 2) Fetch user profile
+  const userInfoResponse = await fetch("https://api.linkedin.com/v2/userinfo", {
+    headers: { Authorization: `Bearer ${tokenData.access_token}` },
+  });
+
+  if (!userInfoResponse.ok) {
+    const errorRedirect = `${APP_DEEP_LINK}?error=${encodeURIComponent("Failed to fetch LinkedIn profile")}`;
+    return res.redirect(errorRedirect);
+  }
+
+  const profile = await userInfoResponse.json();
+
+  if (!profile.email) {
+    const errorRedirect = `${APP_DEEP_LINK}?error=${encodeURIComponent("LinkedIn account has no email")}`;
+    return res.redirect(errorRedirect);
+  }
+
+  log(`[Auth:LinkedIn:Mobile] Profile: email=${profile.email}, name=${profile.name}`);
+
+  // 3) Find or create user + JWT
+  const { token, user } = await findOrCreateUser({
+    email: profile.email,
+    name: profile.name,
+    provider: "linkedin",
+    providerId: profile.sub,
+    imgUrl: profile.picture || null,
+  });
+
+  // 4) Redirect to app deep link with the JWT
+  const successRedirect = `${APP_DEEP_LINK}?token=${encodeURIComponent(token)}&userId=${encodeURIComponent(user.id)}`;
+  log(`[Auth:LinkedIn:Mobile] Success, redirecting to app deep link`);
+  res.redirect(successRedirect);
+});
+
 // ─── Email OTP ──────────────────────────────────────────────
 
 /**

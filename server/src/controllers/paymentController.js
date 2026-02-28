@@ -1,6 +1,8 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
+import { google } from "googleapis";
 import prisma from "../prismaClient.js";
+import { log } from "../utils/logger.js";
 
 /**
  * 🔒 UI → DB plan mapping (PLAN IS FIXED)
@@ -209,6 +211,227 @@ export const verifyPayment = async (req, res) => {
   } catch (err) {
     console.error("🔥 VERIFY PAYMENT ERROR:", err);
     return res.status(500).json({ success: false });
+  }
+};
+
+/**
+ * =========================
+ * SHARED: Activate membership
+ * =========================
+ */
+const activateMembership = async (tx, email, planType) => {
+  const membershipEnd = getMembershipEndDate(planType);
+
+  // Try to update existing PENDING application
+  const updated = await tx.membershipApplication.updateMany({
+    where: { email, status: "PENDING" },
+    data: {
+      membershipStart: new Date(),
+      membershipEnd,
+      status: "ACTIVE",
+      planType,
+    },
+  });
+
+  // If no pending application, create a new ACTIVE one
+  if (updated.count === 0) {
+    await tx.membershipApplication.upsert({
+      where: { email },
+      update: {
+        membershipStart: new Date(),
+        membershipEnd,
+        status: "ACTIVE",
+        planType,
+      },
+      create: {
+        full_name: email.split("@")[0],
+        email,
+        social_profile: "",
+        reason: "Google Play purchase",
+        membershipStart: new Date(),
+        membershipEnd,
+        status: "ACTIVE",
+        planType,
+      },
+    });
+  }
+
+  // Also update user's plan fields
+  await tx.user.updateMany({
+    where: { email },
+    data: {
+      isPaid: true,
+      planExpiry: membershipEnd,
+      current_plan_start: new Date(),
+      current_plan_end: membershipEnd,
+    },
+  });
+
+  log(`[Payment] Membership activated for ${email} (${planType}) until ${membershipEnd.toISOString()}`);
+};
+
+/**
+ * Google Play product ID → DB plan type mapping
+ */
+const GOOGLE_PLAY_PLAN_MAP = {
+  hb_starter_1mo: "ONE_MONTH",
+  hb_growth_3mo: "THREE_MONTH",
+  hb_pro_6mo: "SIX_MONTH",
+};
+
+/**
+ * Google Play product ID → price (INR)
+ */
+const GOOGLE_PLAY_PRICE_MAP = {
+  hb_starter_1mo: 249,
+  hb_growth_3mo: 599,
+  hb_pro_6mo: 999,
+};
+
+/**
+ * =========================
+ * VERIFY GOOGLE PLAY PURCHASE
+ * =========================
+ *
+ * @swagger
+ * /api/payment/google-play/verify:
+ *   post:
+ *     summary: Verify a Google Play in-app purchase
+ *     tags: [Payment]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [purchaseToken, productId, packageName]
+ *             properties:
+ *               purchaseToken:
+ *                 type: string
+ *               productId:
+ *                 type: string
+ *                 enum: [hb_starter_1mo, hb_growth_3mo, hb_pro_6mo]
+ *               packageName:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Purchase verified and membership activated
+ *       400:
+ *         description: Invalid request or purchase not valid
+ *       500:
+ *         description: Server error
+ */
+export const verifyGooglePlayPurchase = async (req, res) => {
+  log("[Payment] Google Play verify hit");
+
+  try {
+    const { purchaseToken, productId, packageName } = req.body;
+
+    // 1. Validate inputs
+    if (!purchaseToken || !productId || !packageName) {
+      return res.status(400).json({ success: false, error: "Missing required fields: purchaseToken, productId, packageName" });
+    }
+
+    const planType = GOOGLE_PLAY_PLAN_MAP[productId];
+    if (!planType) {
+      return res.status(400).json({ success: false, error: `Unknown product ID: ${productId}` });
+    }
+
+    // 2. Get user email from auth token (requireAuth middleware sets req.user)
+    const email = req.user?.email;
+    if (!email) {
+      return res.status(401).json({ success: false, error: "User not authenticated" });
+    }
+
+    // 3. Idempotency check — already verified this purchase?
+    const existingPayment = await prisma.payment.findFirst({
+      where: { googlePlayToken: purchaseToken, status: "SUCCESS" },
+    });
+    if (existingPayment) {
+      log("[Payment] Google Play purchase already verified (idempotent)");
+      return res.json({ success: true, message: "Already verified" });
+    }
+
+    // 4. Verify with Google Play Developer API
+    let purchaseData;
+    try {
+      const serviceAccountKey = JSON.parse(process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_KEY || "{}");
+
+      const auth = new google.auth.GoogleAuth({
+        credentials: serviceAccountKey,
+        scopes: ["https://www.googleapis.com/auth/androidpublisher"],
+      });
+
+      const androidPublisher = google.androidpublisher({ version: "v3", auth });
+
+      const result = await androidPublisher.purchases.products.get({
+        packageName,
+        productId,
+        token: purchaseToken,
+      });
+
+      purchaseData = result.data;
+      log("[Payment] Google Play API response:", JSON.stringify(purchaseData));
+    } catch (apiErr) {
+      log("[Payment] Google Play API error:", apiErr.message);
+      return res.status(400).json({ success: false, error: "Failed to verify purchase with Google Play" });
+    }
+
+    // 5. Validate purchase state
+    // purchaseState: 0=Purchased, 1=Canceled, 2=Pending
+    if (purchaseData.purchaseState !== 0) {
+      log(`[Payment] Purchase not in valid state: ${purchaseData.purchaseState}`);
+      return res.status(400).json({ success: false, error: "Purchase is not in a valid state" });
+    }
+
+    // 6. Create payment + activate membership in a transaction
+    await prisma.$transaction(async (tx) => {
+      // Create payment record
+      await tx.payment.create({
+        data: {
+          orderId: `gp_${purchaseData.orderId || Date.now()}`,
+          amount: GOOGLE_PLAY_PRICE_MAP[productId] || 0,
+          planType,
+          email,
+          userId: req.user.id,
+          source: "google_play",
+          googlePlayToken: purchaseToken,
+          googlePlayOrderId: purchaseData.orderId || null,
+          status: "SUCCESS",
+        },
+      });
+
+      // Activate membership
+      await activateMembership(tx, email, planType);
+    });
+
+    // 7. Acknowledge the purchase (consume it so user can buy again later)
+    try {
+      const serviceAccountKey = JSON.parse(process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_KEY || "{}");
+      const auth = new google.auth.GoogleAuth({
+        credentials: serviceAccountKey,
+        scopes: ["https://www.googleapis.com/auth/androidpublisher"],
+      });
+      const androidPublisher = google.androidpublisher({ version: "v3", auth });
+
+      await androidPublisher.purchases.products.acknowledge({
+        packageName,
+        productId,
+        token: purchaseToken,
+      });
+      log("[Payment] Google Play purchase acknowledged");
+    } catch (ackErr) {
+      // Non-fatal — purchase is still verified, just log
+      log("[Payment] Warning: Failed to acknowledge purchase:", ackErr.message);
+    }
+
+    log(`[Payment] Google Play purchase verified for ${email}, plan: ${planType}`);
+    return res.json({ success: true });
+  } catch (err) {
+    console.error("[Payment] Google Play verify error:", err);
+    return res.status(500).json({ success: false, error: "Internal server error" });
   }
 };
 

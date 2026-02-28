@@ -22,7 +22,10 @@ export default function TabLayout() {
   const router = useRouter();
   useEffect(() => {
     const membershipData = getMembership();
-    if (membershipData && !isMembershipValid(membershipData.membershipEnd)) {
+    // Redirect to no-membership if:
+    // - No membership data at all (new user who hasn't purchased)
+    // - Membership data exists but is expired
+    if (!membershipData || !isMembershipValid(membershipData.membershipEnd)) {
       router.replace('/no-membership');
       return;
     }
@@ -38,7 +41,7 @@ export default function TabLayout() {
         ) {
           const membershipData = getMembership();
           if (
-            membershipData &&
+            !membershipData ||
             !isMembershipValid(membershipData.membershipEnd)
           ) {
             router.replace('/no-membership');

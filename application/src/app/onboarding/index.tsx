@@ -75,17 +75,23 @@ export default function Onboarding() {
         return;
       }
 
-      const verificationData = await checkUserVerification(email);
-      saveMembership({
-        email,
-        membershipEnd: verificationData.data.membershipEnd,
-      });
+      try {
+        const verificationData = await checkUserVerification(email);
+        saveMembership({
+          email,
+          membershipEnd: verificationData.data.membershipEnd,
+        });
 
-      if (!isMembershipValid(verificationData.data.membershipEnd)) {
+        if (!isMembershipValid(verificationData.data.membershipEnd)) {
+          setIsVerifiedUser(false);
+          return;
+        }
+        setIsVerifiedUser(true);
+      } catch (err: any) {
+        // 404 = no membership record exists → user has no membership
+        console.log('[Onboarding] Membership check failed:', err?.response?.status || err.message);
         setIsVerifiedUser(false);
-        return;
       }
-      setIsVerifiedUser(true);
     };
 
     checkIfVerified();
