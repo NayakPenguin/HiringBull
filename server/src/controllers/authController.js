@@ -458,8 +458,7 @@ export const sendOtp = catchAsync(async (req, res) => {
   log(`[Auth:OTP] OTP generated for ${email}`);
 
   await resend.emails.send({
-    // TODO: Change to "HiringBull <noreply@hiringbull.org>" before production push
-    from: process.env.RESEND_FROM_EMAIL || "HiringBull <noreply@punjabtech.online>",
+    from: process.env.RESEND_FROM_EMAIL || "HiringBull <noreply@hiringbull.org>",
     to: email,
     subject: "Your HiringBull verification code",
     html: `

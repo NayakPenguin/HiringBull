@@ -10,11 +10,14 @@ export const validateEnv = () => {
 
     const optional = [
         'RESEND_API_KEY',
+        'RESEND_FROM_EMAIL',
         'GOOGLE_CLIENT_ID_ANDROID',
         'GOOGLE_CLIENT_ID_IOS',
         'GOOGLE_CLIENT_ID_WEB',
         'LINKEDIN_CLIENT_ID',
         'LINKEDIN_CLIENT_SECRET',
+        'GOOGLE_PLAY_SERVICE_ACCOUNT_KEY',
+        'SERVER_URL',
     ];
 
     const missing = [];
