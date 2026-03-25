@@ -1,123 +1,95 @@
-import { clerkMiddleware, getAuth } from "@clerk/express";
-import { createClerkClient } from "@clerk/backend";
+import jwt from "jsonwebtoken";
 import prisma from "../prismaClient.js";
 import { log } from "../utils/logger.js";
 
+const JWT_SECRET = process.env.JWT_SECRET;
+
 /**
- * Clerk backend client (lazy init)
+ * Sign a JWT for a user (365-day expiry)
+ * Includes email so the client can identify the user without an API call
  */
-let clerkClient = null;
-const getClerk = () => {
-  if (!clerkClient) {
-    clerkClient = createClerkClient({
-      secretKey: process.env.CLERK_SECRET_KEY,
-    });
-  }
-  return clerkClient;
+export const signToken = (userId, email) => {
+  return jwt.sign({ sub: userId, email: email || null }, JWT_SECRET, { expiresIn: "365d" });
 };
 
 /**
- * 🔐 Initialize Clerk middleware
- * Must be mounted BEFORE protected routes
+ * Verify and decode a JWT
+ * Returns the payload or null if invalid
  */
-export const initClerk = clerkMiddleware();
+const verifyToken = (token) => {
+  try {
+    return jwt.verify(token, JWT_SECRET);
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Extract Bearer token from Authorization header
+ */
+const extractToken = (req) => {
+  const header = req.headers.authorization;
+  if (!header?.startsWith("Bearer ")) return null;
+  return header.slice(7);
+};
 
 /**
  * 🔐 Require authenticated user
- * - Validates Clerk JWT / session
- * - Creates user ONLY if not exists
- * - Updates name/email ONLY if missing
- * - Attaches `req.user`
+ * - Validates JWT from Authorization header
+ * - Looks up user by id (from JWT sub claim)
+ * - Attaches `req.user` (full Prisma User record)
  */
 export const requireAuth = async (req, res, next) => {
   try {
-    const auth = getAuth(req);
-
-    if (!auth?.userId) {
+    const token = extractToken(req);
+    if (!token) {
+      log(`[Auth] No token in request: ${req.method} ${req.originalUrl}`);
       return res.status(401).json({ message: "Authentication required" });
     }
 
-    const clerkId = auth.userId;
+    const payload = verifyToken(token);
+    if (!payload?.sub) {
+      log(`[Auth] Invalid/expired token: ${req.method} ${req.originalUrl}`);
+      return res.status(401).json({ message: "Invalid or expired token" });
+    }
 
-    // Try to find user first
-    let user = await prisma.user.findUnique({
-      where: { clerkId },
+    const user = await prisma.user.findUnique({
+      where: { id: payload.sub },
     });
 
-    // Defaults (used only if needed)
-    let email = `${clerkId}@no-email.clerk`;
-    let name = "User";
-
-    // Fetch Clerk user safely
-    try {
-      const clerkUser = await getClerk().users.getUser(clerkId);
-
-      email =
-        clerkUser.emailAddresses?.[0]?.emailAddress ?? email;
-
-      if (clerkUser.firstName) {
-        name = clerkUser.firstName +
-          (clerkUser.lastName ? ` ${clerkUser.lastName}` : "");
-      }
-    } catch (err) {
-      log("Clerk user fetch failed:", err);
-    }
-
-    // 🆕 Create user if not exists (using upsert to handle race conditions)
     if (!user) {
-      user = await prisma.user.upsert({
-        where: { clerkId },
-        create: {
-          clerkId,
-          email,
-          name,
-          active: true,
-        },
-        update: {}, // If user already exists (race condition), just fetch it
-      });
-
-      req.user = user;
-      return next();
-    }
-
-    // 🔁 Update ONLY if fields are missing
-    const updates = {};
-
-    if (!user.email && email) {
-      updates.email = email;
-    }
-
-    if (!user.name && name) {
-      updates.name = name;
-    }
-
-    if (Object.keys(updates).length > 0) {
-      user = await prisma.user.update({
-        where: { clerkId },
-        data: updates,
-      });
+      log(`[Auth] User not found for sub=${payload.sub}`);
+      return res.status(401).json({ message: "User not found" });
     }
 
     if (!user.active) {
+      log(`[Auth] Disabled account: userId=${user.id}`);
       return res.status(403).json({ message: "Account disabled" });
     }
 
+    log(`[Auth] Authenticated: userId=${user.id} → ${req.method} ${req.originalUrl}`);
     req.user = user;
     next();
   } catch (error) {
-    log("Auth middleware error:", error);
+    log(`[Auth] Middleware error:`, error.message);
     return res.status(500).json({ message: "Authentication error" });
   }
 };
 
 /**
  * 🔓 Optional auth (does NOT block)
- * - Attaches `req.clerkUserId` if logged in
+ * - Attaches `req.user` if a valid token is present, otherwise continues
  */
-export const optionalAuth = (req, _res, next) => {
-  const auth = getAuth(req);
-  if (auth?.userId) {
-    req.clerkUserId = auth.userId;
+export const optionalAuth = async (req, _res, next) => {
+  const token = extractToken(req);
+  if (token) {
+    const payload = verifyToken(token);
+    if (payload?.sub) {
+      const user = await prisma.user.findUnique({
+        where: { id: payload.sub },
+      });
+      if (user) req.user = user;
+    }
   }
   next();
 };

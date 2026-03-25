@@ -32,7 +32,7 @@ const options = {
           type: 'http',
           scheme: 'bearer',
           bearerFormat: 'JWT',
-          description: 'JWT token from Clerk authentication',
+          description: 'JWT token from /api/auth/* endpoints',
         },
         apiKeyAuth: {
           type: 'apiKey',
@@ -46,7 +46,9 @@ const options = {
           type: 'object',
           properties: {
             id: { type: 'string', format: 'uuid' },
-            clerkId: { type: 'string' },
+            clerkId: { type: 'string', description: 'Legacy Clerk ID' },
+            provider: { type: 'string', description: 'Auth provider: google, linkedin, email' },
+            providerId: { type: 'string', description: 'Provider-specific user ID' },
             name: { type: 'string' },
             email: { type: 'string', format: 'email' },
             img_url: { type: 'string', format: 'uri' },

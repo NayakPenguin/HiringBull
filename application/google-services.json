@@ -36,6 +36,64 @@
     },
     {
       "client_info": {
+        "mobilesdk_app_id": "1:50206145204:android:c03a7e531566dd5f6535e1",
+        "android_client_info": {
+          "package_name": "com.hiringbull.development"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "50206145204-15uf1snddiscrmrequtka1n69fc7djc0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAAbC_CENeeyyID8hIwyC57fUJNMwXUg_A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "50206145204-15uf1snddiscrmrequtka1n69fc7djc0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:50206145204:android:c03a7e531566dd5f6535e1",
+        "android_client_info": {
+          "package_name": "com.hiringbull.staging"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "50206145204-15uf1snddiscrmrequtka1n69fc7djc0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAAbC_CENeeyyID8hIwyC57fUJNMwXUg_A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "50206145204-15uf1snddiscrmrequtka1n69fc7djc0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:50206145204:android:cf259bf2b56843056535e1",
         "android_client_info": {
           "package_name": "com.myapp"

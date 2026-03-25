@@ -47,8 +47,6 @@ export function useNotificationPermissionPrompt() {
     if (finalStatus === 'granted') {
       clearPromptInterval();
       setModalVisible(false);
-      console.log('Notification permission granted.');
-
       const projectId =
         Constants.expoConfig?.extra?.eas?.projectId ??
         Constants.easConfig?.projectId;
@@ -56,7 +54,6 @@ export function useNotificationPermissionPrompt() {
       const { data: expoPushToken } = await Notifications.getExpoPushTokenAsync(
         { projectId }
       );
-      console.log('Expo Push Token:', expoPushToken);
 
       const deviceId = await getOrCreateDeviceId();
       const platform = Platform.OS === 'android' ? 'android' : 'ios';

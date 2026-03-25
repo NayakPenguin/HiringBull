@@ -243,8 +243,8 @@ export default function Jobs() {
     );
   };
 
-  const handleSaveJob = useCallback((jobId: string) => {
-    console.log('Save job:', jobId);
+  const handleSaveJob = useCallback((_jobId: string) => {
+    // TODO: implement save job
   }, []);
 
   const renderItem = useCallback(

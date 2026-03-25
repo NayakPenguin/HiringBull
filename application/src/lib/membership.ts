@@ -19,7 +19,7 @@ export const getMembership = (): MembershipData | null => {
 };
 
 export const clearMembership = () => {
-  storage.delete(MEMBERSHIP_KEY);
+  storage.remove(MEMBERSHIP_KEY);
 };
 
 export const isMembershipValid = (expiryDate: string) => {

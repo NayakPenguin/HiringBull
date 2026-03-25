@@ -6,7 +6,6 @@ import morgan from "morgan";
 import swaggerUi from "swagger-ui-express";
 import routes from "./routes/index.js";
 import { notFoundHandler, errorHandler } from "./middlewares/errorHandlers.js";
-import { initClerk } from "./middlewares/auth.js";
 import { defaultLimiter } from "./middlewares/rateLimiter.js";
 import { validateEnv } from "./utils/validateEnv.js";
 import { swaggerSpec } from "./config/swagger.js";
@@ -48,9 +47,6 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
     tryItOutEnabled: true
   }
 }));
-
-// Clerk authentication (populates req.auth)
-app.use(initClerk);
 
 // Swagger JSON spec
 app.get('/api-docs.json', (req, res) => {

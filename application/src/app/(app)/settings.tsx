@@ -1,6 +1,6 @@
 /* eslint-disable react/react-in-jsx-scope */
 import { Env } from '@env';
-import { useAuth } from '@clerk/clerk-expo';
+import { useAuth } from '@/lib/auth';
 import { useColorScheme } from 'nativewind';
 
 import { Item } from '@/components/settings/item';

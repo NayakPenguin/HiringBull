@@ -15,8 +15,6 @@ export const useRegisterDevice = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: userKeys.devices() });
     },
-    onError: (e) => {
-      console.log('device is not register', e);
-    },
+    onError: () => {},
   });
 };

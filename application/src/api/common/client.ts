@@ -2,13 +2,15 @@ import axios, { AxiosRequestConfig, AxiosError } from 'axios';
 import { Env } from '@env';
 import { authService } from '@/service/auth-service';
 
+const TAG = '[API]';
 
 // API URL from environment variables
-// Defaults to production URL if not set
-const BASE_URL ='https://api.hiringbull.org/';
+// Production: https://api.hiringbull.org
+// For local dev, set EXPO_PUBLIC_API_URL in your .env.development file
+// const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://api.hiringbull.org';
+  const BASE_URL="https://api.hiringbull.org"
 
-// Debug: Log the API URL on startup
-console.log('🔗 API BASE_URL:', BASE_URL);
+console.log(`${TAG} Base URL: ${BASE_URL}`);
 
 export const client = axios.create({
   baseURL: BASE_URL,
@@ -18,22 +20,18 @@ export const client = axios.create({
   },
 });
 
-// Request interceptor - adds Clerk token
+// Request interceptor - adds JWT auth token
 client.interceptors.request.use(
   async (config) => {
-    console.log('📤 API Request:', config.method?.toUpperCase(), config.url);
-    // Get token from auth service
     const token = await authService.getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('📤 Token attached to request');
-    } else {
-      console.log('📤 No token available for request');
     }
+    console.log(`${TAG} → ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, token ? '(auth)' : '(no-auth)');
     return config;
   },
   (error) => {
-    console.error('📤 Request error:', error);
+    console.error(`${TAG} Request error:`, error.message);
     return Promise.reject(error);
   }
 );
@@ -41,16 +39,15 @@ client.interceptors.request.use(
 // Response interceptor - handles errors
 client.interceptors.response.use(
   (response) => {
-    console.log('📥 API Response:', response.status, response.config.url);
+    console.log(`${TAG} ← ${response.status} ${response.config.method?.toUpperCase()} ${response.config.url}`);
     return response;
   },
   async (error: AxiosError) => {
-    console.error('📥 API Error:', error.response?.status, error.config?.url, error.message);
-    // Handle 401 Unauthorized
-    if (error.response?.status === 401) {
-      // You might want to trigger a logout or token refresh here
-      console.log('Authentication failed');
-    }
+    const status = error.response?.status;
+    const url = error.config?.url;
+    const data = error.response?.data;
+    console.error(`${TAG} ← ${status ?? 'NETWORK'} ${error.config?.method?.toUpperCase()} ${url}`, data ?? error.message);
+    // TODO: Handle 401 — trigger logout or token refresh
     return Promise.reject(error);
   }
 );

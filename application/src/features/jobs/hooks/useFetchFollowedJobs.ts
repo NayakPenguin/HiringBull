@@ -1,6 +1,6 @@
 import { fetchFollowedJobs, JobsResponse } from '@/api';
 import QueryKeys from '@/service/queryKeys';
-import { useAuth } from '@clerk/clerk-expo';
+import { useAuth } from '@/lib/auth';
 import { useInfiniteQuery } from '@tanstack/react-query';
 const TEN_MINUTES = 10 * 60 * 1000;
 

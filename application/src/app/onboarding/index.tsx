@@ -1,4 +1,4 @@
-import { useAuth, useUser } from '@clerk/clerk-expo';
+import { useAuth, getUserEmail } from '@/lib/auth';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -22,7 +22,6 @@ type StepIndicatorProps = {
 };
 
 function StepIndicator({ currentStep, totalSteps }: StepIndicatorProps) {
-  console.log(currentStep);
   return (
     <View className="mb-4 w-full flex-row items-center">
       {[1, 2, 3].map((step, index) => {
@@ -51,9 +50,7 @@ function StepIndicator({ currentStep, totalSteps }: StepIndicatorProps) {
 
 export default function Onboarding() {
   const router = useRouter();
-  const { getToken } = useAuth();
   const completeOnboarding = useOnboarding.use.completeOnboarding();
-  const { user } = useUser();
   const [isVerifiedUser, setIsVerifiedUser] = useState(false);
 
   const [step, setStep] = useState(1);
@@ -71,40 +68,45 @@ export default function Onboarding() {
   const { mutate: registerUser, isPending: isRegistering } =
     useRegisterOrEditUser();
 
+  const [membershipLoading, setMembershipLoading] = useState(true);
+
   useEffect(() => {
-    const logToken = async () => {
-      const token = await getToken();
-      console.log('getToken:', token);
-    };
-    logToken();
-
     const checkIfVerified = async () => {
-      if (!user?.primaryEmailAddress?.emailAddress) {
+      const email = getUserEmail();
+      console.log('[Onboarding] checkIfVerified: email =', email);
+      if (!email) {
+        console.log('[Onboarding] No email in JWT, cannot check membership');
+        setMembershipLoading(false);
         return;
       }
 
-      const verificationData = await checkUserVerification(
-        user.primaryEmailAddress.emailAddress
-      );
-      console.log(
-        'User Verification Data:',
-        isMembershipValid(verificationData.data.membershipEnd),
-        verificationData.data
-      );
-      saveMembership({
-        email: user.primaryEmailAddress.emailAddress,
-        membershipEnd: verificationData.data.membershipEnd,
-      });
+      try {
+        console.log('[Onboarding] Calling checkUserVerification for:', email);
+        const verificationData = await checkUserVerification(email);
+        console.log('[Onboarding] Verification response:', JSON.stringify(verificationData));
+        saveMembership({
+          email,
+          membershipEnd: verificationData.data.membershipEnd,
+        });
 
-      if (!isMembershipValid(verificationData.data.membershipEnd)) {
+        const isValid = isMembershipValid(verificationData.data.membershipEnd);
+        console.log('[Onboarding] Membership valid =', isValid, '| membershipEnd =', verificationData.data.membershipEnd);
+        if (!isValid) {
+          setIsVerifiedUser(false);
+        } else {
+          setIsVerifiedUser(true);
+        }
+      } catch (err: any) {
+        // 404 = no membership record exists → user has no membership
+        console.log('[Onboarding] Membership check failed:', err?.response?.status || err.message);
         setIsVerifiedUser(false);
-        return;
+      } finally {
+        setMembershipLoading(false);
       }
-      setIsVerifiedUser(true);
     };
 
     checkIfVerified();
-  }, [user]);
+  }, []);
 
   const handleToggleCompany = (companyId: string) => {
     setSelectedCompanies((prev) =>
@@ -191,9 +193,21 @@ export default function Onboarding() {
       'https://www.hiringbull.in/join-membership'
     );
   };
+  if (membershipLoading) {
+    console.log('[Onboarding] Still checking membership, showing loading...');
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <Text className="text-base text-neutral-500">Checking membership...</Text>
+      </View>
+    );
+  }
+
+  console.log('[Onboarding] isVerifiedUser =', isVerifiedUser);
   if (!isVerifiedUser) {
+    console.log('[Onboarding] User has no valid membership → showing NoActiveMembership');
     return <NoActiveMembership />;
   }
+  console.log('[Onboarding] User has valid membership → showing onboarding steps');
 
   return (
     <View className="flex-1 bg-white dark:bg-neutral-900">

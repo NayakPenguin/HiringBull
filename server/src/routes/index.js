@@ -5,11 +5,10 @@ import socialPostRoutes from './socialPostRoutes.js';
 import paymentRoutes from './paymentRoutes.js';
 import companyRoutes from './companyRoutes.js';
 import deviceRoutes from './deviceRoutes.js';
-import webhookRoutes from './webhookRoutes.js';
 import testingRoutes from './testing.js';
 import webRegistrationRoutes from './webRegistrationRoutes.js';
 import outreachRoutes from './outreachRoutes.js';
-import authTestRoutes from './authTest.js'; 
+import authRoutes from './authRoutes.js';
 import freeJobsRoutes from './freeJobsRoutes.js'; 
 import applicationRoutes from './applicationRoutes.js'
 import membershipRoutes from './membershipRoutes.js'
@@ -18,15 +17,14 @@ const router = express.Router();
 
 // 🔓 Public routes
 router.use('/public', testingRoutes);
-router.use('/webhooks', webhookRoutes);
 router.use('/free-jobs', freeJobsRoutes);
 router.use('/application', applicationRoutes);
 router.use('/membership', membershipRoutes); 
 
-// 🔐 Auth test route (Clerk only)
-router.use('/auth', authTestRoutes); // ✅ NEW
+// 🔐 Auth routes (Google, LinkedIn, Email OTP)
+router.use('/auth', authRoutes);
 
-// 🔒 Normal API routes (unchanged)
+// 🔒 Protected API routes (require JWT)
 router.use('/users/devices', deviceRoutes);
 router.use('/users', userRoutes);
 router.use('/jobs', jobRoutes);
