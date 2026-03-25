@@ -132,7 +132,7 @@ export default function PaymentScreen() {
         const response = await client.post('/api/payment/google-play/verify', {
           purchaseToken: purchase.purchaseToken,
           productId: purchase.productId,
-          packageName: ('packageNameAndroid' in purchase ? purchase.packageNameAndroid : null) || 'com.hiringbull.development',
+          packageName: ('packageNameAndroid' in purchase ? purchase.packageNameAndroid : null) || 'com.hiringbull',
         });
 
         if (response.data.success) {

@@ -13,6 +13,20 @@ const PLAN_TYPE_MAP = {
   PRO: "SIX_MONTH",
 };
 
+/**
+ * 🔒 Server-side price map — NEVER trust amount from client
+ */
+const PLAN_PRICE_MAP = {
+  STARTER: 249,
+  GROWTH: 599,
+  PRO: 999,
+};
+
+/**
+ * Allowed package names for Google Play verification
+ */
+const ALLOWED_PACKAGE_NAMES = ["com.hiringbull", "com.hiringbull.development"];
+
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_SECRET,
@@ -38,25 +52,34 @@ const getMembershipEndDate = (planType) => {
  * =========================
  */
 export const createOrder = async (req, res) => {
-  console.log("\n🟡 CREATE ORDER HIT");
-  console.log("📥 Body:", req.body);
+  log("[Payment] CREATE ORDER");
+  log("[Payment] planType:", req.body?.planType);
 
   try {
-    const { email, amount, planType, referralCode } = req.body;
+    const { email, planType, referralCode } = req.body;
 
     // 1️⃣ Basic validation
-    if (!email || !planType || amount == null) {
-      return res.status(400).json({ error: "Missing required fields" });
+    if (!email || !planType) {
+      return res.status(400).json({ error: "Missing required fields (email, planType)" });
     }
 
     const dbPlanType = PLAN_TYPE_MAP[planType];
     if (!dbPlanType) {
+      return res.status(400).json({ error: "Invalid plan type. Must be STARTER, GROWTH, or PRO" });
+    }
+
+    // 🔒 Server derives amount from planType — NEVER trust client amount
+    let numericAmount = PLAN_PRICE_MAP[planType];
+    if (!numericAmount) {
       return res.status(400).json({ error: "Invalid plan type" });
     }
 
-    const numericAmount = Number(amount);
-    if (isNaN(numericAmount) || numericAmount <= 0) {
-      return res.status(400).json({ error: "Invalid amount" });
+    // Apply referral discount (25% off) if referralCode provided
+    const REFERRAL_DISCOUNT = 0.25;
+    let referralDiscount = null;
+    if (referralCode) {
+      referralDiscount = Math.round(numericAmount * REFERRAL_DISCOUNT);
+      numericAmount = numericAmount - referralDiscount;
     }
 
     // 2️⃣ Idempotency (reuse pending payment)
@@ -92,6 +115,7 @@ export const createOrder = async (req, res) => {
         planType: dbPlanType,
         email,
         referralCode: referralCode || null,
+        referralDiscount: referralDiscount,
         referralApplied: Boolean(referralCode),
         status: "PENDING",
       },
@@ -103,7 +127,7 @@ export const createOrder = async (req, res) => {
       key: process.env.RAZORPAY_KEY_ID,
     });
   } catch (err) {
-    console.error("🔥 CREATE ORDER ERROR:", err);
+    console.error("[Payment] CREATE ORDER ERROR:", err.message);
     return res.status(500).json({ error: "Failed to create order" });
   }
 };
@@ -114,8 +138,7 @@ export const createOrder = async (req, res) => {
  * =========================
  */
 export const verifyPayment = async (req, res) => {
-  console.log("\n🟢 VERIFY PAYMENT HIT");
-  console.log("📥 Raw body:", JSON.stringify(req.body, null, 2));
+  log("[Payment] VERIFY PAYMENT");
 
   try {
     const {
@@ -125,7 +148,7 @@ export const verifyPayment = async (req, res) => {
     } = req.body;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-      console.log("❌ Missing Razorpay fields");
+      log("[Payment] Missing Razorpay fields");
       return res.status(400).json({ success: false });
     }
 
@@ -134,17 +157,17 @@ export const verifyPayment = async (req, res) => {
       where: { orderId: razorpay_order_id },
     });
 
-    console.log("🔍 Order ID from frontend:", razorpay_order_id);
-    console.log("🔍 Payment from DB:", payment);
+    log("[Payment] Looking up order:", razorpay_order_id);
+    log("[Payment] Found payment:", payment?.id);
 
     if (!payment) {
-      console.log("❌ No payment found for orderId");
+      log("[Payment] No payment found for orderId");
       return res.status(404).json({ success: false });
     }
 
     // 2️⃣ Idempotency
     if (payment.status === "SUCCESS") {
-      console.log("♻️ Payment already marked SUCCESS");
+      log("[Payment] Payment already marked SUCCESS (idempotent)");
       return res.json({ success: true });
     }
 
@@ -156,17 +179,10 @@ export const verifyPayment = async (req, res) => {
       .update(body)
       .digest("hex");
 
-    console.log("🔐 Signature debug:");
-    console.log("   body used:", body);
-    console.log("   expected :", expectedSignature);
-    console.log("   received :", razorpay_signature);
-    console.log(
-      "   secret   :",
-      process.env.RAZORPAY_SECRET?.slice(0, 6) + "..."
-    );
+    log("[Payment] Signature verification for order:", razorpay_order_id);
 
     if (expectedSignature !== razorpay_signature) {
-      console.log("❌ SIGNATURE MISMATCH → marking payment FAILED");
+      log("[Payment] SIGNATURE MISMATCH → marking payment FAILED");
 
       await prisma.payment.update({
         where: { id: payment.id },
@@ -176,11 +192,11 @@ export const verifyPayment = async (req, res) => {
       return res.status(400).json({ success: false });
     }
 
-    console.log("✅ Signature verified");
+    log("[Payment] Signature verified");
 
     // 4️⃣ SUCCESS → update payment + activate membership
     await prisma.$transaction(async (tx) => {
-      console.log("🧾 Updating payment → SUCCESS");
+      log("[Payment] Updating payment → SUCCESS");
 
       await tx.payment.update({
         where: { id: payment.id },
@@ -191,25 +207,16 @@ export const verifyPayment = async (req, res) => {
         },
       });
 
-      console.log("👤 Activating membership for:", payment.email);
+      log("[Payment] Activating membership for:", payment.email);
 
-      await tx.membershipApplication.updateMany({
-        where: {
-          email: payment.email,
-          status: "PENDING", // safety guard
-        },
-        data: {
-          membershipStart: new Date(),
-          membershipEnd: getMembershipEndDate(payment.planType),
-          status: "ACTIVE",
-        },
-      });
+      // Activate membership (updates both MembershipApplication AND User)
+      await activateMembership(tx, payment.email, payment.planType);
     });
 
-    console.log("🎉 Payment verified + membership activated");
+    log("[Payment] Razorpay payment verified + membership activated for: " + payment.email);
     return res.json({ success: true });
   } catch (err) {
-    console.error("🔥 VERIFY PAYMENT ERROR:", err);
+    console.error("[Payment] VERIFY PAYMENT ERROR:", err.message);
     return res.status(500).json({ success: false });
   }
 };
@@ -334,6 +341,12 @@ export const verifyGooglePlayPurchase = async (req, res) => {
       return res.status(400).json({ success: false, error: "Missing required fields: purchaseToken, productId, packageName" });
     }
 
+    // 🔒 Validate packageName to prevent verification of purchases from fake/cloned apps
+    if (!ALLOWED_PACKAGE_NAMES.includes(packageName)) {
+      log(`[Payment] Rejected invalid packageName: ${packageName}`);
+      return res.status(400).json({ success: false, error: "Invalid package name" });
+    }
+
     const planType = GOOGLE_PLAY_PLAN_MAP[productId];
     if (!planType) {
       return res.status(400).json({ success: false, error: `Unknown product ID: ${productId}` });
@@ -355,16 +368,21 @@ export const verifyGooglePlayPurchase = async (req, res) => {
     }
 
     // 4. Verify with Google Play Developer API
+    const serviceAccountKeyRaw = process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_KEY;
+    if (!serviceAccountKeyRaw) {
+      log("[Payment] GOOGLE_PLAY_SERVICE_ACCOUNT_KEY is not configured");
+      return res.status(500).json({ success: false, error: "Google Play verification not configured" });
+    }
+
     let purchaseData;
+    const serviceAccountKey = JSON.parse(serviceAccountKeyRaw);
+    const gpAuth = new google.auth.GoogleAuth({
+      credentials: serviceAccountKey,
+      scopes: ["https://www.googleapis.com/auth/androidpublisher"],
+    });
+    const androidPublisher = google.androidpublisher({ version: "v3", auth: gpAuth });
+
     try {
-      const serviceAccountKey = JSON.parse(process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_KEY || "{}");
-
-      const auth = new google.auth.GoogleAuth({
-        credentials: serviceAccountKey,
-        scopes: ["https://www.googleapis.com/auth/androidpublisher"],
-      });
-
-      const androidPublisher = google.androidpublisher({ version: "v3", auth });
 
       const result = await androidPublisher.purchases.products.get({
         packageName,
@@ -407,15 +425,8 @@ export const verifyGooglePlayPurchase = async (req, res) => {
       await activateMembership(tx, email, planType);
     });
 
-    // 7. Acknowledge the purchase (consume it so user can buy again later)
+    // 7. Acknowledge the purchase (reuse same auth + publisher)
     try {
-      const serviceAccountKey = JSON.parse(process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_KEY || "{}");
-      const auth = new google.auth.GoogleAuth({
-        credentials: serviceAccountKey,
-        scopes: ["https://www.googleapis.com/auth/androidpublisher"],
-      });
-      const androidPublisher = google.androidpublisher({ version: "v3", auth });
-
       await androidPublisher.purchases.products.acknowledge({
         packageName,
         productId,

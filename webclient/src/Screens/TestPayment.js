@@ -32,7 +32,6 @@ const TestPayment = () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             email: "test.user@gmail.com",
-            amount: 100,            // ₹100
             planType: "STARTER",
           }),
         }

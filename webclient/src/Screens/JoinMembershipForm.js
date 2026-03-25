@@ -271,7 +271,7 @@ const JoinMembershipForm = () => {
     }
   };
 
-  const startPayment = async ({ amount, planType }) => {
+  const startPayment = async ({ planType }) => {
     try {
       const res = await fetch(
         "https://api.hiringbull.org/api/payment/create-order",
@@ -280,7 +280,6 @@ const JoinMembershipForm = () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             email: formData.email,
-            amount,
             planType,
             referralCode: formData.isDiscountApplied
               ? formData.referralEmail
@@ -746,7 +745,6 @@ const JoinMembershipForm = () => {
                         className="apply-btn"
                         onClick={() =>
                           startPayment({
-                            amount: formData.isDiscountApplied ? 2 : 1,
                             planType: "STARTER",
                           })
                         }
@@ -811,7 +809,6 @@ const JoinMembershipForm = () => {
                         className="apply-btn"
                         onClick={() =>
                           startPayment({
-                            amount: formData.isDiscountApplied ? 2 : 1,
                             planType: "GROWTH",
                           })
                         }
@@ -871,7 +868,6 @@ const JoinMembershipForm = () => {
                         className="apply-btn"
                         onClick={() =>
                           startPayment({
-                            amount: formData.isDiscountApplied ? 2 : 1,
                             planType: "PRO",
                           })
                         }
