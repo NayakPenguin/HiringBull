@@ -1,62 +1,99 @@
-# HiringBull API Documentation
+# HiringBull Backend API
 
-Backend APIs for HiringBull – a comprehensive platform for onboarding users, managing jobs, companies, payments (IAP), referrals, and notifications.
+Backend API server for HiringBull – a comprehensive platform for onboarding users, managing jobs, companies, payments (IAP), referrals, and notifications.
 
----
+## Tech Stack
 
-## 🚀 Tech Stack
-
-- **Runtime**: Node.js (>= 18)
+- **Runtime**: Node.js (>= 24)
+- **Language**: **TypeScript** (fully typed)
 - **Framework**: Express.js
-- **Database**: PostgreSQL (via Prisma ORM)
-- **Authentication**: Clerk (JWT & Webhooks)
+- **Database**: PostgreSQL (via Prisma ORM 7)
+- **Authentication**: JWT + Google/LinkedIn OAuth, Email OTP
 - **Validation**: Joi
-- **Payments**: In-App Purchases (Google Console / Apple Store)
+- **Payments**: Google Play Billing (IAP)
+- **API Documentation**: Swagger/OpenAPI
 
----
+## Project Structure
 
-## 🛠️ Getting Started
+```
+server/
+├── prisma/             # Database schema and migrations
+├── prisma.config.ts    # Prisma 7 CLI datasource/config
+├── src/
+│   ├── generated/      # Prisma 7 generated client
+│   ├── types/          # TypeScript type definitions
+│   ├── controllers/    # Request handlers + Business Logic
+│   ├── middlewares/    # Request interceptors
+│   ├── routes/         # API Endpoint definitions
+│   ├── validations/    # Joi schemas for request validation
+│   ├── utils/          # Helper functions
+│   └── config/         # Configuration files
+├── dist/               # Compiled JavaScript output
+└── package.json
+```
+
+## Getting Started
 
 ### Prerequisites
-- Node.js installed on your machine.
+- Node.js >= 24 installed on your machine.
 - A running PostgreSQL database.
+- Bun 1.3+
 
 ### Installation
 1. Clone the repository and navigate to the server directory.
 2. Install dependencies:
    ```bash
-   npm install
+  bun install
    ```
 
+### Build & Run
+```bash
+# Build TypeScript
+bun run build
+
+# Run in production
+bun start
+
+# Run in development (with hot reload)
+bun dev
+```
+
 ### Database Setup
-1. Configure your `DATABASE_URL` in the `.env` file.
+1. Configure `DATABASE_URL` and `DIRECT_URL` in the `.env` file.
 2. Generate Prisma client:
    ```bash
-   npx prisma generate
+  bun run prisma:generate
    ```
-3. Push the schema to your database:
+3. Apply migrations in production:
    ```bash
-   npx prisma db push
+  bunx prisma migrate deploy
    ```
 
 ---
 
-## 🔑 Environment Variables
+## Environment Variables
 
 Create a `.env` file in the root of the `server/` directory:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `CLERK_PUBLISHABLE_KEY` | No | Clerk publishable key |
-| `CLERK_SECRET_KEY` | No | Clerk secret key |
-| `CLERK_WEBHOOK_SECRET` | No | Secret for verifying Clerk webhooks |
-| `INTERNAL_API_KEY` | No | Key for internal/bulk admin operations |
+| `DATABASE_URL` | Yes | Runtime PostgreSQL connection string |
+| `DIRECT_URL` | Yes | Direct PostgreSQL URL used by Prisma CLI/migrations |
+| `JWT_SECRET` | Yes | Secret for JWT signing |
+| `RESEND_API_KEY` | No | Resend API key for emails |
+| `RESEND_FROM_EMAIL` | No | Default sender email |
+| `GOOGLE_CLIENT_ID_ANDROID` | No | Google OAuth for Android |
+| `GOOGLE_CLIENT_ID_IOS` | No | Google OAuth for iOS |
+| `GOOGLE_CLIENT_ID_WEB` | No | Google OAuth for Web |
+| `LINKEDIN_CLIENT_ID` | No | LinkedIn OAuth client ID |
+| `LINKEDIN_CLIENT_SECRET` | No | LinkedIn OAuth client secret |
+| `GOOGLE_PLAY_SERVICE_ACCOUNT_KEY` | No | Google Play billing |
+| `SERVER_URL` | No | Server URL for callbacks |
 | `PORT` | No | Server port (default: 4000) |
 
 ---
 
-## � API Reference
+## API Reference
 
 ### Base URL
 `https://api.hiringbull.org/`

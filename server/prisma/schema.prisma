@@ -2,13 +2,13 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  importFileExtension = "js"
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
 }
 
 enum ExperienceLevel {
@@ -49,42 +49,43 @@ model PaymentTesting {
 }
 
 model User {
-  id                     String    @id @default(uuid())
-  clerkId                String?   @unique // Legacy — kept for data migration
-  provider               String?   // "google" | "linkedin" | "email"
-  providerId             String?   // Provider-specific user ID (Google sub, LinkedIn sub, or email)
-  name                   String
-  img_url                String?
-  email                  String    @unique
-  active                 Boolean   @default(true)
-  is_experienced         Boolean   @default(false)
-  college_name           String?
-  cgpa                   String?
-  company_name           String?
-  years_of_experience    Float?
-  resume_link            String?
-  segment                String?
-  experience_level       ExperienceLevel?
-  onboarding_completed   Boolean   @default(false)
+  id                      String             @id @default(uuid())
+  clerkId                 String?            @unique // Legacy — kept for data migration
+  provider                String? // "google" | "linkedin" | "email"
+  providerId              String? // Provider-specific user ID (Google sub, LinkedIn sub, or email)
+  name                    String
+  img_url                 String?
+  email                   String             @unique
+  active                  Boolean            @default(true)
+  is_experienced          Boolean            @default(false)
+  college_name            String?
+  cgpa                    String?
+  company_name            String?
+  years_of_experience     Float?
+  resume_link             String?
+  segment                 String?
+  experience_level        ExperienceLevel?
+  onboarding_completed    Boolean            @default(false)
   onboarding_completed_at DateTime?
-  promo_code             String?   @unique
-  promo_code_used        String?
-  tokens_left            Int?      @default(3)
-  tokens_last_update     DateTime?
-  total_paid             Float?    @default(0)
-  last_paid              Float?
-  current_plan_start     DateTime?
-  current_plan_end      DateTime?
-  created_at             DateTime  @default(now())
-  updated_at             DateTime  @updatedAt
-  expiry                 DateTime?
-  isPaid                 Boolean   @default(false)
-  planExpiry             DateTime?
-  payments               Payment[]
-  comments               Comment[]
-  followedCompanies      Company[]
-  devices                Device[]
-  outreachRequests       OutreachRequest[]
+  promo_code              String?            @unique
+  promo_code_used         String?
+  tokens_left             Int?               @default(3)
+  tokens_last_update      DateTime?
+  total_paid              Float?             @default(0)
+  last_paid               Float?
+  current_plan_start      DateTime?
+  current_plan_end        DateTime?
+  created_at              DateTime           @default(now())
+  updated_at              DateTime           @updatedAt
+  expiry                  DateTime?
+  isPaid                  Boolean            @default(false)
+  planExpiry              DateTime?
+  payments                Payment[]
+  comments                Comment[]
+  followedCompanies       Company[]
+  devices                 Device[]
+  outreachRequests        OutreachRequest[]
+  resourceBookmarks       ResourceBookmark[]
 
   @@index([email])
   @@index([clerkId])
@@ -104,15 +105,15 @@ model Otp {
 }
 
 model Company {
-  id          String   @id @default(uuid())
-  name        String   @unique
+  id          String           @id @default(uuid())
+  name        String           @unique
   logo        String?
   description String?
   category    CompanyCategory?
   users       User[]
   jobs        Job[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @default(now()) @updatedAt 
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @default(now()) @updatedAt
 
   @@index([category])
   @@index([name])
@@ -137,15 +138,15 @@ model Job {
 }
 
 model SocialPost {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   name        String
   description String
   segment     String?
   company     String?
-  source      String?  // "linkedin", "reddit", "twitter", "direct"
+  source      String? // "linkedin", "reddit", "twitter", "direct"
   source_link String?
   image_link  String?
-  created_at  DateTime @default(now())
+  created_at  DateTime  @default(now())
   created_by  String?
   comments    Comment[]
 
@@ -168,14 +169,14 @@ model Comment {
 }
 
 model Device {
-  id        String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  deviceId  String   // stable device identifier (UUID from app / browser)
-  token     String?  // FCM / APNs token (can be null)
-  type      String?  // ios | android | web
+  deviceId String // stable device identifier (UUID from app / browser)
+  token    String? // FCM / APNs token (can be null)
+  type     String? // ios | android | web
 
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -186,33 +187,33 @@ model Device {
 }
 
 model Payment {
-  id              String        @id @default(uuid())
-  orderId         String        @unique
-  paymentId       String?
-  signature       String?
-  amount          Float
-  status          PaymentStatus @default(PENDING)
+  id        String        @id @default(uuid())
+  orderId   String        @unique
+  paymentId String?
+  signature String?
+  amount    Float
+  status    PaymentStatus @default(PENDING)
 
   // Payment source: "razorpay" | "google_play"
-  source          String        @default("razorpay")
+  source String @default("razorpay")
 
   // Google Play Billing fields
-  googlePlayToken   String?     // purchaseToken from Google Play
-  googlePlayOrderId String?     // orderId from Google Play receipt
+  googlePlayToken   String? // purchaseToken from Google Play
+  googlePlayOrderId String? // orderId from Google Play receipt
 
-  email           String        
+  email String
 
-  userId          String?
-  user            User?         @relation(fields: [userId], references: [id])
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
 
-  planType        PlanType
+  planType PlanType
 
   referralCode     String?
   referredByEmail  String?
   referralDiscount Float?
-  referralApplied  Boolean       @default(false)
+  referralApplied  Boolean @default(false)
 
-  createdAt       DateTime      @default(now())
+  createdAt DateTime @default(now())
 
   @@index([email])
   @@index([orderId])
@@ -220,29 +221,28 @@ model Payment {
   @@index([source])
 }
 
-
 model OutreachRequest {
-  id           String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  userId       String
-  user         User     @relation(fields: [userId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-  email        String
-  companyName  String
+  email       String
+  companyName String
 
-  reason       String          // ✅ REQUIRED (compulsory)
+  reason String // ✅ REQUIRED (compulsory)
 
-  jobId        String?
-  resumeLink   String?
-  message      String?
+  jobId      String?
+  resumeLink String?
+  message    String?
 
-  reply        String?
+  reply String?
 
-  status       String   @default("PENDING")
+  status String @default("PENDING")
 
-  createdAt    DateTime @default(now())
-  reviewedAt   DateTime?
-  sentAt       DateTime?
+  createdAt  DateTime  @default(now())
+  reviewedAt DateTime?
+  sentAt     DateTime?
 
   @@index([userId])
   @@index([companyName])
@@ -251,45 +251,45 @@ model OutreachRequest {
 }
 
 model WebRegistration {
-  id            String        @id @default(uuid())
-  email         String        @unique
-  currentPlan   PlanType
-  planStart     DateTime
-  planEnd       DateTime
-  paidAmount    Float
-  referralCode  String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id           String   @id @default(uuid())
+  email        String   @unique
+  currentPlan  PlanType
+  planStart    DateTime
+  planEnd      DateTime
+  paidAmount   Float
+  referralCode String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([email])
 }
 
 model application {
-  id              String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  full_name       String
-  email           String   @unique
-  phone           String?
+  full_name String
+  email     String  @unique
+  phone     String?
 
-  social_profile  String
+  social_profile String
 
-  is_experienced  Boolean  @default(false)
+  is_experienced  Boolean @default(false)
   current_company String?
 
-  college_name    String?
-  field_of_study  String?
-  passout_year    Int?
+  college_name   String?
+  field_of_study String?
+  passout_year   Int?
 
-  why_membership  String
+  why_membership     String
   tried_alternatives String?
-  reason          String
+  reason             String
 
-  status          String   @default("PENDING")
-  admin_reply     String?
+  status      String  @default("PENDING")
+  admin_reply String?
 
-  created_at      DateTime @default(now())
-  reviewed_at     DateTime?
-  updated_at      DateTime @updatedAt
+  created_at  DateTime  @default(now())
+  reviewed_at DateTime?
+  updated_at  DateTime  @updatedAt
 
   @@index([status])
   @@index([email])
@@ -297,27 +297,95 @@ model application {
 }
 
 model MembershipApplication {
-  id               String   @id @default(uuid())
+  id String @id @default(uuid())
 
   // Applicant info
-  full_name        String
-  email            String   @unique
-  phone            String?
-  social_profile   String
-  reason           String
+  full_name      String
+  email          String  @unique
+  phone          String?
+  social_profile String
+  reason         String
 
   // Membership lifecycle (used later)
-  membershipStart  DateTime?
-  membershipEnd    DateTime?
-  planType         PlanType?
+  membershipStart DateTime?
+  membershipEnd   DateTime?
+  planType        PlanType?
 
   // System state
-  status           String   @default("PENDING") // PENDING | ACTIVE | REJECTED | EXPIRED
+  status String @default("PENDING") // PENDING | ACTIVE | REJECTED | EXPIRED
 
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([email])
   @@index([status])
   @@index([createdAt])
+}
+
+// ─── Resources (curated learning content) ────────────────────────────────────
+enum ResourceCategory {
+  INTERVIEW_PREP
+  SYSTEM_DESIGN
+  DSA
+  BEHAVIORAL
+  CAREER_GROWTH
+  COMPANY_RESEARCH
+  RESUME
+  NEGOTIATION
+  TECH_BLOGS
+  PODCASTS_VIDEOS
+}
+
+enum ResourceType {
+  ARTICLE
+  VIDEO
+  BOOK
+  COURSE
+  TOOL
+  PODCAST
+  REPO
+  NEWSLETTER
+  CHEATSHEET
+}
+
+model Resource {
+  id            String             @id @default(uuid())
+  title         String
+  description   String
+  url           String
+  category      ResourceCategory
+  type          ResourceType
+  author        String?
+  source        String? // youtube | github | medium | substack | etc.
+  thumbnail     String?
+  tags          String[]           @default([])
+  is_free       Boolean            @default(true)
+  is_curated    Boolean            @default(true)
+  language      String             @default("en")
+  difficulty    String? // beginner | intermediate | advanced
+  estimated_min Int? // estimated time investment in minutes
+  view_count    Int                @default(0)
+  is_active     Boolean            @default(true)
+  created_at    DateTime           @default(now())
+  updated_at    DateTime           @updatedAt
+  bookmarks     ResourceBookmark[]
+
+  @@unique([url])
+  @@index([category])
+  @@index([type])
+  @@index([is_active])
+  @@index([created_at])
+}
+
+model ResourceBookmark {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resourceId String
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, resourceId])
+  @@index([userId])
+  @@index([resourceId])
 }

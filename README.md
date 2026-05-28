@@ -1,4 +1,4 @@
-<img width="498" alt="ChatGPT Image Jan 3, 2026, 05_56_26 PM" src="https://github.com/user-attachments/assets/39200c4b-299d-4eac-a8b3-c9ad92add5de" />
+<img width="498" alt="HiringBull Jan 3, 2026, 05_56_26 PM" src="https://github.com/user-attachments/assets/39200c4b-299d-4eac-a8b3-c9ad92add5de" />
 
 ## Where Early Careers Take Their First Big Leap  
 

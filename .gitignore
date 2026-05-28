@@ -10,6 +10,8 @@ yarn.lock
 # Env files
 .env
 .env.*
+webs/
+
 
 # Logs
 logs
@@ -26,6 +28,7 @@ coverage/
 dist/
 build/
 .out/
+server/src/generated/prisma/
 
 # Editor/OS
 .vscode/

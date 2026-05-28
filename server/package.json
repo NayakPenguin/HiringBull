@@ -1,41 +1,55 @@
 {
-    "name": "hiringbull-server",
-    "version": "0.1.0",
-    "private": true,
-    "main": "src/index.js",
-    "type": "module",
-    "scripts": {
-        "start": "node --enable-source-maps src/index.js",
-        "dev": "nodemon --watch src --exec node --enable-source-maps src/index.js",
-        "lint": "eslint ."
-    },
-    "engines": {
-        "node": ">=18"
-    },
-    "dependencies": {
-        "@prisma/client": "^5.22.0",
-        "body-parser": "^2.2.1",
-        "cors": "^2.8.5",
-        "dotenv": "^16.0.0",
-        "expo-server-sdk": "^4.0.0",
-        "express": "^4.22.1",
-        "express-rate-limit": "^8.2.1",
-        "google-auth-library": "^10.6.1",
-        "googleapis": "^171.4.0",
-        "helmet": "^6.0.1",
-        "http-status": "^2.1.0",
-        "joi": "^18.0.2",
-        "jsonwebtoken": "^9.0.3",
-        "morgan": "^1.10.0",
-        "razorpay": "^2.9.6",
-        "resend": "^6.9.2",
-        "swagger-jsdoc": "^6.2.8",
-        "swagger-ui-express": "^5.0.1",
-        "xss": "^1.0.15"
-    },
-    "devDependencies": {
-        "eslint": "^8.0.0",
-        "nodemon": "^2.0.20",
-        "prisma": "^5.22.0"
-    }
+  "name": "hiringbull-server",
+  "version": "1.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "bun run build && nodemon --watch src --exec node dist/index.js",
+    "build": "prisma generate && tsc",
+    "lint": "eslint .",
+    "tsc": "tsc --noemit",
+    "prisma:generate": "prisma generate"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "@prisma/client": "^7.8.0",
+    "@prisma/adapter-pg": "^7.8.0",
+    "body-parser": "^2.2.2",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "expo-server-sdk": "^4.0.0",
+    "express": "^4.22.2",
+    "express-rate-limit": "^8.5.2",
+    "google-auth-library": "^10.6.2",
+    "googleapis": "^171.4.0",
+    "helmet": "^6.2.0",
+    "http-status": "^2.1.0",
+    "joi": "^18.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.1",
+    "razorpay": "^2.9.6",
+    "resend": "^6.12.3",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1",
+    "xss": "^1.0.15"
+  },
+  "devDependencies": {
+    "@types/body-parser": "^1.19.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/morgan": "^1.9.10",
+    "@types/node": "^22.19.19",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
+    "eslint": "^10.4.0",
+    "nodemon": "^3.1.14",
+    "prisma": "^7.8.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3"
+  }
 }

@@ -13,6 +13,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
@@ -25,9 +28,9 @@ jobs:
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             cd ${{ secrets.APP_DIR }}
             git pull origin main
-            npm install
-            npx prisma generate
-            npx prisma migrate deploy
+            bun install --frozen-lockfile
+            bun run build
+            bunx prisma migrate deploy
             pm2 restart 0
             pm2 save
           EOF

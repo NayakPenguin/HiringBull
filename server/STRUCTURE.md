@@ -3,7 +3,7 @@
 This document outlines the folder structure and architectural patterns for the backend.
 
 ## Architecture Pattern
-**Routes -> Middleware -> Controllers (Logic) -> Database**
+**Routes → Middleware → Controllers (Logic) → Database**
 
 We have simplified the architecture by removing the Service layer. Controllers are responsible for both handling HTTP requests and executing business logic.
 
@@ -11,19 +11,20 @@ We have simplified the architecture by removing the Service layer. Controllers a
 ```
 server/
 ├── prisma/             # Database schema (schema.prisma)
-└── src/
-    ├── controllers/    # Request handlers + Business Logic
-    ├── middlewares/    # Request interceptors
-    │   ├── auth.js         # Clerk authentication (requireAuth, requireApiKey)
-    │   ├── rateLimiter.js  # Rate limiting (default, auth, api)
-    │   ├── validate.js     # Joi schema validation
-    │   └── errorHandlers.js # Global error handling
-    ├── routes/         # API Endpoint definitions
-    ├── validations/    # Joi schemas for request validation
-    └── utils/          # Helper functions
-        ├── pagination.js   # Pagination helpers for Prisma
-        ├── validateEnv.js  # Environment variable validation
-        └── pick.js         # Object utility
+├── src/
+│   ├── types/          # TypeScript type definitions
+│   ├── controllers/    # Request handlers + Business Logic (.ts)
+│   ├── middlewares/    # Request interceptors (.ts)
+│   │   ├── auth.ts         # JWT authentication
+│   │   ├── rateLimiter.ts  # Rate limiting
+│   │   ├── validate.ts     # Joi schema validation
+│   │   └── errorHandlers.ts # Global error handling
+│   ├── routes/         # API Endpoint definitions (.ts)
+│   ├── validations/    # Joi schemas for request validation (.ts)
+│   ├── utils/          # Helper functions (.ts)
+│   └── config/         # Configuration files (.ts)
+├── dist/               # Compiled JavaScript output
+└── package.json
 ```
 
 ## Module Responsibilities

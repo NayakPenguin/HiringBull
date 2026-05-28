@@ -1,0 +1,63 @@
+{
+  "project_info": {
+    "project_number": "50206145204",
+    "project_id": "hiringbull-app",
+    "storage_bucket": "hiringbull-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:50206145204:android:c03a7e531566dd5f6535e1",
+        "android_client_info": {
+          "package_name": "com.hiringbull"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "50206145204-90jv70a2t2c2eghnbslga2fqn72namh6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hiringbull",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "50206145204-avqcpj48rl0aqshvbq44hvsuraabfumb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hiringbull",
+            "certificate_hash": "d8fc5d7cae2634c690080c9f05c34d2b166d99f9"
+          }
+        },
+        {
+          "client_id": "50206145204-jejnefccm1ftuq823e4b34921ueefrt2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hiringbull",
+            "certificate_hash": "ffaa10a9cab0d85cf2b6db02826f2c4212f8da76"
+          }
+        },
+        {
+          "client_id": "50206145204-15uf1snddiscrmrequtka1n69fc7djc0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAAbC_CENeeyyID8hIwyC57fUJNMwXUg_A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "50206145204-15uf1snddiscrmrequtka1n69fc7djc0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
