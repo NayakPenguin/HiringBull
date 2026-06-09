@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { type BottomSheetModal } from '@gorhom/bottom-sheet';
 import React, { forwardRef } from 'react';
 import { Dimensions, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -44,7 +44,9 @@ export const AppConfirmModal = forwardRef<
         <View className="flex-row items-center">
           <View
             className={`mr-4 size-12 items-center justify-center rounded-full ${
-              isDestructive ? 'bg-danger-50' : 'bg-neutral-100'
+              isDestructive
+                ? 'bg-danger-50 dark:bg-danger-900'
+                : 'bg-neutral-100 dark:bg-neutral-800'
             }`}
           >
             <Ionicons
@@ -54,20 +56,24 @@ export const AppConfirmModal = forwardRef<
             />
           </View>
 
-          <Text className="text-xl font-bold text-neutral-900">{title}</Text>
+          <Text className="text-xl font-bold text-neutral-900 dark:text-white">
+            {title}
+          </Text>
         </View>
 
         {description && (
-          <Text className="mt-2 text-sm text-neutral-500">{description}</Text>
+          <Text className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+            {description}
+          </Text>
         )}
 
         {/* Actions */}
         <View className="mt-8 flex-row gap-3">
           <Pressable
             onPress={() => (ref as any)?.current?.dismiss()}
-            className="flex-1 rounded-xl border border-neutral-300 py-3"
+            className="flex-1 rounded-xl border border-neutral-300 py-3 dark:border-neutral-700"
           >
-            <Text className="text-center text-base font-semibold text-neutral-700">
+            <Text className="text-center text-base font-semibold text-neutral-700 dark:text-neutral-200">
               {cancelText}
             </Text>
           </Pressable>
@@ -78,10 +84,10 @@ export const AppConfirmModal = forwardRef<
               onConfirm();
             }}
             className={`flex-1 rounded-xl py-3 ${
-              isDestructive ? 'bg-danger-600' : 'bg-neutral-900'
+              isDestructive ? 'bg-danger-600' : 'bg-neutral-900 dark:bg-white'
             }`}
           >
-            <Text className="text-center text-base font-semibold text-white">
+            <Text className="text-center text-base font-semibold text-white dark:text-neutral-900">
               {confirmText}
             </Text>
           </Pressable>

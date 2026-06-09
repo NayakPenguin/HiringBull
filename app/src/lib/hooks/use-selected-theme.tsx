@@ -14,7 +14,7 @@ export type ColorSchemeType = 'light' | 'dark' | 'system';
  *
  */
 export const useSelectedTheme = () => {
-  const { colorScheme: _color, setColorScheme } = useColorScheme();
+  const { setColorScheme } = useColorScheme();
   const [theme, _setTheme] = useMMKVString(SELECTED_THEME, storage);
 
   const setSelectedTheme = React.useCallback(
@@ -28,16 +28,7 @@ export const useSelectedTheme = () => {
   const selectedTheme = (theme ?? 'system') as ColorSchemeType;
   return { selectedTheme, setSelectedTheme } as const;
 };
-// to be used in the root file to load the selected theme from MMKV
-// Set to true to enable dark mode support
-const DARK_MODE_ENABLED = false;
-
 export const loadSelectedTheme = () => {
-  if (!DARK_MODE_ENABLED) {
-    colorScheme.set('light');
-    return;
-  }
-
   const theme = storage.getString(SELECTED_THEME);
   if (theme !== undefined) {
     colorScheme.set(theme as ColorSchemeType);

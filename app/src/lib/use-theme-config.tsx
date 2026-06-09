@@ -1,14 +1,13 @@
-import type { Theme } from '@react-navigation/native';
+import type { Theme } from 'expo-router/react-navigation';
 import {
   DarkTheme as _DarkTheme,
   DefaultTheme,
-} from '@react-navigation/native';
+} from 'expo-router/react-navigation';
 import { useColorScheme } from 'nativewind';
 
 import colors from '@/components/ui/colors';
 
-// Set to true to enable dark mode support
-const DARK_MODE_ENABLED = false;
+const DARK_MODE_ENABLED = true;
 
 const DarkTheme: Theme = {
   ..._DarkTheme,

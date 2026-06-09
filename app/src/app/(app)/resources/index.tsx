@@ -39,27 +39,49 @@ interface ReviewResult {
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-function ScoreCircle({ score, label, size = 80 }: { score: number; label?: string; size?: number }) {
+function ScoreCircle({
+  score,
+  label,
+  size = 80,
+}: {
+  score: number;
+  label?: string;
+  size?: number;
+}) {
   const color = score >= 75 ? '#10b981' : score >= 50 ? '#f59e0b' : '#ef4444';
   return (
     <View className="items-center">
       <View
-        style={{ width: size, height: size, borderRadius: size / 2, borderWidth: 4, borderColor: color }}
+        style={{
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          borderWidth: 4,
+          borderColor: color,
+        }}
         className="items-center justify-center"
       >
-        <Text style={{ color, fontSize: size * 0.3, fontWeight: '800' }}>{score}</Text>
+        <Text style={{ color, fontSize: size * 0.3, fontWeight: '800' }}>
+          {score}
+        </Text>
       </View>
-      {label && <Text className="mt-1 text-xs text-neutral-500">{label}</Text>}
+      {label && (
+        <Text className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+          {label}
+        </Text>
+      )}
     </View>
   );
 }
 
 function ThinkingSteps({ steps }: { steps: Step[] }) {
   return (
-    <View className="mt-4 rounded-2xl border border-neutral-100 bg-neutral-50 p-4">
+    <View className="mt-4 rounded-2xl border border-neutral-100 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-900">
       <View className="mb-2 flex-row items-center gap-2">
         <Ionicons name="sparkles" size={16} color="#7c3aed" />
-        <Text className="text-sm font-semibold text-neutral-700">HiringBull Copilot is thinking...</Text>
+        <Text className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">
+          HiringBull Copilot is thinking...
+        </Text>
       </View>
       {steps.map((step, i) => (
         <View key={i} className="ml-1 mt-2 flex-row items-center gap-2">
@@ -68,7 +90,9 @@ function ThinkingSteps({ steps }: { steps: Step[] }) {
           ) : (
             <ActivityIndicator size={14} color="#7c3aed" />
           )}
-          <Text className={`text-sm ${step.status === 'done' ? 'text-neutral-600' : 'text-neutral-800 font-medium'}`}>
+          <Text
+            className={`text-sm ${step.status === 'done' ? 'text-neutral-600 dark:text-neutral-400' : 'font-medium text-neutral-800 dark:text-neutral-200'}`}
+          >
             {step.text}
           </Text>
         </View>
@@ -93,8 +117,12 @@ export default function CopilotScreen() {
   const pickResume = useCallback(async () => {
     try {
       const docResult = await DocumentPicker.getDocumentAsync({
-        type: ['application/pdf', 'text/plain', 'application/msword',
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+        type: [
+          'application/pdf',
+          'text/plain',
+          'application/msword',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ],
         copyToCacheDirectory: true,
       });
 
@@ -141,7 +169,8 @@ export default function CopilotScreen() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: client.defaults.headers.Authorization as string || '',
+          Authorization:
+            (client.defaults.headers.Authorization as string) || '',
         },
         body: JSON.stringify({
           resume: resumeText,
@@ -180,7 +209,10 @@ export default function CopilotScreen() {
                 const existing = prev.findIndex((s) => s.text === event.step);
                 if (existing >= 0) {
                   const updated = [...prev];
-                  updated[existing] = { text: event.step, status: event.status };
+                  updated[existing] = {
+                    text: event.step,
+                    status: event.status,
+                  };
                   return updated;
                 }
                 return [...prev, { text: event.step, status: event.status }];
@@ -212,7 +244,10 @@ export default function CopilotScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+    <SafeAreaView
+      className="flex-1 bg-white dark:bg-neutral-950"
+      edges={['top']}
+    >
       <FocusAwareStatusBar />
       <ScrollView
         ref={scrollRef}
@@ -226,11 +261,11 @@ export default function CopilotScreen() {
           <View className="pb-1 pt-4">
             <View className="flex-row items-center gap-2">
               <Ionicons name="sparkles" size={28} color="#7c3aed" />
-              <Text className="text-[32px] font-extrabold leading-[38px] text-neutral-900">
+              <Text className="text-[32px] font-extrabold leading-[38px] text-neutral-900 dark:text-white">
                 Copilot
               </Text>
             </View>
-            <Text className="mt-2 text-[15px] leading-[22px] text-neutral-500">
+            <Text className="mt-2 text-[15px] leading-[22px] text-neutral-500 dark:text-neutral-400">
               AI-powered resume analysis to help you{'\n'}land your dream job.
             </Text>
           </View>
@@ -238,67 +273,106 @@ export default function CopilotScreen() {
           {/* Mode Toggle */}
           <View className="mt-6 flex-row gap-3">
             <Pressable
-              onPress={() => { setMode('match'); reset(); }}
-              className={`flex-1 rounded-xl border px-4 py-3 ${mode === 'match' ? 'border-violet-500 bg-violet-50' : 'border-neutral-200 bg-white'}`}
+              onPress={() => {
+                setMode('match');
+                reset();
+              }}
+              className={`flex-1 rounded-xl border px-4 py-3 ${mode === 'match' ? 'border-violet-500 bg-violet-50 dark:bg-violet-950/50' : 'border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900'}`}
             >
               <View className="flex-row items-center gap-2">
-                <Ionicons name="git-compare-outline" size={18} color={mode === 'match' ? '#7c3aed' : '#737373'} />
-                <Text className={`text-sm font-semibold ${mode === 'match' ? 'text-violet-700' : 'text-neutral-600'}`}>
+                <Ionicons
+                  name="git-compare-outline"
+                  size={18}
+                  color={mode === 'match' ? '#7c3aed' : '#737373'}
+                />
+                <Text
+                  className={`text-sm font-semibold ${mode === 'match' ? 'text-violet-700 dark:text-violet-200' : 'text-neutral-600 dark:text-neutral-300'}`}
+                >
                   Match with JD
                 </Text>
               </View>
-              <Text className="mt-1 text-xs text-neutral-500">Compare resume vs job</Text>
+              <Text className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                Compare resume vs job
+              </Text>
             </Pressable>
             <Pressable
-              onPress={() => { setMode('review'); reset(); }}
-              className={`flex-1 rounded-xl border px-4 py-3 ${mode === 'review' ? 'border-violet-500 bg-violet-50' : 'border-neutral-200 bg-white'}`}
+              onPress={() => {
+                setMode('review');
+                reset();
+              }}
+              className={`flex-1 rounded-xl border px-4 py-3 ${mode === 'review' ? 'border-violet-500 bg-violet-50 dark:bg-violet-950/50' : 'border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900'}`}
             >
               <View className="flex-row items-center gap-2">
-                <Ionicons name="document-text-outline" size={18} color={mode === 'review' ? '#7c3aed' : '#737373'} />
-                <Text className={`text-sm font-semibold ${mode === 'review' ? 'text-violet-700' : 'text-neutral-600'}`}>
+                <Ionicons
+                  name="document-text-outline"
+                  size={18}
+                  color={mode === 'review' ? '#7c3aed' : '#737373'}
+                />
+                <Text
+                  className={`text-sm font-semibold ${mode === 'review' ? 'text-violet-700 dark:text-violet-200' : 'text-neutral-600 dark:text-neutral-300'}`}
+                >
                   Resume Review
                 </Text>
               </View>
-              <Text className="mt-1 text-xs text-neutral-500">General quality check</Text>
+              <Text className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                General quality check
+              </Text>
             </Pressable>
           </View>
 
           {/* Resume Upload */}
           <View className="mt-6">
-            <Text className="mb-2 text-sm font-semibold text-neutral-700">Your Resume</Text>
+            <Text className="mb-2 text-sm font-semibold text-neutral-700 dark:text-neutral-200">
+              Your Resume
+            </Text>
             <Pressable
               onPress={pickResume}
-              className="flex-row items-center gap-3 rounded-xl border border-dashed border-neutral-300 bg-neutral-50 px-4 py-4"
+              className="flex-row items-center gap-3 rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-900"
             >
-              <View className="h-10 w-10 items-center justify-center rounded-full bg-violet-100">
-                <Ionicons name="cloud-upload-outline" size={20} color="#7c3aed" />
+              <View className="size-10 items-center justify-center rounded-full bg-violet-100 dark:bg-violet-950/60">
+                <Ionicons
+                  name="cloud-upload-outline"
+                  size={20}
+                  color="#7c3aed"
+                />
               </View>
               <View className="flex-1">
-                <Text className="text-sm font-medium text-neutral-700">
+                <Text className="text-sm font-medium text-neutral-700 dark:text-neutral-200">
                   {resumeFileName || 'Upload Resume'}
                 </Text>
-                <Text className="text-xs text-neutral-400">PDF, DOC, or TXT</Text>
+                <Text className="text-xs text-neutral-400 dark:text-neutral-500">
+                  PDF, DOC, or TXT
+                </Text>
               </View>
-              {resumeFileName && <Ionicons name="checkmark-circle" size={20} color="#10b981" />}
+              {resumeFileName && (
+                <Ionicons name="checkmark-circle" size={20} color="#10b981" />
+              )}
             </Pressable>
 
-            <Text className="my-3 text-center text-xs text-neutral-400">— or paste below —</Text>
+            <Text className="my-3 text-center text-xs text-neutral-400 dark:text-neutral-500">
+              — or paste below —
+            </Text>
             <TextInput
               placeholder="Paste your resume text here..."
               placeholderTextColor="#9ca3af"
               value={resumeText.startsWith('[Uploaded:') ? '' : resumeText}
-              onChangeText={(t) => { setResumeText(t); setResumeFileName(''); }}
+              onChangeText={(t) => {
+                setResumeText(t);
+                setResumeFileName('');
+              }}
               multiline
               numberOfLines={6}
               textAlignVertical="top"
-              className="min-h-[120px] rounded-xl border border-neutral-200 bg-white p-4 text-sm text-neutral-800"
+              className="min-h-[120px] rounded-xl border border-neutral-200 bg-white p-4 text-sm text-neutral-800 dark:border-neutral-800 dark:bg-neutral-900 dark:text-white"
             />
           </View>
 
           {/* Job Description (only in match mode) */}
           {mode === 'match' && (
             <View className="mt-5">
-              <Text className="mb-2 text-sm font-semibold text-neutral-700">Job Description</Text>
+              <Text className="mb-2 text-sm font-semibold text-neutral-700 dark:text-neutral-200">
+                Job Description
+              </Text>
               <TextInput
                 placeholder="Paste the job description here..."
                 placeholderTextColor="#9ca3af"
@@ -307,16 +381,18 @@ export default function CopilotScreen() {
                 multiline
                 numberOfLines={6}
                 textAlignVertical="top"
-                className="min-h-[120px] rounded-xl border border-neutral-200 bg-white p-4 text-sm text-neutral-800"
+                className="min-h-[120px] rounded-xl border border-neutral-200 bg-white p-4 text-sm text-neutral-800 dark:border-neutral-800 dark:bg-neutral-900 dark:text-white"
               />
             </View>
           )}
 
           {/* Error */}
           {error ? (
-            <View className="mt-4 flex-row items-center gap-2 rounded-xl bg-red-50 px-4 py-3">
+            <View className="mt-4 flex-row items-center gap-2 rounded-xl bg-red-50 px-4 py-3 dark:bg-red-950/50">
               <Ionicons name="alert-circle" size={18} color="#ef4444" />
-              <Text className="flex-1 text-sm text-red-600">{error}</Text>
+              <Text className="flex-1 text-sm text-red-600 dark:text-red-300">
+                {error}
+              </Text>
             </View>
           ) : null}
 
@@ -332,7 +408,11 @@ export default function CopilotScreen() {
               <Ionicons name="sparkles" size={18} color="#fff" />
             )}
             <Text className="text-base font-bold text-white">
-              {isAnalyzing ? 'Analyzing...' : mode === 'match' ? 'Analyze Match' : 'Review Resume'}
+              {isAnalyzing
+                ? 'Analyzing...'
+                : mode === 'match'
+                  ? 'Analyze Match'
+                  : 'Review Resume'}
             </Text>
           </Pressable>
 
@@ -343,95 +423,161 @@ export default function CopilotScreen() {
           {result && (
             <Animated.View style={{ opacity: fadeAnim }} className="mt-6">
               {/* Score */}
-              <View className="items-center rounded-2xl border border-neutral-100 bg-gradient-to-b from-violet-50 to-white p-6">
+              <View className="items-center rounded-2xl border border-neutral-100 bg-violet-50 p-6 dark:border-neutral-800 dark:bg-neutral-900">
                 <ScoreCircle
-                  score={'matchScore' in result ? (result as MatchResult).matchScore : (result as ReviewResult).overallScore}
+                  score={
+                    'matchScore' in result
+                      ? (result as MatchResult).matchScore
+                      : (result as ReviewResult).overallScore
+                  }
                   label={mode === 'match' ? 'Match Score' : 'Overall Score'}
                   size={100}
                 />
                 {mode === 'review' && 'formatScore' in result && (
                   <View className="mt-4 flex-row gap-6">
-                    <ScoreCircle score={(result as ReviewResult).formatScore} label="Format" size={56} />
-                    <ScoreCircle score={(result as ReviewResult).contentScore} label="Content" size={56} />
-                    <ScoreCircle score={(result as ReviewResult).atsScore} label="ATS" size={56} />
+                    <ScoreCircle
+                      score={(result as ReviewResult).formatScore}
+                      label="Format"
+                      size={56}
+                    />
+                    <ScoreCircle
+                      score={(result as ReviewResult).contentScore}
+                      label="Content"
+                      size={56}
+                    />
+                    <ScoreCircle
+                      score={(result as ReviewResult).atsScore}
+                      label="ATS"
+                      size={56}
+                    />
                   </View>
                 )}
               </View>
 
               {/* Summary */}
-              <View className="mt-4 rounded-2xl border border-neutral-100 bg-white p-4">
-                <Text className="mb-2 text-sm font-bold text-neutral-800">Summary</Text>
-                <Text className="text-sm leading-5 text-neutral-600">{result.summary}</Text>
+              <View className="mt-4 rounded-2xl border border-neutral-100 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+                <Text className="mb-2 text-sm font-bold text-neutral-800 dark:text-neutral-100">
+                  Summary
+                </Text>
+                <Text className="text-sm leading-5 text-neutral-600 dark:text-neutral-300">
+                  {result.summary}
+                </Text>
               </View>
 
               {/* Strengths */}
               {result.strengths && result.strengths.length > 0 && (
-                <View className="mt-4 rounded-2xl border border-green-100 bg-green-50 p-4">
+                <View className="mt-4 rounded-2xl border border-green-100 bg-green-50 p-4 dark:border-green-900 dark:bg-green-950/40">
                   <View className="mb-2 flex-row items-center gap-2">
-                    <Ionicons name="checkmark-circle" size={16} color="#10b981" />
-                    <Text className="text-sm font-bold text-green-800">Strengths</Text>
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={16}
+                      color="#10b981"
+                    />
+                    <Text className="text-sm font-bold text-green-800 dark:text-green-200">
+                      Strengths
+                    </Text>
                   </View>
                   {result.strengths.map((s: string, i: number) => (
-                    <Text key={i} className="mt-1 text-sm text-green-700">• {s}</Text>
+                    <Text
+                      key={i}
+                      className="mt-1 text-sm text-green-700 dark:text-green-300"
+                    >
+                      • {s}
+                    </Text>
                   ))}
                 </View>
               )}
 
               {/* Gaps / Issues */}
-              {('gaps' in result ? result.gaps : (result as ReviewResult).issues)?.length > 0 && (
-                <View className="mt-4 rounded-2xl border border-red-100 bg-red-50 p-4">
+              {('gaps' in result
+                ? result.gaps
+                : (result as ReviewResult).issues
+              )?.length > 0 && (
+                <View className="mt-4 rounded-2xl border border-red-100 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/40">
                   <View className="mb-2 flex-row items-center gap-2">
                     <Ionicons name="alert-circle" size={16} color="#ef4444" />
-                    <Text className="text-sm font-bold text-red-800">
+                    <Text className="text-sm font-bold text-red-800 dark:text-red-200">
                       {mode === 'match' ? 'Gaps' : 'Issues'}
                     </Text>
                   </View>
-                  {('gaps' in result ? result.gaps : (result as ReviewResult).issues)?.map((g: string, i: number) => (
-                    <Text key={i} className="mt-1 text-sm text-red-700">• {g}</Text>
+                  {('gaps' in result
+                    ? result.gaps
+                    : (result as ReviewResult).issues
+                  )?.map((g: string, i: number) => (
+                    <Text
+                      key={i}
+                      className="mt-1 text-sm text-red-700 dark:text-red-300"
+                    >
+                      • {g}
+                    </Text>
                   ))}
                 </View>
               )}
 
               {/* Suggestions */}
               {result.suggestions && result.suggestions.length > 0 && (
-                <View className="mt-4 rounded-2xl border border-violet-100 bg-violet-50 p-4">
+                <View className="mt-4 rounded-2xl border border-violet-100 bg-violet-50 p-4 dark:border-violet-900 dark:bg-violet-950/40">
                   <View className="mb-2 flex-row items-center gap-2">
                     <Ionicons name="bulb-outline" size={16} color="#7c3aed" />
-                    <Text className="text-sm font-bold text-violet-800">Suggestions</Text>
+                    <Text className="text-sm font-bold text-violet-800 dark:text-violet-200">
+                      Suggestions
+                    </Text>
                   </View>
                   {result.suggestions.map((s: string, i: number) => (
-                    <Text key={i} className="mt-2 text-sm leading-5 text-violet-700">{i + 1}. {s}</Text>
+                    <Text
+                      key={i}
+                      className="mt-2 text-sm leading-5 text-violet-700 dark:text-violet-300"
+                    >
+                      {i + 1}. {s}
+                    </Text>
                   ))}
                 </View>
               )}
 
               {/* Missing Keywords (match mode) */}
-              {'missingKeywords' in result && (result as MatchResult).missingKeywords?.length > 0 && (
-                <View className="mt-4 rounded-2xl border border-amber-100 bg-amber-50 p-4">
-                  <View className="mb-2 flex-row items-center gap-2">
-                    <Ionicons name="key-outline" size={16} color="#d97706" />
-                    <Text className="text-sm font-bold text-amber-800">Missing Keywords</Text>
+              {'missingKeywords' in result &&
+                (result as MatchResult).missingKeywords?.length > 0 && (
+                  <View className="mt-4 rounded-2xl border border-amber-100 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/40">
+                    <View className="mb-2 flex-row items-center gap-2">
+                      <Ionicons name="key-outline" size={16} color="#d97706" />
+                      <Text className="text-sm font-bold text-amber-800 dark:text-amber-200">
+                        Missing Keywords
+                      </Text>
+                    </View>
+                    <View className="flex-row flex-wrap gap-2">
+                      {(result as MatchResult).missingKeywords.map(
+                        (k: string, i: number) => (
+                          <View
+                            key={i}
+                            className="rounded-full bg-amber-200 px-3 py-1 dark:bg-amber-900"
+                          >
+                            <Text className="text-xs font-medium text-amber-800 dark:text-amber-100">
+                              {k}
+                            </Text>
+                          </View>
+                        )
+                      )}
+                    </View>
                   </View>
-                  <View className="flex-row flex-wrap gap-2">
-                    {(result as MatchResult).missingKeywords.map((k: string, i: number) => (
-                      <View key={i} className="rounded-full bg-amber-200 px-3 py-1">
-                        <Text className="text-xs font-medium text-amber-800">{k}</Text>
-                      </View>
-                    ))}
-                  </View>
-                </View>
-              )}
+                )}
 
               {/* Improved Bullets */}
               {result.improvedBullets && result.improvedBullets.length > 0 && (
-                <View className="mt-4 rounded-2xl border border-blue-100 bg-blue-50 p-4">
+                <View className="mt-4 rounded-2xl border border-blue-100 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950/40">
                   <View className="mb-2 flex-row items-center gap-2">
                     <Ionicons name="create-outline" size={16} color="#3b82f6" />
-                    <Text className="text-sm font-bold text-blue-800">Improved Bullets (Copy These)</Text>
+                    <Text className="text-sm font-bold text-blue-800 dark:text-blue-200">
+                      Improved Bullets (Copy These)
+                    </Text>
                   </View>
                   {result.improvedBullets.map((b: string, i: number) => (
-                    <View key={i} className="mt-2 rounded-lg bg-white p-3">
-                      <Text className="text-sm leading-5 text-neutral-700">• {b}</Text>
+                    <View
+                      key={i}
+                      className="mt-2 rounded-lg bg-white p-3 dark:bg-neutral-900"
+                    >
+                      <Text className="text-sm leading-5 text-neutral-700 dark:text-neutral-200">
+                        • {b}
+                      </Text>
                     </View>
                   ))}
                 </View>
@@ -439,11 +585,18 @@ export default function CopilotScreen() {
 
               {/* Reset */}
               <Pressable
-                onPress={() => { reset(); setResumeText(''); setJdText(''); setResumeFileName(''); }}
-                className="mt-6 flex-row items-center justify-center gap-2 rounded-xl border border-neutral-200 py-3"
+                onPress={() => {
+                  reset();
+                  setResumeText('');
+                  setJdText('');
+                  setResumeFileName('');
+                }}
+                className="mt-6 flex-row items-center justify-center gap-2 rounded-xl border border-neutral-200 py-3 dark:border-neutral-800"
               >
                 <Ionicons name="refresh-outline" size={18} color="#737373" />
-                <Text className="text-sm font-semibold text-neutral-600">Start New Analysis</Text>
+                <Text className="text-sm font-semibold text-neutral-600 dark:text-neutral-300">
+                  Start New Analysis
+                </Text>
               </Pressable>
             </Animated.View>
           )}

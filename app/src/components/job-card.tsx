@@ -70,8 +70,10 @@ export function JobCard({ job, onSave }: JobCardProps) {
   return (
     <>
       <View
-        className={`android:shadow-sm ios:shadow-sm mb-4 rounded-xl border bg-white p-4 ${
-          isSaved ? 'border-neutral-400' : 'border-neutral-200'
+        className={`mb-4 rounded-xl border bg-white p-4 android:shadow-sm ios:shadow-sm dark:bg-neutral-900 ${
+          isSaved
+            ? 'border-neutral-400 dark:border-neutral-500'
+            : 'border-neutral-200 dark:border-neutral-800'
         }`}
       >
         <View className="flex-row items-start gap-3">
@@ -85,10 +87,10 @@ export function JobCard({ job, onSave }: JobCardProps) {
             />
           ) : (
             <View
-              className="items-center justify-center rounded-xl bg-neutral-200"
+              className="items-center justify-center rounded-xl bg-neutral-200 dark:bg-neutral-800"
               style={{ width: 50, height: 50 }}
             >
-              <Text className="text-lg font-bold text-neutral-500">
+              <Text className="text-lg font-bold text-neutral-500 dark:text-neutral-300">
                 {job.company.charAt(0).toUpperCase()}
               </Text>
             </View>
@@ -97,20 +99,23 @@ export function JobCard({ job, onSave }: JobCardProps) {
           <View className="flex-1">
             <Pressable onPress={handleCardPress} className="flex-row gap-1">
               <View className="flex-1 flex-row items-start">
-                <Text className="text-neutral-90 shrink text-base font-bold">
+                <Text className="shrink text-base font-bold text-neutral-900 dark:text-white">
                   {job.title}
                 </Text>
                 <Feather name="arrow-up-right" className="ml-1" />
               </View>
             </Pressable>
-            <Text className="mb-2 text-sm text-neutral-600">
+            <Text className="mb-2 text-sm text-neutral-600 dark:text-neutral-400">
               {companyLocation}
             </Text>
 
             <View className="flex-row flex-wrap gap-2">
               {visibleTags.map((tag) => (
-                <View key={tag} className="rounded-md bg-gray-100 px-2 py-1">
-                  <Text className="text-xs font-medium text-gray-800">
+                <View
+                  key={tag}
+                  className="rounded-md bg-gray-100 px-2 py-1 dark:bg-neutral-800"
+                >
+                  <Text className="text-xs font-medium text-gray-800 dark:text-neutral-200">
                     {tag}
                   </Text>
                 </View>
@@ -121,9 +126,9 @@ export function JobCard({ job, onSave }: JobCardProps) {
                     e.stopPropagation();
                     setExpanded(true);
                   }}
-                  className="rounded-md bg-gray-200 px-2 py-1"
+                  className="rounded-md bg-gray-200 px-2 py-1 dark:bg-neutral-700"
                 >
-                  <Text className="text-xs font-medium text-gray-600">
+                  <Text className="text-xs font-medium text-gray-600 dark:text-neutral-300">
                     +{hiddenCount} more
                   </Text>
                 </Pressable>
@@ -131,17 +136,17 @@ export function JobCard({ job, onSave }: JobCardProps) {
             </View>
 
             {/* Footer */}
-            <View className="mt-3 flex-row items-center justify-between border-t border-neutral-100 pt-2">
+            <View className="mt-3 flex-row items-center justify-between border-t border-neutral-100 pt-2 dark:border-neutral-800">
               <View>
-                <Text className="mb-1 text-xs text-neutral-400">
+                <Text className="mb-1 text-xs text-neutral-400 dark:text-neutral-500">
                   Add these keywords to your resume to improve ATS matching.
                 </Text>
-                <Text className="text-xs text-neutral-400">
+                <Text className="text-xs text-neutral-400 dark:text-neutral-500">
                   {formatRelativeTime(job.created_at)}
                 </Text>
               </View>
               {formattedSalary && (
-                <Text className="text-sm font-bold text-neutral-900">
+                <Text className="text-sm font-bold text-neutral-900 dark:text-white">
                   {formattedSalary}
                 </Text>
               )}

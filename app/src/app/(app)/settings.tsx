@@ -1,8 +1,6 @@
-/* eslint-disable react/react-in-jsx-scope */
-import React from 'react';
 import { Env } from '@env';
-import { useAuth } from '@/lib/auth';
 import { useColorScheme } from 'nativewind';
+import React from 'react';
 
 import { Item } from '@/components/settings/item';
 import { ItemsContainer } from '@/components/settings/items-container';
@@ -17,6 +15,7 @@ import {
 } from '@/components/ui';
 import { Github, Rate, Share, Support, Website } from '@/components/ui/icons';
 import { translate } from '@/lib';
+import { useAuth } from '@/lib/auth';
 
 export default function Settings() {
   const { signOut } = useAuth();
@@ -27,8 +26,8 @@ export default function Settings() {
     <>
       <FocusAwareStatusBar />
 
-      <ScrollView>
-        <View className="flex-1 px-4 pt-16 ">
+      <ScrollView className="bg-white dark:bg-neutral-950">
+        <View className="flex-1 px-4 pt-16">
           <Text className="text-xl font-bold">
             {translate('settings.title')}
           </Text>

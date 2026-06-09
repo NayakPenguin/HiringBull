@@ -1,5 +1,3 @@
-import type { UserMeResponse } from '@/api/outreach/useUserInfo';
-import { useAuth } from '@/lib/auth';
 import { Ionicons } from '@expo/vector-icons';
 import { type BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useQueryClient } from '@tanstack/react-query';
@@ -7,6 +5,7 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Clipboard, Linking, Pressable, ScrollView } from 'react-native';
 
+import type { UserMeResponse } from '@/api/outreach/useUserInfo';
 import {
   FocusAwareStatusBar,
   Image,
@@ -15,8 +14,9 @@ import {
   View,
 } from '@/components/ui';
 import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
-import { resetOnboarding } from '@/lib';
 import { resetUser } from '@/features/users';
+import { resetOnboarding } from '@/lib';
+import { useAuth } from '@/lib/auth';
 import {
   clearMembership,
   getMembership,
@@ -36,12 +36,14 @@ function SettingsItemRow({ item }: { item: SettingsItem }) {
   return (
     <Pressable
       onPress={item.onPress}
-      className="mb-3 flex-row items-center justify-between rounded-xl border border-neutral-200 bg-white p-4 active:opacity-70"
+      className="mb-3 flex-row items-center justify-between rounded-xl border border-neutral-200 bg-white p-4 active:opacity-70 dark:border-neutral-800 dark:bg-neutral-900"
     >
       <View className="flex-row items-center gap-3">
         <View
           className={`size-10 items-center justify-center rounded-xl ${
-            item.isDestructive ? 'bg-danger-50' : 'bg-neutral-100'
+            item.isDestructive
+              ? 'bg-danger-50 dark:bg-danger-900'
+              : 'bg-neutral-100 dark:bg-neutral-800'
           }`}
         >
           <Ionicons
@@ -52,7 +54,9 @@ function SettingsItemRow({ item }: { item: SettingsItem }) {
         </View>
         <Text
           className={`text-base font-semibold ${
-            item.isDestructive ? 'text-danger-600' : 'text-neutral-900'
+            item.isDestructive
+              ? 'text-danger-600 dark:text-danger-300'
+              : 'text-neutral-900 dark:text-neutral-100'
           }`}
         >
           {item.label}
@@ -95,6 +99,12 @@ export default function Profile() {
       icon: 'business-outline',
       iconColor: '#13803b', // primary-500
       onPress: () => navigate('/edit-companies'),
+    },
+    {
+      label: 'Theme',
+      icon: 'moon-outline',
+      iconColor: '#737373',
+      onPress: () => navigate('/settings'),
     },
     {
       label: 'Report Issue',
@@ -150,17 +160,20 @@ export default function Profile() {
 
   return (
     <>
-      <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+      <SafeAreaView
+        className="flex-1 bg-white dark:bg-neutral-950"
+        edges={['top']}
+      >
         <FocusAwareStatusBar />
         <View className="flex-1 pt-6">
-          <View className="border-b border-neutral-200 bg-white px-5 pb-4 shadow-sm">
+          <View className="border-b border-neutral-200 bg-white px-5 pb-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
             <Text
-              className="text-3xl  text-neutral-900 "
+              className="text-3xl text-neutral-900 dark:text-white"
               style={{ fontFamily: 'Montez' }}
             >
               Profile
             </Text>
-            <Text className="my-2 text-base font-medium text-neutral-500">
+            <Text className="my-2 text-base font-medium text-neutral-500 dark:text-neutral-400">
               Manage your account, experience, and preferences to get more
               relevant jobs and recommendations.
             </Text>
@@ -174,7 +187,7 @@ export default function Profile() {
               paddingTop: 20,
             }}
           >
-            <View className="android:shadow-sm ios:shadow-sm mb-6 rounded-xl border border-neutral-300 bg-neutral-50 p-5">
+            <View className="mb-6 rounded-xl border border-neutral-300 bg-neutral-50 p-5 android:shadow-sm ios:shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
               <View className="flex-row items-center gap-4">
                 <View className="size-16 items-center justify-center overflow-hidden rounded-full bg-primary-100">
                   <Image
@@ -189,13 +202,13 @@ export default function Profile() {
                 </View>
 
                 <View className="flex-1">
-                  <Text className="text-xl font-bold text-neutral-900">
+                  <Text className="text-xl font-bold text-neutral-900 dark:text-white">
                     {displayName}
                   </Text>
                   {email ? (
                     <View className="mt-1 flex-row items-center gap-1">
                       <Ionicons name="mail-outline" size={14} color="#737373" />
-                      <Text className="text-sm font-medium text-neutral-600">
+                      <Text className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
                         {email}
                       </Text>
                     </View>
@@ -206,14 +219,16 @@ export default function Profile() {
             <View
               className={`mb-6 flex-row items-center justify-between rounded-xl border p-4 ${
                 isValid
-                  ? 'border-neutral-200 bg-neutral-50'
-                  : 'border-danger-200 bg-danger-50'
+                  ? 'border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900'
+                  : 'dark:bg-danger-950/40 border-danger-200 bg-danger-50 dark:border-danger-900'
               }`}
             >
               <View className="flex-row items-center gap-3">
                 <View
                   className={`size-10 items-center justify-center rounded-full ${
-                    isValid ? 'bg-primary-100' : 'bg-danger-100'
+                    isValid
+                      ? 'bg-primary-100 dark:bg-neutral-800'
+                      : 'bg-danger-100 dark:bg-danger-900'
                   }`}
                 >
                   <Ionicons
@@ -226,7 +241,9 @@ export default function Profile() {
                 <View>
                   <Text
                     className={`text-sm font-semibold ${
-                      isValid ? 'text-neutral-900' : 'text-danger-700'
+                      isValid
+                        ? 'text-neutral-900 dark:text-neutral-100'
+                        : 'text-danger-700 dark:text-danger-300'
                     }`}
                   >
                     {isValid ? 'Membership valid till' : 'Membership expired'}
@@ -234,7 +251,9 @@ export default function Profile() {
 
                   <Text
                     className={`text-sm font-medium ${
-                      isValid ? 'text-neutral-600' : 'text-danger-600'
+                      isValid
+                        ? 'text-neutral-600 dark:text-neutral-400'
+                        : 'text-danger-600 dark:text-danger-300'
                     }`}
                   >
                     {membershipData
@@ -258,7 +277,7 @@ export default function Profile() {
             </View>
 
             <View className="mb-6">
-              <Text className="mb-3 text-xs font-bold uppercase tracking-wider text-neutral-400">
+              <Text className="mb-3 text-xs font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
                 Settings
               </Text>
               {SETTINGS.map((item, index) => (
@@ -266,16 +285,16 @@ export default function Profile() {
               ))}
             </View>
 
-            <View className="rounded-xl bg-yellow-300 p-4">
+            <View className="rounded-xl bg-yellow-300 p-4 dark:bg-yellow-900">
               <View className="flex-row items-start gap-3">
-                <View className="mt-1 size-10 shrink-0 items-center justify-center rounded-full bg-primary-100">
+                <View className="mt-1 size-10 shrink-0 items-center justify-center rounded-full bg-primary-100 dark:bg-yellow-800">
                   <Ionicons name="gift-outline" size={20} color="#13803b" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-md mb-1 font-bold text-black">
+                  <Text className="text-md mb-1 font-bold text-black dark:text-yellow-50">
                     Refer & Earn
                   </Text>
-                  <Text className="text-sm font-medium leading-5 text-black">
+                  <Text className="text-sm font-medium leading-5 text-black dark:text-yellow-100">
                     Share with friends and earn FLAT ₹50 when they sign up using
                     your email as referral code.
                   </Text>
@@ -285,7 +304,7 @@ export default function Profile() {
                         'https://hiringbull.org/referral/' + email
                       )
                     }
-                    className="mt-2 text-sm font-semibold text-neutral-900 underline"
+                    className="mt-2 text-sm font-semibold text-neutral-900 underline dark:text-yellow-50"
                   >
                     Show my earnings
                     <Ionicons
@@ -302,9 +321,9 @@ export default function Profile() {
                       onPress={() => {
                         Clipboard.setString(email);
                       }}
-                      className="mt-3 flex-row items-center justify-between rounded-lg bg-yellow-400 px-3 py-2"
+                      className="mt-3 flex-row items-center justify-between rounded-lg bg-yellow-400 px-3 py-2 dark:bg-yellow-800"
                     >
-                      <Text className="text-sm font-medium text-primary-900">
+                      <Text className="text-sm font-medium text-primary-900 dark:text-yellow-50">
                         {email}
                       </Text>
                       <Ionicons name="copy-outline" size={16} color="#13803b" />

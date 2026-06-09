@@ -1,12 +1,13 @@
-import { getUserEmail } from '@/lib/auth';
 import { Ionicons } from '@expo/vector-icons';
 import { type BottomSheetModal } from '@gorhom/bottom-sheet';
 import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { FlatList, Image, Pressable, type TextInput } from 'react-native';
 
 import { useSendOutreach } from '@/api/outreach/useSendOutreach';
+import { useMyProfile } from '@/api/outreach/useUserInfo';
 import {
   Button,
   ControlledInput,
@@ -17,11 +18,9 @@ import {
   Text,
   View,
 } from '@/components/ui';
-import { useOnboarding } from '@/lib';
+import { getUserEmail } from '@/lib/auth';
 import { useOutreachForm } from '@/lib/hooks/use-outreach-form';
 import { showToast } from '@/lib/toast';
-import { useMyProfile } from '@/api/outreach/useUserInfo';
-import { useQueryClient } from '@tanstack/react-query';
 
 type Company = {
   id: string;
@@ -93,8 +92,10 @@ function CompanyCard({
   return (
     <Pressable
       onPress={onPress}
-      className={`relative aspect-square w-[22%] items-center justify-center rounded-xl border bg-white android:shadow-sm ios:shadow-sm ${
-        selected ? 'border-primary-600' : 'border-neutral-200'
+      className={`relative aspect-square w-[22%] items-center justify-center rounded-xl border bg-white android:shadow-sm ios:shadow-sm dark:bg-neutral-900 ${
+        selected
+          ? 'border-primary-600 dark:border-white'
+          : 'border-neutral-200 dark:border-neutral-800'
       }`}
     >
       {selected && (
@@ -159,7 +160,7 @@ export default function Outreach() {
         resumeLink: values.resumeLink,
       },
       {
-        onSuccess: (res) => {
+        onSuccess: () => {
           queryClient.invalidateQueries({
             queryKey: ['users', 'me'],
           });
@@ -196,16 +197,22 @@ export default function Outreach() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+    <SafeAreaView
+      className="flex-1 bg-white dark:bg-neutral-950"
+      edges={['top']}
+    >
       <FocusAwareStatusBar />
 
       {/* HEADER */}
-      <View className="border-b border-neutral-200 px-5 pb-4 pt-6">
-        <Text className="text-3xl" style={{ fontFamily: 'Montez' }}>
+      <View className="border-b border-neutral-200 px-5 pb-4 pt-6 dark:border-neutral-800 dark:bg-neutral-950">
+        <Text
+          className="text-3xl text-neutral-900 dark:text-white"
+          style={{ fontFamily: 'Montez' }}
+        >
           Outreach
         </Text>
 
-        <Text className="mt-2 text-base text-neutral-500">
+        <Text className="mt-2 text-base text-neutral-500 dark:text-neutral-400">
           Reach employees, we send it to WhatsApp groups with company employees.
         </Text>
 
@@ -220,23 +227,23 @@ export default function Outreach() {
       </View>
 
       {/* CONTENT */}
-      <View className="flex-1 bg-slate-50 pt-4">
+      <View className="flex-1 bg-slate-50 pt-4 dark:bg-neutral-950">
         {remaining === 0 ? (
           <View className="mb-3 ml-4 flex-row items-center">
-            <View className="flex-row items-center gap-2 rounded-full bg-neutral-200 px-3 py-1.5">
+            <View className="flex-row items-center gap-2 rounded-full bg-neutral-200 px-3 py-1.5 dark:bg-neutral-800">
               <Ionicons name="lock-closed" size={14} color="#555" />
-              <Text className="text-sm font-medium text-neutral-600">
+              <Text className="text-sm font-medium text-neutral-600 dark:text-neutral-300">
                 Tokens expired for this month
               </Text>
             </View>
           </View>
         ) : (
           <View className="mb-3 ml-4 flex-row items-center">
-            <View className="flex-row items-center gap-2 rounded-full bg-yellow-100 px-3 py-1.5">
+            <View className="flex-row items-center gap-2 rounded-full bg-yellow-100 px-3 py-1.5 dark:bg-yellow-900/40">
               <View className="size-6 items-center justify-center rounded-full bg-yellow-400">
                 <Ionicons name="flash" size={14} color="#000" />
               </View>
-              <Text className="text-sm font-semibold text-yellow-900">
+              <Text className="text-sm font-semibold text-yellow-900 dark:text-yellow-100">
                 <Text className="font-bold">{remaining}</Text> Outreach Left
               </Text>
             </View>
@@ -263,23 +270,23 @@ export default function Outreach() {
           )}
           ListFooterComponent={() => (
             <View>
-              <View className="self-start mt-2">
+              <View className="mt-2 self-start">
                 <Pressable
                   onPress={() => router.push('/outreach/requests')}
-                  className="flex-row items-center gap-2 bg-neutral-900 rounded-xl px-4 py-2"
+                  className="flex-row items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 dark:bg-white"
                 >
-                  <Text className="font-medium text-white">
+                  <Text className="font-medium text-white dark:text-neutral-900">
                     Outreach & Replies
                   </Text>
-                  <Ionicons name="arrow-forward" size={16} color="white" />
+                  <Ionicons name="arrow-forward" size={16} color="#737373" />
                 </Pressable>
               </View>
             </View>
           )}
         />
-        <View className="m-4 flex-row items-center rounded-lg bg-neutral-200 p-1">
+        <View className="m-4 flex-row items-center rounded-lg bg-neutral-200 p-1 dark:bg-neutral-800">
           <Ionicons name="information-circle" size={20} className="mr-2" />
-          <Text className="text-sm text-neutral-500">
+          <Text className="text-sm text-neutral-500 dark:text-neutral-400">
             3 outreach credits per month, reset monthly
           </Text>
         </View>
@@ -309,11 +316,11 @@ export default function Outreach() {
           contentContainerStyle={{ padding: 20 }}
           keyboardShouldPersistTaps="handled"
         >
-          <Text className="mb-1 text-xl font-bold">
+          <Text className="mb-1 text-xl font-bold text-neutral-900 dark:text-white">
             Message {selectedCompany?.name}
           </Text>
 
-          <Text className="mb-4 text-sm text-neutral-500">
+          <Text className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
             This message will be sent to employees & HRs
           </Text>
 
