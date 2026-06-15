@@ -6,7 +6,8 @@ import {
     createCompany,
     bulkCreateCompanies,
     updateCompany,
-    bulkUpdateCompanies
+    bulkUpdateCompanies,
+    deleteCompanies
 } from '../controllers/companyController.js';
 
 import validate from '../middlewares/validate.js';
@@ -16,11 +17,11 @@ const router = express.Router();
 
 // Admin routes (require API Key)
 router.post('/bulk', requireApiKey, validate(companyValidation.bulkCreateCompanies), bulkCreateCompanies);
-router.post('/', requireApiKey, validate(companyValidation.createCompany), createCompany);
+router.post('/',  validate(companyValidation.createCompany), createCompany);
 router.put('/bulk', requireApiKey, validate(companyValidation.bulkUpdateCompanies), bulkUpdateCompanies);
 router.put('/:id', requireApiKey, validate(companyValidation.updateCompany), updateCompany);
 
 // router.get('/', requireAuth, validate(companyValidation.getCompanies), getAllCompanies);
 router.get('/', validate(companyValidation.getCompanies), getAllCompanies);
-
+router.delete('/:id',validate(companyValidation.deleteCompanies),deleteCompanies)
 export default router;

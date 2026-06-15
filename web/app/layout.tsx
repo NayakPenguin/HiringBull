@@ -23,7 +23,7 @@ export default function RootLayout({
     <html lang="en" className={poppins.variable}>
       <body>
         <StyledComponentsRegistry>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "flex-start", width: "100%", minHeight: "100vh" }}>
             {children}
           </div>
         </StyledComponentsRegistry>

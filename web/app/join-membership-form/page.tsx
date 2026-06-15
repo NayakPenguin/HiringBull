@@ -83,7 +83,7 @@ const JoinMembershipForm = () => {
     reasonOption: "",
     reasonText: "",
     referralEmail: "",
-    acknowledged: false,
+    acknowledged: true,
     isDiscountApplied: false
   });
 
@@ -179,7 +179,8 @@ const JoinMembershipForm = () => {
     if (!formData.acknowledged) {
       newErrors.acknowledged = "Please confirm";
     }
-
+     console.log("formData", formData);
+     console.log("newErrors", newErrors);
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length > 0) {
