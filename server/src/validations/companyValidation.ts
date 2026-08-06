@@ -49,3 +49,11 @@ export const bulkUpdateCompanies = {
         ).min(1),
     }),
 };
+
+
+export const deleteCompanies = {
+     params: Joi.object().keys({
+        id: Joi.string().required(),
+    })
+
+};

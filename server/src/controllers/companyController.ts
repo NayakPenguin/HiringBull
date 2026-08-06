@@ -245,3 +245,19 @@ export const bulkUpdateCompanies = catchAsync(
     });
   },
 );
+
+export const deleteCompanies = catchAsync(async(req: Request, res: Response)=>{
+   const id = req.params.id as string;
+   const company = await prisma.company.findUnique({where:{id}});
+   if (!company) {
+    res.status(httpStatus.NOT_FOUND).json({ message: "Company not found" });
+    return;
+  }
+  const deleteCompany = await prisma.company.delete({
+    where:{id}
+  })
+   res.status(httpStatus.OK).json({
+    message: "Company deleted successfully",
+    data: deleteCompany,
+   });
+})
